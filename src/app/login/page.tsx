@@ -18,6 +18,8 @@ export default function LoginForm() {
     setLoading(true)
 
     try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

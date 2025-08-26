@@ -54,7 +54,7 @@ export default function Button({
           <path
             className="opacity-75"
             fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            d="M22 12a10 10 0 00-10-10v4a6 6 0 016 6h4z"
           />
         </svg>
       ) : (
