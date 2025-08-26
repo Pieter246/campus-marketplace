@@ -3,16 +3,19 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Button from "@/components/ui/Button"
 
 export default function LoginForm() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault() // ✅ prevent default form submission
     setError("")
+    setLoading(true)
 
     try {
       const response = await fetch("/api/login", {
@@ -29,9 +32,11 @@ export default function LoginForm() {
       } else {
         setError(data.message || "Login failed")
       }
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      console.error(err)
       setError("An error occurred during login")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -76,12 +81,10 @@ export default function LoginForm() {
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-          >
+          {/* Button now just uses the `loading` prop */}
+          <Button type="submit" className="w-full" loading={loading}>
             LOG IN
-          </button>
+          </Button>
         </form>
 
         <p className="mt-4 text-center text-gray-600">
