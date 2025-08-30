@@ -1,4 +1,5 @@
-// EXAMPLE: Updated Login Page with Firebase Auth
+// Example: Login page using Firebase Auth
+
 "use client"
 
 import { useState } from "react"
@@ -8,14 +9,14 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 
 import { auth } from "@/lib/firebase"
 import Button from "@/components/ui/Button"
 
-export default function FirebaseLoginForm() {
+export default function LoginForm() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // Email/Password Login
+  // Firebase Email/Password Login
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
     setError("")
@@ -28,7 +29,7 @@ export default function FirebaseLoginForm() {
       // Get Firebase ID token
       const idToken = await user.getIdToken()
       
-      // Call your API to create/update user profile in Firestore
+      // Sync user with Firestore database (same as register page)
       await fetch("/api/auth/sync-user", {
         method: "POST",
         headers: { 
@@ -65,7 +66,7 @@ export default function FirebaseLoginForm() {
       // Get Firebase ID token
       const idToken = await user.getIdToken()
       
-      // Sync user with your Firestore database
+      // Sync user with Firestore database
       await fetch("/api/auth/sync-user", {
         method: "POST",
         headers: { 
@@ -122,7 +123,7 @@ export default function FirebaseLoginForm() {
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            <span className="px-2 bg-white text-gray-500">Or login with email</span>
           </div>
         </div>
 
