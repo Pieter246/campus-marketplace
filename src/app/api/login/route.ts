@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { email, password } = body;
 
-    // --- Test implementation (keep for now) ---
+    // --- Demo user implementation ---
     if (email === "user@example.com" && password === "password12345") {
       return NextResponse.json({
         access_token: "mock_jwt_token_here",
@@ -15,10 +15,20 @@ export async function POST(req: Request) {
       });
     }
 
-    // --- Firebase authentication (commented out for later use) ---
+    // --- Invalid credentials response ---
+    // Return errors for specific fields to match inline validation
+    const fieldErrors: { [key: string]: string } = {};
+    if (!email.includes("@")) fieldErrors.email = "Please enter a valid email address";
+    else fieldErrors.email = "Email or password is incorrect";
+
+    fieldErrors.password = "Email or password is incorrect";
+
+    return NextResponse.json({ ...fieldErrors }, { status: 401 });
+
+    // --- Optional real authentication (Firebase, Supabase, etc.) ---
     /*
     import { signInWithEmailAndPassword } from "firebase/auth";
-    import { auth } from "@/lib/firebase"; // make sure you set this up
+    import { auth } from "@/lib/firebase";
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -28,13 +38,11 @@ export async function POST(req: Request) {
         user: { id: user.uid, email: user.email, name: user.displayName },
       });
     } catch (error) {
-      return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
+      return NextResponse.json({ email: "Email or password is incorrect", password: "Email or password is incorrect" }, { status: 401 });
     }
     */
-
-    return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
   } catch (error) {
     console.error("Login API error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ email: "Internal server error", password: "Internal server error" }, { status: 500 });
   }
 }
