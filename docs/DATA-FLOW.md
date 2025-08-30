@@ -20,61 +20,51 @@ flowchart TD
 
     %% =====================================================
     %% FRONTEND COMPONENTS
-    subgraph "Next.js Frontend"
+    subgraph "Frontend Layer"
         direction TB
-        LoginPage[Login Page<br/>src/app/login/page.tsx]:::ui
-        HomePage[Home Page<br/>src/app/page.tsx]:::ui
-        PhotoUpload[Photo Upload<br/>src/components/PhotoUpload.tsx]:::ui
-        AuthComponents[Auth Components<br/>src/components/auth/]:::ui
-        MarketComponents[Marketplace Components<br/>src/components/marketplace/]:::ui
-        UIComponents[UI Components<br/>src/components/ui/]:::ui
+        LoginPage[Login Page]:::ui
+        RegistrationPage[Registration Page]:::ui
+        MarketplacePage[Marketplace Page]:::ui
+        ItemDetailPage[Item Detail Page]:::ui
+        ProfilePage[Profile Page]:::ui
+        MyItemsPage[My Items Page]:::ui
+        CartPage[Cart Page]:::ui
+        PaymentPage[Payment Page]:::ui
+        NewItemPage[New Item Page]:::ui
     end
 
     %% =====================================================
     %% API ROUTES
-    subgraph "Next.js API Routes"
+    subgraph "API Layer"
         direction TB
-        LoginAPI[POST /api/login]:::api
-        PhotoAPI[POST /api/photos/upload]:::api
-        SetupAPI[POST /api/setup-database]:::api
-    end
-
-    %% =====================================================
-    %% SERVICES LAYER
-    subgraph "Service Layer"
-        direction TB
-        FirebaseConfig[Firebase Config<br/>src/lib/firebase-config.ts]:::api
-        FirebaseLib[Firebase Lib<br/>src/lib/firebase.ts]:::api
-        PhotoService[Photo Service<br/>src/lib/photoService.ts]:::api
-        PhotoUploadLib[Photo Upload<br/>src/lib/photoUpload.ts]:::api
-        DatabaseInit[Database Init<br/>src/lib/initializeDatabase.ts]:::api
+        AuthAPI[Authentication APIs]:::api
+        UserAPI[User Management APIs]:::api
+        ItemAPI[Item Management APIs]:::api
+        PhotoAPI[Photo Upload APIs]:::api
+        PaymentAPI[Payment APIs]:::api
+        MessageAPI[Messaging APIs]:::api
     end
 
     %% =====================================================
     %% FIREBASE SERVICES
     subgraph "Firebase Backend"
         direction TB
-        FirebaseAuth[Firebase Auth]:::firebase
+        FirebaseAuth[Firebase Authentication]:::firebase
         Firestore[Firestore Database]:::firebase
         FirebaseStorage[Firebase Storage]:::firebase
-        CloudFunctions[Cloud Functions<br/>Optional]:::firebase
+        CloudFunctions[Cloud Functions]:::firebase
     end
 
     %% =====================================================
-    %% DATA COLLECTIONS (Based on ERD)
-    subgraph "Firestore Collections"
+    %% DATA COLLECTIONS
+    subgraph "Database Collections"
         direction TB
-        UsersCollection[(users)]:::data
-        ProfilesCollection[(user_profiles)]:::data
-        CategoriesCollection[(categories)]:::data
-        ItemsCollection[(items)]:::data
-        PhotosCollection[(item_photos)]:::data
-        CartsCollection[(carts)]:::data
-        CartItemsCollection[(cart_items)]:::data
-        OrdersCollection[(orders)]:::data
-        OrderItemsCollection[(order_items)]:::data
-        PaymentsCollection[(payments)]:::data
-        MessagesCollection[(messages)]:::data
+        UsersCollection[(Users & Profiles)]:::data
+        ItemsCollection[(Items & Photos)]:::data
+        TransactionCollection[(Orders & Payments)]:::data
+        MessageCollection[(Messages)]:::data
+        CategoryCollection[(Categories)]:::data
+        CartCollection[(Carts)]:::data
     end
 
     %% =====================================================
@@ -82,153 +72,201 @@ flowchart TD
 
     %% Authentication Flow
     Student --> LoginPage
-    LoginPage --> LoginAPI
-    LoginAPI --> FirebaseAuth
+    Student --> RegistrationPage
+    LoginPage --> AuthAPI
+    RegistrationPage --> AuthAPI
+    AuthAPI --> FirebaseAuth
     FirebaseAuth --> UsersCollection
-    FirebaseAuth --> ProfilesCollection
 
-    %% Home/Browse Flow
-    Student --> HomePage
-    HomePage --> MarketComponents
-    MarketComponents --> ItemsCollection
-    ItemsCollection --> PhotosCollection
-    ItemsCollection --> CategoriesCollection
+    %% Marketplace Flow
+    Student --> MarketplacePage
+    MarketplacePage --> ItemAPI
+    ItemAPI --> ItemsCollection
+    ItemsCollection --> CategoryCollection
 
-    %% Photo Upload Flow
-    Student --> PhotoUpload
-    PhotoUpload --> PhotoAPI
-    PhotoAPI --> PhotoService
-    PhotoService --> FirebaseStorage
-    PhotoService --> PhotosCollection
+    %% Item Management Flow
+    Student --> ItemDetailPage
+    ItemDetailPage --> ItemAPI
+    ItemDetailPage --> PhotoAPI
+    PhotoAPI --> FirebaseStorage
+    ItemAPI --> ItemsCollection
+
+    %% My Items Management Flow
+    Student --> MyItemsPage
+    MyItemsPage --> ItemAPI
+    MyItemsPage --> PhotoAPI
+
+    %% New Item Creation
+    Student --> NewItemPage
+    NewItemPage --> ItemAPI
+    NewItemPage --> PhotoAPI
+
+    %% Profile Management
+    Student --> ProfilePage
+    ProfilePage --> UserAPI
+    UserAPI --> UsersCollection
+
+    %% Shopping Cart Flow
+    Student --> CartPage
+    CartPage --> ItemAPI
+    CartPage --> PaymentAPI
+    PaymentAPI --> TransactionCollection
+    CartPage --> CartCollection
+
+    %% Payment Flow
+    CartPage --> PaymentPage
+    PaymentPage --> PaymentAPI
 
     %% Messaging Flow
-    MarketComponents --> MessagesCollection
-
-    %% Cart & Orders Flow
-    MarketComponents --> CartsCollection
-    CartsCollection --> CartItemsCollection
-    CartItemsCollection --> OrdersCollection
-    OrdersCollection --> OrderItemsCollection
-    OrdersCollection --> PaymentsCollection
+    ItemDetailPage --> MessageAPI
+    MessageAPI --> MessageCollection
 
     %% Admin Flow
-    Admin --> HomePage
-    Admin --> SetupAPI
-    SetupAPI --> DatabaseInit
-    DatabaseInit --> CategoriesCollection
+    Admin --> MarketplacePage
+    Admin --> UserAPI
+    Admin --> ItemAPI
 
-    %% Service Layer Connections
-    FirebaseConfig --> FirebaseAuth
-    FirebaseConfig --> Firestore
-    FirebaseConfig --> FirebaseStorage
-    
-    FirebaseLib --> FirebaseAuth
-    FirebaseLib --> Firestore
-    
-    PhotoUploadLib --> FirebaseStorage
-    PhotoUploadLib --> Firestore
+    %% Firebase Service Connections
+    AuthAPI --> FirebaseAuth
+    UserAPI --> Firestore
+    ItemAPI --> Firestore
+    PhotoAPI --> FirebaseStorage
+    PaymentAPI --> Firestore
+    MessageAPI --> Firestore
 ```
 
 ## Key User Journey Flows
 
-### 1. User Registration & Authentication Flow
+### 1. User Authentication Flow
 ```mermaid
 sequenceDiagram
-    participant S as Student
+    participant U as User
     participant LP as Login Page
-    participant FA as Firebase Auth
-    participant FS as Firestore
+    participant API as Auth API
+    participant FB as Firebase Auth
+    participant DB as Database
     
-    S->>LP: Access login page
-    LP->>FA: Register/Login request
-    FA->>FA: Authenticate user
-    FA->>FS: Create user document
-    FA->>FS: Create user profile
-    FA-->>LP: Return auth token
-    LP-->>S: Redirect to home
+    U->>LP: Enter credentials
+    LP->>API: Authentication request
+    API->>FB: Validate credentials
+    FB->>DB: Create/update user data
+    FB-->>LP: Return auth token
+    LP-->>U: Login success
 ```
 
-### 2. Item Listing Creation Flow
+### 2. User Registration Flow
 ```mermaid
 sequenceDiagram
-    participant S as Student (Seller)
-    participant UI as Marketplace UI
-    participant API as Photo Upload API
-    participant ST as Firebase Storage
-    participant FS as Firestore
+    participant U as User
+    participant RP as Registration Page
+    participant API as Auth API
+    participant FB as Firebase Auth
+    participant DB as Database
     
-    S->>UI: Create new listing
-    S->>UI: Fill item details
-    S->>UI: Upload photos
-    UI->>API: POST /api/photos/upload
-    API->>ST: Store images
-    ST-->>API: Return image URLs
-    API->>FS: Save to item_photos
-    UI->>FS: Create item document
-    FS-->>UI: Confirm creation
-    UI-->>S: Show success message
+    U->>RP: Enter registration details
+    RP->>API: Registration request
+    API->>FB: Create new account
+    FB->>DB: Create user profile
+    FB-->>RP: Return auth token
+    RP-->>U: Registration success
 ```
 
-### 3. Browse & Purchase Flow
+### 3. Item Browsing Flow
 ```mermaid
 sequenceDiagram
-    participant B as Student (Buyer)
-    participant MC as Marketplace Components
-    participant FS as Firestore
-    participant MSG as Messages Collection
+    participant U as User
+    participant MP as Marketplace Page
+    participant API as Item API
+    participant DB as Database
     
-    B->>MC: Browse marketplace
-    MC->>FS: Query items by category/filters
-    FS-->>MC: Return item list
-    MC-->>B: Display items
-    B->>MC: Select item
-    MC->>FS: Get item details & photos
-    B->>MC: Contact seller
-    MC->>MSG: Create message thread
-    MSG-->>MC: Confirm message sent
-    MC-->>B: Show conversation
+    U->>MP: Browse marketplace
+    MP->>API: Request items
+    API->>DB: Query items & categories
+    DB-->>API: Return item data
+    API-->>MP: Item list with photos
+    MP-->>U: Display items
 ```
 
-## Data Security & Access Control
-
-- **Firebase Auth** handles all user authentication
-- **Firestore Security Rules** control data access based on user authentication
-- **Storage Rules** ensure only authenticated users can upload photos
-- **API Routes** validate requests and enforce business logic
-
-## Technology Stack
-
-- **Frontend**: Next.js 14 with TypeScript
-- **Backend**: Firebase (Auth, Firestore, Storage)
-- **Styling**: Tailwind CSS
-- **Deployment**: Vercel (recommended for Next.js)
-- **Database**: Firestore (NoSQL document database)
-```
-
-## User Interface Flow Diagram
-
+### 4. My Items Management Flow
 ```mermaid
-flowchart TD
-    A[Login] --> B[Registration]
-    B --> C[Home]
-    C --> D[Local Database]
-    D --> E[Discogs API]
-    D --> F[Home/Search Collection]
+sequenceDiagram
+    participant U as User (Seller)
+    participant MIP as My Items Page
+    participant API as Item API
+    participant ST as Storage
+    participant DB as Database
     
-    F --> G[Add Record]
-    F --> H[Catalogue Screen]
-    F --> I[Profile Management]
+    U->>MIP: View my items
+    MIP->>API: Request user's items
+    API->>DB: Query items by user ID
+    DB-->>API: Return user's items
+    API-->>MIP: Display user's items
+    MIP-->>U: Show editable item list
     
-    G --> J[View Record Details]
-    H --> K[Edit Folders]
+    U->>MIP: Edit item
+    MIP->>API: Update item data
+    API->>ST: Update photos (if changed)
+    API->>DB: Update item details
+    DB-->>API: Confirm update
+    API-->>MIP: Update success
+    MIP-->>U: Item updated
+```
+
+### 5. Item Creation Flow
+```mermaid
+sequenceDiagram
+    participant U as User (Seller)
+    participant NP as New Item Page
+    participant API as Item API
+    participant ST as Storage
+    participant DB as Database
     
-    %% Styling
-    classDef authStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
-    classDef homeStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    classDef dataStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
-    classDef actionStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    U->>NP: Create new item
+    NP->>API: Submit item data
+    API->>ST: Upload photos
+    API->>DB: Save item details
+    DB-->>API: Confirm creation
+    API-->>NP: Success response
+    NP-->>U: Item created
+```
+
+### 6. Purchase Flow
+```mermaid
+sequenceDiagram
+    participant B as Buyer
+    participant CP as Cart Page
+    participant PP as Payment Page
+    participant API as Payment API
+    participant DB as Database
     
-    class A,B authStyle
-    class C,F homeStyle
-    class D,E dataStyle
-    class G,H,I,J,K actionStyle
+    B->>CP: Review cart
+    CP->>PP: Proceed to payment
+    PP->>API: Process payment
+    API->>DB: Create order record
+    DB-->>API: Order confirmed
+    API-->>PP: Payment success
+    PP-->>B: Order complete
+```
+
+## Data Flow Patterns
+
+### Pattern 1: Direct Frontend-Database Access
+**Used for**: Real-time browsing, simple queries, user interactions
+```
+Frontend Page → Firebase Client → Database Collections
+```
+
+### Pattern 2: API-Mediated Access
+**Used for**: Complex operations, business logic, data validation
+```
+Frontend Page → API Layer → Firebase Backend → Database Collections
+```
+
+## Technology Stack Overview
+
+- **Frontend**: React/Next.js pages and components
+- **API Layer**: Next.js API routes for business logic
+- **Backend**: Firebase services (Auth, Firestore, Storage)
+- **Database**: Firestore collections following ERD schema
+- **Authentication**: Firebase Auth with JWT tokens
+- **File Storage**: Firebase Storage for images

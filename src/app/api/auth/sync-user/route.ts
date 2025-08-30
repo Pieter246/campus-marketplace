@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
         createdAt: now,
         updatedAt: now,
         isActive: true,
-        emailVerified: emailVerified || false
+        emailVerified: emailVerified || false,
+        isAdmin: false // New users are not admins by default
       })
 
       // Create user profile document

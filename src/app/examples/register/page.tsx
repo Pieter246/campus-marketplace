@@ -1,34 +1,61 @@
-// EXAMPLE: Updated Login Page with Firebase Auth
+// Example: Registration page using Firebase Auth
+
 "use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import Button from "@/components/ui/Button"
 
-export default function FirebaseLoginForm() {
+export default function RegisterForm() {
   const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: ""
+  })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // Email/Password Login
-  async function handleEmailLogin(e: React.FormEvent) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  // Firebase Email/Password Registration
+  async function handleEmailRegister(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters")
+      return
+    }
+
     setLoading(true)
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      )
       const user = userCredential.user
       
       // Get Firebase ID token
       const idToken = await user.getIdToken()
       
-      // Call your API to create/update user profile in Firestore
+      // Sync user with Firestore database
       await fetch("/api/auth/sync-user", {
         method: "POST",
         headers: { 
@@ -38,22 +65,22 @@ export default function FirebaseLoginForm() {
         body: JSON.stringify({
           uid: user.uid,
           email: user.email,
-          displayName: user.displayName,
+          displayName: null,
           emailVerified: user.emailVerified
         }),
       })
 
       router.push("/")
     } catch (error: any) {
-      console.error("Login error:", error)
-      setError(error.message || "Login failed")
+      console.error("Registration error:", error)
+      setError(error.message || "Registration failed")
     } finally {
       setLoading(false)
     }
   }
 
-  // Google OAuth Login
-  async function handleGoogleLogin() {
+  // Google OAuth Registration
+  async function handleGoogleRegister() {
     setError("")
     setLoading(true)
     
@@ -65,7 +92,7 @@ export default function FirebaseLoginForm() {
       // Get Firebase ID token
       const idToken = await user.getIdToken()
       
-      // Sync user with your Firestore database
+      // Sync user with Firestore database
       await fetch("/api/auth/sync-user", {
         method: "POST",
         headers: { 
@@ -83,8 +110,8 @@ export default function FirebaseLoginForm() {
 
       router.push("/")
     } catch (error: any) {
-      console.error("Google login error:", error)
-      setError(error.message || "Google login failed")
+      console.error("Google registration error:", error)
+      setError(error.message || "Google registration failed")
     } finally {
       setLoading(false)
     }
@@ -93,8 +120,8 @@ export default function FirebaseLoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-2 text-center">Login to your account</h2>
-        <p className="text-gray-600 mb-6 text-center">Welcome back!</p>
+        <h2 className="text-2xl font-bold mb-2 text-center">Create your account</h2>
+        <p className="text-gray-600 mb-6 text-center">Join the campus marketplace!</p>
 
         {error && (
           <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
@@ -102,9 +129,9 @@ export default function FirebaseLoginForm() {
           </div>
         )}
 
-        {/* Google Login Button */}
+        {/* Google Registration Button */}
         <Button 
-          onClick={handleGoogleLogin}
+          onClick={handleGoogleRegister}
           className="w-full mb-4 bg-red-600 hover:bg-red-700 flex items-center justify-center gap-2"
           loading={loading}
         >
@@ -122,21 +149,22 @@ export default function FirebaseLoginForm() {
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            <span className="px-2 bg-white text-gray-500">Or register with email</span>
           </div>
         </div>
 
         {/* Email/Password Form */}
-        <form onSubmit={handleEmailLogin} className="space-y-4">
+        <form onSubmit={handleEmailRegister} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
               Email address
             </label>
             <input
               id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleInputChange}
               required
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -148,23 +176,41 @@ export default function FirebaseLoginForm() {
             </label>
             <input
               id="password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              minLength={6}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-sm text-gray-500 mt-1">Must be at least 6 characters</p>
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="block text-gray-700 font-medium mb-1">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
               required
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <Button type="submit" className="w-full" loading={loading}>
-            LOG IN
+            CREATE ACCOUNT
           </Button>
         </form>
 
         <p className="mt-4 text-center text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
-            Create an account
+          Already have an account?{" "}
+          <Link href="/login" className="text-blue-600 hover:underline">
+            Sign in
           </Link>
         </p>
       </div>
