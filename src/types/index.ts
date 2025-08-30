@@ -10,6 +10,7 @@ export interface User {
   updatedAt: Date;
   isActive: boolean;
   emailVerified: boolean;
+  isAdmin: boolean;
 }
 
 export interface UserProfile {

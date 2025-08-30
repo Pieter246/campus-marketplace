@@ -2,11 +2,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
     // Testing workflow changes - updated comment to trigger workflow
     // Testing workflow changes - users can only access their own data
-    // Users collection - users can only access their own data
+    // Users collection - users can only access their own data, admins can access all
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      // Only admins can update isAdmin field
+      allow update: if request.auth != null && 
+        (request.auth.uid == userId || isAdmin()) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']) || isAdmin());
     }
     
     // User profiles - users can read all profiles but only edit their own
@@ -15,17 +26,18 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Categories - read-only for all authenticated users
+    // Categories - read-only for all authenticated users, admins can manage
     match /categories/{categoryId} {
       allow read: if request.auth != null;
-      allow write: if false; // Only admins should create categories (handle via admin SDK)
+      allow write: if isAdmin();
     }
     
-    // Items - users can read all, but only edit their own
+    // Items - users can read all, but only edit their own; admins can moderate
     match /items/{itemId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == resource.data.sellerId;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.sellerId;
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.sellerId || isAdmin());
     }
     
     // Item photos - linked to items ownership
@@ -70,10 +82,12 @@ service cloud.firestore {
          get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.sellerId == request.auth.uid);
     }
     
-    // Messages - users can access messages they sent or received
+    // Messages - users can access messages they sent or received; admins can moderate
     match /messages/{messageId} {
       allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid == resource.data.receiverId || 
+         isAdmin());
     }
   }
 }
