@@ -78,7 +78,8 @@ export async function initializeDatabase() {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       isActive: true,
-      emailVerified: false
+      emailVerified: false,
+      isAdmin: false
     });
     console.log('Created collection: users (with field structure)');
 
@@ -228,7 +229,8 @@ export async function createSampleData() {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       isActive: true,
-      emailVerified: true
+      emailVerified: true,
+      isAdmin: false
     });
 
     // Sample user profile

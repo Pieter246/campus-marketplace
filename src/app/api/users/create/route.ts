@@ -14,6 +14,7 @@ interface CreateUserRequest {
   yearOfStudy?: number
   bio?: string
   preferredContactMethod?: 'email' | 'phone' | 'whatsapp'
+  isAdmin?: boolean
 }
 
 export async function POST(req: NextRequest) {
@@ -34,7 +35,8 @@ export async function POST(req: NextRequest) {
       studentNumber = "",
       yearOfStudy = 1,
       bio = "",
-      preferredContactMethod = "email"
+      preferredContactMethod = "email",
+      isAdmin = false
     } = body
 
     // Validation
@@ -55,6 +57,17 @@ export async function POST(req: NextRequest) {
       }, { status: 409 })
     }
 
+    // Check if current user is admin (for creating admin users)
+    const currentUserDoc = await getDoc(doc(db, "users", user.uid))
+    const isCurrentUserAdmin = currentUserDoc.exists() ? (currentUserDoc.data().isAdmin || false) : false
+
+    // Only admins can create admin users
+    if (isAdmin && !isCurrentUserAdmin) {
+      return NextResponse.json({ 
+        message: "Unauthorized: Only admins can create admin users" 
+      }, { status: 403 })
+    }
+
     const now = serverTimestamp()
 
     // Create user document in 'users' collection
@@ -67,7 +80,8 @@ export async function POST(req: NextRequest) {
       createdAt: now,
       updatedAt: now,
       isActive: true,
-      emailVerified: user.email_verified || false
+      emailVerified: user.email_verified || false,
+      isAdmin: isAdmin
     })
 
     // Create user profile document in 'userProfiles' collection
@@ -147,6 +161,7 @@ export async function GET(req: NextRequest) {
         email: userData.email,
         isActive: userData.isActive,
         emailVerified: userData.emailVerified,
+        isAdmin: userData.isAdmin || false,
         createdAt: userData.createdAt,
         updatedAt: userData.updatedAt
       }

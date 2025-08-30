@@ -14,6 +14,7 @@ interface UpdateUserRequest {
   bio?: string
   preferredContactMethod?: 'email' | 'phone' | 'whatsapp'
   profilePictureUrl?: string
+  isAdmin?: boolean
 }
 
 export async function PUT(req: NextRequest) {
@@ -36,6 +37,9 @@ export async function PUT(req: NextRequest) {
       }, { status: 404 })
     }
 
+    const currentUserData = userDoc.data()
+    const isCurrentUserAdmin = currentUserData.isAdmin || false
+
     const now = serverTimestamp()
     const updateData: any = { updatedAt: now }
     const profileUpdateData: any = { updatedAt: now }
@@ -49,6 +53,15 @@ export async function PUT(req: NextRequest) {
     }
     if (body.phoneNumber !== undefined) {
       updateData.phoneNumber = body.phoneNumber.trim()
+    }
+    if (body.isAdmin !== undefined) {
+      // Only admins can update the isAdmin field
+      if (!isCurrentUserAdmin) {
+        return NextResponse.json({ 
+          message: "Unauthorized: Only admins can update admin status" 
+        }, { status: 403 })
+      }
+      updateData.isAdmin = body.isAdmin
     }
 
     // Prepare profile document updates

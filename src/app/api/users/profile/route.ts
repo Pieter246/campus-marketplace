@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
       phoneNumber: userData.phoneNumber,
       isActive: userData.isActive,
       emailVerified: userData.emailVerified,
+      isAdmin: userData.isAdmin || false,
       
       // Profile data
       profilePictureUrl: profileData.profilePictureUrl,
