@@ -91,6 +91,13 @@ export default function LoginForm() {
           </Link>
         </p>
 
+        <p className="text-center text-gray-600">
+          Forgot password?{" "}
+          <Link href="/reset-password" className="text-blue-600 hover:underline">
+            Reset it
+          </Link>
+        </p>
+
         <div className="mt-6 text-center text-gray-500 text-sm">
           Demo User:<br />
           Email: user@example.com<br />

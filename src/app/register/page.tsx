@@ -13,19 +13,23 @@ export default function RegisterPage() {
     username: "",
     password: "",
     confirmPassword: "",
+    terms: false, // ✅ added terms field
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors((prev) => ({ ...prev, [e.target.name]: "" })); // clear error while typing
+    const { name, type, checked, value } = e.target;
+    setForm({
+      ...form,
+      [name]: type === "checkbox" ? checked : value, // ✅ checkbox uses `checked`
+    });
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Frontend validation first
     const newErrors: { [key: string]: string } = {};
     if (!form.email.includes("@")) newErrors.email = "Please enter a valid email address";
     if (!form.username || form.username.trim().length < 3)
@@ -34,6 +38,7 @@ export default function RegisterPage() {
       newErrors.password = "Password must be at least 6 characters";
     if (form.password !== form.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
+    if (!form.terms) newErrors.terms = "You must agree to the terms and conditions";
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -53,7 +58,6 @@ export default function RegisterPage() {
         localStorage.setItem("access_token", data.access_token);
         router.push("/dashboard");
       } else {
-        // ✅ Use API errors directly for inline display
         setErrors(data);
       }
     } catch (err) {
@@ -89,7 +93,7 @@ export default function RegisterPage() {
               type={input.type}
               name={input.name}
               id={input.name}
-              value={form[input.name as keyof typeof form]}
+              value={form[input.name as keyof typeof form] as string} // ✅ cast safe because all these are strings
               onChange={handleChange}
               disabled={loading}
               label={input.label}
@@ -97,14 +101,36 @@ export default function RegisterPage() {
             />
           ))}
 
-          <Button type="submit" className="w-full mb-0" loading={loading}>
+          {/* Terms & Conditions checkbox */}
+          <div className="flex items-start mb-0">
+            <input
+              type="checkbox"
+              id="terms"
+              name="terms"
+              checked={form.terms}
+              onChange={handleChange}
+              disabled={loading}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+            <label htmlFor="terms" className="ml-2 text-sm text-gray-700">
+              I agree to the{" "}
+              <a href="/terms" className="text-blue-600 hover:underline">
+                Terms & Conditions
+              </a>
+            </label>
+          </div>
+          {errors.terms && (
+            <p className="mt-1 mb-0 text-sm text-red-500">{errors.terms}</p>
+          )}
+
+          <Button type="submit" className="w-full mb-0 mt-4" loading={loading}>
             Register
           </Button>
 
           <Button
             type="button"
             className="w-full mt-1"
-            variant="outline"
+            variant="secondary"
             onClick={() => router.push("/login")}
           >
             Back
