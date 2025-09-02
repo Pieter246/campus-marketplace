@@ -98,7 +98,7 @@ export default function RegisterPage() {
           ))}
 
           <Button type="submit" className="w-full mb-0" loading={loading}>
-            REGISTER
+            Register
           </Button>
 
           <Button
@@ -107,7 +107,7 @@ export default function RegisterPage() {
             variant="outline"
             onClick={() => router.push("/login")}
           >
-            BACK
+            Back
           </Button>
         </form>
       </div>

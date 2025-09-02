@@ -80,7 +80,7 @@ export default function LoginForm() {
           ))}
 
           <Button type="submit" className="w-full" loading={loading}>
-            LOG IN
+            Log In
           </Button>
         </form>
 
