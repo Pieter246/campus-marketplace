@@ -1,11 +1,13 @@
+// Example: Login page using Firebase Auth
+
 "use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import Button from "@/components/ui/Button"
-import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
+import { Button } from "@/components/ui/Button"
 
 export default function LoginForm() {
   const router = useRouter()
@@ -14,20 +16,20 @@ export default function LoginForm() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
+  // Firebase Email/Password Login
   async function handleEmailLogin(e: React.FormEvent) {
-    e.preventDefault() // ✅ prevent default form submission
+    e.preventDefault()
     setError("")
     setLoading(true)
 
     try {
-      //Sign in with email and password
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
       
       // Get Firebase ID token
       const idToken = await user.getIdToken()
       
-      // Sync user with Firestore database
+      // Sync user with Firestore database (same as register page)
       await fetch("/api/auth/sync-user", {
         method: "POST",
         headers: { 
@@ -52,19 +54,19 @@ export default function LoginForm() {
     }
   }
 
-async function handleGoogleLogin() {
+  // Google OAuth Login
+  async function handleGoogleLogin() {
     setError("")
     setLoading(true)
-
-    try{
-      //Sign in with Google authenticator
+    
+    try {
       const provider = new GoogleAuthProvider()
       const userCredential = await signInWithPopup(auth, provider)
       const user = userCredential.user
-
+      
       // Get Firebase ID token
       const idToken = await user.getIdToken()
-
+      
       // Sync user with Firestore database
       await fetch("/api/auth/sync-user", {
         method: "POST",
@@ -81,9 +83,8 @@ async function handleGoogleLogin() {
         }),
       })
 
-      router.push("/examples") //Redirect to home page
-
-    } catch(error: any){
+      router.push("/")
+    } catch (error: any) {
       console.error("Google login error:", error)
       setError(error.message || "Google login failed")
     } finally {
@@ -107,7 +108,7 @@ async function handleGoogleLogin() {
         <Button 
           onClick={handleGoogleLogin}
           className="w-full mb-4 bg-red-600 hover:bg-red-700 flex items-center justify-center gap-2"
-          loading={loading}
+          disabled={loading}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -157,7 +158,7 @@ async function handleGoogleLogin() {
             />
           </div>
 
-          <Button type="submit" className="w-full" loading={loading}>
+          <Button type="submit" className="w-full" disabled={loading}>
             LOG IN
           </Button>
         </form>
@@ -168,12 +169,6 @@ async function handleGoogleLogin() {
             Create an account
           </Link>
         </p>
-
-        <div className="mt-6 text-center text-gray-500 text-sm">
-          Demo User:<br />
-          Email: MeiringTest@gmail.com<br />
-          Password: CMPG322!login
-        </div>
       </div>
     </div>
   )

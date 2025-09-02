@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useAuth } from "../../../context/auth-hook"
-import Button from "@/components/ui/Button"
+import { useAuth } from "@/app/auth-hook"
+import { Button } from "@/components/ui/Button"
+
 
 export default function ExamplesIndex() {
   const { user, loading, logout } = useAuth()

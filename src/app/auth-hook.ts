@@ -1,3 +1,4 @@
+"use client"
 // examples/auth-hook.ts
 // Custom hook for authentication state management in TypeScript
 
@@ -10,7 +11,7 @@ interface AuthState {
   loading: boolean
 }
 
-export function useAuth() {
+export function useAuth({children}: {children: React.ReactNode}) {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     loading: true
