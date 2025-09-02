@@ -44,7 +44,8 @@ export default function LoginForm() {
         }),
       })
 
-      router.push("/")
+      router.push("/examples") //Redirect to home page
+
     } catch (error: any) {
       console.error("Login error:", error)
       setError(error.message || "Login failed")

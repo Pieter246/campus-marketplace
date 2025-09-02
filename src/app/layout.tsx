@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 //import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import Link from "next/link";
 
 /*
 const geistSans = Geist({
@@ -41,6 +42,19 @@ export default function RootLayout({
         //className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased`}
       >
+        <nav className="bg-sky-950 text-white p-5 h-24 flex items-center justify-between z-10 relative">
+          <Link href="/" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
+            <span>Campus marketplace</span>
+          </Link>
+          <ul className="flex gap-6 items-center">
+            <li>
+              <Link href="/login" className="uppercase tracking-widest hover:underline">Login</Link>
+            </li>              
+            <li>
+              <Link href="/property-search" className="uppercase tracking-widest hover:underline">Register</Link>
+            </li>   
+          </ul>
+        </nav>
         {children}
       </body>
     </html>

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useAuth } from "./auth-hook"
+import { useAuth } from "../../../context/auth-hook"
 import Button from "@/components/ui/Button"
 
 export default function ExamplesIndex() {
