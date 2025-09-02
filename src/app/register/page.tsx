@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -83,30 +84,17 @@ export default function RegisterPage() {
         </h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           {inputs.map((input) => (
-            <div key={input.name} className="relative w-full">
-              <input
-                type={input.type}
-                name={input.name}
-                value={form[input.name as keyof typeof form]}
-                onChange={handleChange}
-                placeholder=" "
-                id={input.name}
-                disabled={loading}
-                className={`peer w-full border-b-2 bg-transparent py-3 px-1 text-gray-900 focus:outline-none transition-colors
-                  ${errors[input.name] ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-blue-500"}`}
-              />
-              <label
-                htmlFor={input.name}
-                className={`absolute left-1 text-base text-gray-400 cursor-text transition-all duration-300
-                  ${form[input.name as keyof typeof form] ? "-top-1 text-sm text-blue-500" : "top-3"}
-                  peer-focus:-top-1 peer-focus:text-sm peer-focus:text-blue-500`}
-              >
-                {input.label}
-              </label>
-              {errors[input.name] && (
-                <p className="mt-1 text-sm text-red-500">{errors[input.name]}</p>
-              )}
-            </div>
+            <Input
+              key={input.name}
+              type={input.type}
+              name={input.name}
+              id={input.name}
+              value={form[input.name as keyof typeof form]}
+              onChange={handleChange}
+              disabled={loading}
+              label={input.label}
+              error={errors[input.name]}
+            />
           ))}
 
           <Button type="submit" className="w-full mb-0" loading={loading}>
