@@ -1,93 +1,100 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input"; // ✅ import your reusable textbox
 
 export default function LoginForm() {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const router = useRouter();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
-    setError("")
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" })); // clear error while typing
+  };
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // ✅ Frontend validation first
+    const newErrors: { [key: string]: string } = {};
+    if (!form.email.includes("@")) newErrors.email = "Please enter a valid email address";
+    if (!form.password) newErrors.password = "Password is required";
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    setLoading(true);
     try {
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
+        body: JSON.stringify(form),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("access_token", data.access_token)
-        router.push("/")
+        localStorage.setItem("access_token", data.access_token);
+        router.push("/");
       } else {
-        setError(data.message || "Login failed")
+        // ✅ Use API errors directly
+        setErrors(data);
       }
-    } catch (error) {
-      console.error(error)
-      setError("An error occurred during login")
+    } catch (err) {
+      console.error(err);
+      setErrors({ email: "An error occurred", password: "An error occurred" });
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  const inputs = [
+    { name: "email", type: "email", label: "Email" },
+    { name: "password", type: "password", label: "Password" },
+  ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold mb-2 text-center">Login to your account</h2>
         <p className="text-gray-600 mb-6 text-center">Welcome back!</p>
 
-        {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <form onSubmit={handleLogin} className="space-y-6">
+          {inputs.map((input) => (
+            <Input
+              key={input.name}
+              type={input.type}
+              name={input.name}
+              id={input.name}
+              value={form[input.name as keyof typeof form]}
+              onChange={handleChange}
+              disabled={loading}
+              label={input.label}
+              error={errors[input.name]}
             />
-          </div>
+          ))}
 
-          <div>
-            <label htmlFor="password" className="block text-gray-700 font-medium mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-          >
-            LOG IN
-          </button>
+          <Button type="submit" className="w-full" loading={loading}>
+            Log In
+          </Button>
         </form>
 
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{" "}
           <Link href="/register" className="text-blue-600 hover:underline">
             Create an account
+          </Link>
+        </p>
+
+        <p className="text-center text-gray-600">
+          Forgot password?{" "}
+          <Link href="/reset-password" className="text-blue-600 hover:underline">
+            Reset it
           </Link>
         </p>
 
@@ -98,5 +105,5 @@ export default function LoginForm() {
         </div>
       </div>
     </div>
-  )
+  );
 }
