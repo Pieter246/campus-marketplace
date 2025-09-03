@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useAuth } from "@/app/auth-hook"
-import { Button } from "@/components/ui/Button"
+import { Button } from "@/components/ui/button"
 
 
 export default function ExamplesIndex() {

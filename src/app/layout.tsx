@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Link from "next/link";import AuthButtons from "@/components/auth-buttons";
+import { AuthProvider } from "../../context/auth";
 ;
 
 
@@ -47,17 +48,22 @@ export default function RootLayout({
         //className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased`}
       >
-        <nav className="bg-purple-700 text-white p-5 h-24 flex items-center justify-between z-10 relative">
-          <Link href="/marketMain" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
-            <span>Campus marketplace</span>
-          </Link>        
-          <ul className="flex gap-6 items-center">
-            <li>
-              <AuthButtons children={children}/> {/* Pass children down to AuthButtons component*/}
-            </li>              
-          </ul>
-        </nav>
-        {children}
+        <AuthProvider>
+          <nav className="bg-purple-700 text-white p-5 h-24 flex items-center justify-between z-10 relative">
+            <Link href="/marketMain" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
+              <span>Campus marketplace</span>
+            </Link>        
+            <ul className="flex gap-6 items-center">
+              <li>
+                <Link href="/marketMain" className="uppercase tracking-widest hover:underline">Property search</Link>
+              </li>              
+              <li>
+                <AuthButtons />
+              </li>
+            </ul>
+          </nav>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
