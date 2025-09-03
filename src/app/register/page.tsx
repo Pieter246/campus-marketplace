@@ -82,7 +82,7 @@ export default function RegisterPage() {
   ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex justify-center items-center p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow">
         <div className="flex justify-center mb-4">
           <Logo className="h-42 w-auto" />

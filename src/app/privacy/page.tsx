@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button";
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="flex justify-center items-center p-4">
       <div className="max-w-3xl w-full bg-white rounded-2xl shadow p-8">
         <h1 className="text-3xl font-bold mb-6 text-center">Privacy Policy</h1>
 
