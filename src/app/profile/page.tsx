@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
 
 interface Order {
   id: string;
@@ -17,7 +19,11 @@ export default function AccountPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   // These will eventually be fetched from backend
-  const [user, setUser] = useState<{ username: string; email: string; membership: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email: string; membership: string } | null>({
+    username: "",
+    email: "",
+    membership: "Premium Member",
+  });
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [orderHistory, setOrderHistory] = useState<Order[]>([]);
 
@@ -28,27 +34,27 @@ export default function AccountPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
-      <header className="bg-transparent text-gray-900 py-8 px-4 text-center shadow-lg relative">
-        <h1 className="text-3xl font-bold">Account Settings</h1>
-        <p className="mt-1">Manage your account information and orders</p>
-        <div className="flex justify-center items-center gap-4 mt-4">
-          <div className="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center text-xl font-bold">
-            {user?.username?.[0]?.toUpperCase() || "?"}
+      <main className="flex-1 max-w-4xl mx-auto p-6 pt-12">
+        <header className="text-center mb-6">
+          <h1 className="text-3xl font-bold">Account Settings</h1>
+          <p className="mt-1 text-gray-600">Manage your account information and orders</p>
+          <div className="flex justify-center items-center gap-4 mt-4">
+            <div className="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center text-xl font-bold">
+              {user?.username?.[0]?.toUpperCase() || "?"}
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">{user?.username || "Loading..."}</h2>
+              <p className="text-gray-400">{user?.membership || "Member"}</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold">{user?.username || "Loading..."}</h2>
-            <p className="text-gray-300">{user?.membership || "Member"}</p>
-          </div>
-        </div>
+          <button
+            onClick={() => showAlert("Signed out successfully.", "success")}
+            className="mt-4 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md flex items-center gap-2 text-white"
+          >
+            Sign Out
+          </button>
+        </header>
 
-        <button
-          onClick={() => showAlert("Signed out successfully.", "success")}
-          className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md flex items-center gap-2"
-        >
-          <i className="fas fa-sign-out-alt"></i> Sign Out
-        </button>
-      </header>
-      <main className="flex-1 max-w-4xl mx-auto p-6">
         <div className="flex flex-wrap bg-white rounded-lg shadow mb-6">
           {["profile", "password", "active-orders", "order-history"].map((t) => (
             <button
@@ -62,6 +68,7 @@ export default function AccountPage() {
             </button>
           ))}
         </div>
+
         {alert && (
           <div
             className={`mb-4 p-4 rounded-md ${
@@ -76,24 +83,23 @@ export default function AccountPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-bold mb-4">Update Profile</h2>
             <div className="space-y-4">
-              <input
+              <Input
+                name="username"
                 type="text"
-                placeholder="Username"
-                defaultValue={user?.username || ""}
-                className="w-full border px-3 py-2 rounded-md"
+                label="Username"
+                value={user?.username || ""}
+                onChange={() => {}}
               />
-              <input
+              <Input
+                name="email"
                 type="email"
-                placeholder="Email"
-                defaultValue={user?.email || ""}
-                className="w-full border px-3 py-2 rounded-md"
+                label="Email"
+                value={user?.email || ""}
+                onChange={() => {}}
               />
-              <button
-                onClick={() => showAlert("Profile updated!", "success")}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              >
+              <Button onClick={() => showAlert("Profile updated!", "success")}>
                 Save
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -102,20 +108,26 @@ export default function AccountPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-bold mb-4">Update Password</h2>
             <div className="space-y-4">
-              <input
+              <Input
+                name="currentPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="Current Password"
-                className="w-full border px-3 py-2 rounded-md"
+                label="Current Password"
+                value=""
+                onChange={() => {}}
               />
-              <input
+              <Input
+                name="newPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="New Password"
-                className="w-full border px-3 py-2 rounded-md"
+                label="New Password"
+                value=""
+                onChange={() => {}}
               />
-              <input
+              <Input
+                name="confirmPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="Confirm New Password"
-                className="w-full border px-3 py-2 rounded-md"
+                label="Confirm New Password"
+                value=""
+                onChange={() => {}}
               />
               <label className="flex items-center gap-2">
                 <input
@@ -125,12 +137,9 @@ export default function AccountPage() {
                 />
                 Show Password
               </label>
-              <button
-                onClick={() => showAlert("Password updated!", "success")}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              >
+              <Button onClick={() => showAlert("Password updated!", "success")}>
                 Update Password
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -175,10 +184,6 @@ export default function AccountPage() {
           </div>
         )}
       </main>
-      
-      <footer className="text-center mt-12 text-gray-500 border-t pt-4">
-        <p>&copy; 2025 Campus Marketplace. All rights reserved.</p>
-      </footer>
     </div>
   );
 }
