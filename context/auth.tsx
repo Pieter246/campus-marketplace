@@ -9,7 +9,7 @@ type AuthContextType = {
     currentUser: User | null; //User type Metadata NB!!!!!!!
     logout: () => Promise<void>;
     loginWithGoogle: () => Promise<void>;
-    customClaims: ParsedToken | null;
+    customClaims: ParsedToken | null; // Have access to users custom claims (i.e. admin)
     loginWithEmail: (email: string, password: string) => Promise<void>;
 };
 
@@ -20,9 +20,15 @@ export const AuthProvider = ({ children }: {children: React.ReactNode;}) => {
     const [customClaims, setCustomClaims] = useState<ParsedToken | null>(null);
 
     useEffect(() => {
+        //If user loggs in or logs out perform the following actions (user state changes)
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
+
+            //Set current user to user or null if no user
             setCurrentUser(user ?? null);
+
+            // If there is a user, get their ID token and refresh token
             if(user){
+                // Grab token and refresh token                
                 const tokenResult = await user.getIdTokenResult();
                 const token = tokenResult.token;
                 const refreshToken = user.refreshToken;

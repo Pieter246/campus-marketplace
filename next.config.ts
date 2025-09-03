@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+
+  /* This is for auth-buttons */
   images: {
     remotePatterns: [
       {

@@ -15,7 +15,7 @@ export default function AuthButtons() {
         <div>
             {!!auth?.currentUser && (
             <DropdownMenu>
-                <DropdownMenuTrigger>
+                 <DropdownMenuTrigger> {/* Triggers when avatar is clicked */}
                     <Avatar>
                         {!!auth.currentUser.photoURL && (
                             <Image 
@@ -33,12 +33,12 @@ export default function AuthButtons() {
                 <DropdownMenuContent>
                     <DropdownMenuLabel>
                         <div>{auth.currentUser.displayName}</div>
-                        <div className="font-normal text-xs">
+                        <div className="font-normal text-xs"> {/* text-xs Makes email smaller */}
                             {auth.currentUser.email}
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild> {/* asChild makes the entire item clickable and passes functionaity and classNames to Link component */}
                         <Link href="/account">My Account</Link>
                     </DropdownMenuItem>
                     {!!auth.customClaims?.admin && (
@@ -62,9 +62,9 @@ export default function AuthButtons() {
             </DropdownMenu>
             )}
             {!auth?.currentUser &&
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-center"> {/*flex makes items appear beside each other gap-2 creates space between login and signup links*/}
                     <Link href="/login" className="uppercase tracking-widest hover:underline">Login</Link>
-                    <div className="h-8 w-[1px] bg-white/50"/>
+                    <div className="h-8 w-[1px] bg-white/50"/> {/*h-8 is height w-[1px] is arbitrary width bg-white/50 is white with 50% opacity*/}
                     <Link href="/register" className="uppercase tracking-widest hover:underline">Signup</Link>
                 </div>
             }

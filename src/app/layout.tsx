@@ -1,13 +1,11 @@
-
-
 import type { Metadata } from "next";
 //import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-import Link from "next/link";import AuthButtons from "@/components/auth-buttons";
+import Link from "next/link";
+import AuthButtons from "@/components/auth-buttons";
 import { AuthProvider } from "../../context/auth";
 ;
-
 
 /*
 const geistSans = Geist({
@@ -49,13 +47,13 @@ export default function RootLayout({
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased`}
       >
         <AuthProvider>
-          <nav className="bg-purple-700 text-white p-5 h-24 flex items-center justify-between z-10 relative">
+          <nav className="bg-purple-600 text-white p-5 h-24 flex items-center justify-between z-10 relative">
             <Link href="/marketMain" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
               <span>Campus marketplace</span>
             </Link>        
-            <ul className="flex gap-6 items-center">
+            <ul className="flex gap-6 items-center"> {/*flex lets items appear beneath each other instead of beside one another gap-6 creates space between item search and auth buttons*/}
               <li>
-                <Link href="/marketMain" className="uppercase tracking-widest hover:underline">Property search</Link>
+                 <Link href="/marketMain" className="uppercase tracking-widest hover:underline">Item search</Link> {/*tracking-widest is for increased letter spacing*/}
               </li>              
               <li>
                 <AuthButtons />
