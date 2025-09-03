@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
   ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex justify-center items-center p-4">
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold mb-2 text-center">Reset Password</h2>
         <p className="text-gray-600 mb-6 text-center">

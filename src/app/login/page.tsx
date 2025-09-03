@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input"; // ✅ import your reusable textbox
+import Input from "@/components/ui/Input";
+import Logo from "@/components/ui/Logo";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -14,13 +15,12 @@ export default function LoginForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors((prev) => ({ ...prev, [e.target.name]: "" })); // clear error while typing
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Frontend validation first
     const newErrors: { [key: string]: string } = {};
     if (!form.email.includes("@")) newErrors.email = "Please enter a valid email address";
     if (!form.password) newErrors.password = "Password is required";
@@ -42,7 +42,6 @@ export default function LoginForm() {
         localStorage.setItem("access_token", data.access_token);
         router.push("/");
       } else {
-        // ✅ Use API errors directly
         setErrors(data);
       }
     } catch (err) {
@@ -59,8 +58,13 @@ export default function LoginForm() {
   ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex justify-center items-center p-4">
+    {/*<div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">*/}
+    
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
+        <div className="flex justify-center mb-4">
+          <Logo className="h-42 w-auto" />
+        </div>
         <h2 className="text-2xl font-bold mb-2 text-center">Login to your account</h2>
         <p className="text-gray-600 mb-6 text-center">Welcome back!</p>
 
