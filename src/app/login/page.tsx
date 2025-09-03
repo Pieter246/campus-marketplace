@@ -13,7 +13,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
-    e.preventDefault() // ✅ prevent default form submission
+    e.preventDefault() // prevent default form submission
     setError("")
     setLoading(true)
 
