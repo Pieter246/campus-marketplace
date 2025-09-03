@@ -36,7 +36,7 @@ export default function AccountPage() {
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
       <main className="flex-1 max-w-4xl mx-auto p-6 pt-12">
         <header className="text-center mb-6">
-          <h1 className="text-3xl font-bold">Account Settings</h1>
+          <h1 className="text-3xl font-bold text-center">Account Settings</h1>
           <p className="mt-1 text-gray-600">Manage your account information and orders</p>
           <div className="flex justify-center items-center gap-4 mt-4">
             <div className="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center text-xl font-bold">
@@ -47,12 +47,6 @@ export default function AccountPage() {
               <p className="text-gray-400">{user?.membership || "Member"}</p>
             </div>
           </div>
-          <button
-            onClick={() => showAlert("Signed out successfully.", "success")}
-            className="mt-4 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md flex items-center gap-2 text-white"
-          >
-            Sign Out
-          </button>
         </header>
 
         <div className="flex flex-wrap bg-white rounded-lg shadow mb-6">
@@ -81,12 +75,13 @@ export default function AccountPage() {
 
         {tab === "profile" && (
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-4">Update Profile</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">Update Profile</h2>
             <div className="space-y-4">
               <Input
                 name="username"
                 type="text"
                 label="Username"
+                id="username"
                 value={user?.username || ""}
                 onChange={() => {}}
               />
@@ -94,10 +89,14 @@ export default function AccountPage() {
                 name="email"
                 type="email"
                 label="Email"
+                id="email"
                 value={user?.email || ""}
                 onChange={() => {}}
               />
-              <Button onClick={() => showAlert("Profile updated!", "success")}>
+              <Button 
+                className="w-full"
+                onClick={() => showAlert("Profile updated!", "success")}
+                >
                 Save
               </Button>
             </div>
@@ -106,12 +105,13 @@ export default function AccountPage() {
 
         {tab === "password" && (
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-4">Update Password</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">Update Password</h2>
             <div className="space-y-4">
               <Input
                 name="currentPassword"
                 type={showPassword ? "text" : "password"}
                 label="Current Password"
+                id="currentPassword"
                 value=""
                 onChange={() => {}}
               />
@@ -119,6 +119,7 @@ export default function AccountPage() {
                 name="newPassword"
                 type={showPassword ? "text" : "password"}
                 label="New Password"
+                id="newPassword"
                 value=""
                 onChange={() => {}}
               />
@@ -126,18 +127,14 @@ export default function AccountPage() {
                 name="confirmPassword"
                 type={showPassword ? "text" : "password"}
                 label="Confirm New Password"
+                id="confirmPassword"
                 value=""
                 onChange={() => {}}
               />
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={showPassword}
-                  onChange={() => setShowPassword((v) => !v)}
-                />
-                Show Password
-              </label>
-              <Button onClick={() => showAlert("Password updated!", "success")}>
+              <Button 
+                className="w-full"
+                onClick={() => showAlert("Password updated!", "success")}
+                >
                 Update Password
               </Button>
             </div>
@@ -146,7 +143,7 @@ export default function AccountPage() {
 
         {tab === "active-orders" && (
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-4">Active Orders</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">Active Orders</h2>
             {activeOrders.length === 0 ? (
               <p className="text-gray-500">No active orders.</p>
             ) : (
@@ -166,7 +163,7 @@ export default function AccountPage() {
 
         {tab === "order-history" && (
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-4">Order History</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">Order History</h2>
             {orderHistory.length === 0 ? (
               <p className="text-gray-500">No past orders.</p>
             ) : (
@@ -183,6 +180,15 @@ export default function AccountPage() {
             )}
           </div>
         )}
+      <div className="mt-6 text-center">
+        <Button
+          variant="secondary"
+          className="w-full"
+          onClick={() => showAlert("Signed out successfully.", "success")}
+        >
+          Sign Out
+        </Button>
+      </div>
       </main>
     </div>
   );
