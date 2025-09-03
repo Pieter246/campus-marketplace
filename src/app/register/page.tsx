@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Logo from "@/components/ui/Logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function RegisterPage() {
     username: "",
     password: "",
     confirmPassword: "",
-    terms: false, // ✅ added terms field
+    terms: false,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
@@ -22,7 +23,7 @@ export default function RegisterPage() {
     const { name, type, checked, value } = e.target;
     setForm({
       ...form,
-      [name]: type === "checkbox" ? checked : value, // ✅ checkbox uses `checked`
+      [name]: type === "checkbox" ? checked : value,
     });
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
@@ -83,6 +84,9 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow">
+        <div className="flex justify-center mb-4">
+          <Logo className="h-42 w-auto" />
+        </div>
         <h1 className="mb-6 text-center text-2xl font-semibold">
           Create an account
         </h1>
@@ -93,7 +97,7 @@ export default function RegisterPage() {
               type={input.type}
               name={input.name}
               id={input.name}
-              value={form[input.name as keyof typeof form] as string} // ✅ cast safe because all these are strings
+              value={form[input.name as keyof typeof form] as string} // cast safe because all these are strings
               onChange={handleChange}
               disabled={loading}
               label={input.label}
@@ -116,6 +120,10 @@ export default function RegisterPage() {
               I agree to the{" "}
               <a href="/terms" className="text-blue-600 hover:underline">
                 Terms & Conditions
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" className="text-blue-600 hover:underline">
+                Privacy Policy
               </a>
             </label>
           </div>
@@ -133,7 +141,7 @@ export default function RegisterPage() {
             variant="secondary"
             onClick={() => router.push("/login")}
           >
-            Back
+            Back to Login
           </Button>
         </form>
       </div>
