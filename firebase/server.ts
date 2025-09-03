@@ -17,11 +17,12 @@ const serviceAccount = {
   "universe_domain": "googleapis.com"
 }
 
+// Initialize Firebase
 let firestore: Firestore;
 let auth: Auth;
 const currentApps = getApps();
 
-//Only initialise app if one does not exist otherwise use the existing one
+// Only initialise app if one does not exist otherwise use the existing one
 if (!currentApps.length) {
   const app = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount as ServiceAccount)

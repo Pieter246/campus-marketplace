@@ -22,15 +22,15 @@ const currentApps = getApps();
 let auth: Auth;
 let storage: FirebaseStorage;
 
+// Only initialise app if one does not exist otherwise use the existing one
 if (!currentApps.length) {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   storage = getStorage(app);
-  // const analytics = getAnalytics(currentApps[0]);
 }else {
    const app = currentApps[0];
    auth = getAuth(app);
    storage = getStorage(app);
 }
 
-export { auth, storage  };
+export { auth, storage };
