@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useAuth } from "./auth-hook"
-import Button from "@/components/ui/Button"
+import Button from "@/components/Button"
 
 export default function ExamplesIndex() {
   const { user, loading, logout } = useAuth()

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
-import Button from "@/components/ui/Button"
+import Button from "@/components/Button"
 
 export default function RegisterForm() {
   const router = useRouter()

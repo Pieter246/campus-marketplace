@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import Footer from "@/components/ui/Footer";
-import Logo from "@/components/ui/Logo";
+import Footer from "@/components/Footer";
+import Logo from "@/components/Logo";
 
 const rubikSans = localFont({
   src: "./fonts/Rubik-Var.ttf",
@@ -35,7 +35,7 @@ export default function RootLayout({
         </header>
 
         {/* Main content grows to fill available space */}
-        <main className="flex-grow pt-10">{children}</main>
+        <main className="flex-grow ">{children}</main>
 
         {/* Footer at bottom */}
         <Footer />
