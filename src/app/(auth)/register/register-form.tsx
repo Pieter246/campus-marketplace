@@ -96,7 +96,7 @@ export default function RegisterForm(){
                     render={({ field }) => {
                         return (
                             <FormItem>
-                                <FormLabel>Confirm password</FormLabel>
+                                <FormLabel>Confirm Password</FormLabel>
                                 <FormControl>
                                     <Input {...field} placeholder="Confirm password" type="password"/>
                                 </FormControl>

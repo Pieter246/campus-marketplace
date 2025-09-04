@@ -10,7 +10,7 @@ export default function ContinueWithGoogleButton() {
 
     return (
         <Button 
-        variant="outline"
+        variant="secondary"
         onClick={async () => {    
             try {
                 await auth?.loginWithGoogle();      
