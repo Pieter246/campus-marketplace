@@ -31,7 +31,7 @@ export default function Test() {
                 value=""
                 onChange={() => {}}
             />
-            <Logo className="h-42 w-auto mb-10 mt-20" />
+            <Logo className="h-42 w-auto mb-10 mt-20 " />
         </div>
     );
-}
+} 
