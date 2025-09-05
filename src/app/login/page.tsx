@@ -1,8 +1,11 @@
+// app/login/page.tsx - Use client-side Firebase Auth
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Logo from "@/components/ui/Logo";
@@ -29,24 +32,38 @@ export default function LoginForm() {
     if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
+    
     try {
-      const response = await fetch("/api/login", {
+      // Use client-side Firebase Auth (like your example)
+      const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
+      const user = userCredential.user;
+      
+      // Get Firebase ID token
+      const idToken = await user.getIdToken();
+      
+      // Sync user with Firestore database
+      await fetch("/api/auth/sync-user", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          emailVerified: user.emailVerified,
+          photoURL: user.photoURL
+        }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem("access_token", data.access_token);
-        router.push("/");
-      } else {
-        setErrors(data);
-      }
-    } catch (err) {
-      console.error(err);
-      setErrors({ email: "An error occurred", password: "An error occurred" });
+      // Store token in localStorage
+      localStorage.setItem("access_token", idToken);
+      router.push("/");
+      
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setErrors({ general: error.message || "Invalid credentials" });
     } finally {
       setLoading(false);
     }
@@ -59,14 +76,18 @@ export default function LoginForm() {
 
   return (
     <div className="flex justify-center items-center p-4">
-    {/*<div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">*/}
-    
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
         <div className="flex justify-center mb-4">
           <Logo className="h-42 w-auto" />
         </div>
         <h2 className="text-2xl font-bold mb-2 text-center">Login to your account</h2>
         <p className="text-gray-600 mb-6 text-center">Welcome back!</p>
+
+        {errors.general && (
+          <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
+            {errors.general}
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-6">
           {inputs.map((input) => (

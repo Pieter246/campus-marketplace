@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
@@ -14,10 +16,10 @@ export default function ResetPasswordPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors((prev) => ({ ...prev, [e.target.name]: "" })); // clear error while typing
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
-  const handleReset = (e: React.FormEvent) => {
+  const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors: { [key: string]: string } = {};
@@ -28,11 +30,27 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    // Simulate frontend-only behavior (API call would go here)
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // 1. Send password reset email using Firebase Auth
+      await sendPasswordResetEmail(auth, form.email);
+      
+      // 2. Show success message
       setSuccess(true);
-    }, 1000);
+      
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/user-not-found') {
+        setErrors({ email: "No account found with this email address" });
+      } else if (error.code === 'auth/invalid-email') {
+        setErrors({ email: "Invalid email address" });
+      } else {
+        setErrors({ email: "Failed to send reset email. Please try again." });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputs = [
@@ -46,6 +64,12 @@ export default function ResetPasswordPage() {
         <p className="text-gray-600 mb-6 text-center">
           Enter your email address and we will send you instructions to reset your password.
         </p>
+
+        {errors.general && (
+          <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
+            {errors.general}
+          </div>
+        )}
 
         <form onSubmit={handleReset} className="space-y-6">
           {inputs.map((input) => (
@@ -69,13 +93,16 @@ export default function ResetPasswordPage() {
           )}
 
           {success && (
-            <p className="text-green-600 text-center font-medium">
-              Instructions have been sent to your email.
-            </p>
+            <div className="bg-green-100 text-green-700 px-4 py-3 rounded text-center">
+              <p className="font-medium">Password reset instructions sent!</p>
+              <p className="text-sm mt-1">
+                Check your email at <strong>{form.email}</strong> for instructions to reset your password.
+              </p>
+            </div>
           )}
         </form>
 
-        <div className="mt-2 text-center">
+        <div className="mt-6 text-center">
           <Button
             type="button"
             variant="secondary"
@@ -84,6 +111,13 @@ export default function ResetPasswordPage() {
           >
             Back to Login
           </Button>
+        </div>
+
+        {/* Security note */}
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-800 text-center">
+            For security, password reset links are sent to your email and expire after a short time.
+          </p>
         </div>
       </div>
     </div>

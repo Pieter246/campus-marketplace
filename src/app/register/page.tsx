@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import toast from "react-hot-toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -45,30 +47,62 @@ export default function RegisterPage() {
     if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
+    
     try {
-      const response = await fetch("/api/register", {
+      // 1. Create user with Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        form.email, 
+        form.password
+      );
+      const user = userCredential.user;
+      
+      // 2. Get Firebase ID token
+      const idToken = await user.getIdToken();
+      
+      // 3. Sync user with Firestore database
+      const syncResponse = await fetch("/api/auth/sync-user", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          displayName: form.username, // Use the username as display name
+          emailVerified: user.emailVerified,
+          photoURL: null
+        }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success("Registration successful!");
-        localStorage.setItem("access_token", data.access_token);
-        router.push("/dashboard");
-      } else {
-        setErrors(data);
+      if (!syncResponse.ok) {
+        throw new Error("Failed to sync user data");
       }
-    } catch (err) {
-      console.error(err);
-      setErrors({
-        email: "An error occurred",
-        username: "An error occurred",
-        password: "An error occurred",
-        confirmPassword: "An error occurred",
-      });
+
+      // 4. Store token and redirect
+      toast.success("Registration successful!");
+      localStorage.setItem("access_token", idToken);
+      
+      // Force auth state update
+      window.dispatchEvent(new Event('storage'));
+      router.push("/dashboard");
+      
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      
+      // Handle specific Firebase errors
+      let errorMessage = "Registration failed";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "Email already in use";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "Password is too weak";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Invalid email address";
+      }
+      
+      toast.error(errorMessage);
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -90,6 +124,13 @@ export default function RegisterPage() {
         <h1 className="mb-6 text-center text-2xl font-semibold">
           Create an account
         </h1>
+        
+        {errors.general && (
+          <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
+            {errors.general}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {inputs.map((input) => (
             <Input
@@ -97,7 +138,7 @@ export default function RegisterPage() {
               type={input.type}
               name={input.name}
               id={input.name}
-              value={form[input.name as keyof typeof form] as string} // cast safe because all these are strings
+              value={form[input.name as keyof typeof form] as string}
               onChange={handleChange}
               disabled={loading}
               label={input.label}
