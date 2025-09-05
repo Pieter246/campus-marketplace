@@ -239,7 +239,7 @@ export default function PhotoUpload({
 
                 {photo.url && (
                   <div className="absolute inset-0 bg-green-500 bg-opacity-75 rounded-lg flex items-center justify-center">
-                    <div className="text-white text-sm">✓ Uploaded</div>
+                    <div className="text-white text-sm">Uploaded</div>
                   </div>
                 )}
               </div>
