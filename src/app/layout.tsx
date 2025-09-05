@@ -7,8 +7,6 @@ import { AuthProvider } from "@/context/auth";
 import Link from "next/link";
 import { Toaster } from "@/components/ui/sonner";
 import AuthButtons from "@/components/auth-buttons";
-import Image from "next/image";
-import { HomeIcon } from "lucide-react";
 
 const rubikSans = localFont({
   src: "./fonts/Rubik-Var.ttf",
@@ -36,15 +34,11 @@ export default function RootLayout({
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased flex flex-col min-h-screen`}
       >
         <AuthProvider>
-          <header className="bg-white shadow p-4 flex items-center sticky top-0 z-10">         
-            <div className="text-3xl tracking-widest flex gap-2 items-center uppercase">
-              <Logo />
+          <header className="bg-sky-950 shadow p-4 flex items-center justify-between sticky top-0 z-10"> {/* justify-between very important */}  
+            <Link href="/" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
+              <Logo className="h-10 w-auto"/>
               <span>Campus Marketplace</span>
-            </div>    
-            {/* <Link href="/" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
-              <HomeIcon />
-              <span>Fire Homes</span>
-            </Link> */}
+            </Link>
             <ul className="flex gap-6 items-center">
               <li>
                 <Link href="/property-search" className="uppercase tracking-widest hover:underline">Property search</Link>
