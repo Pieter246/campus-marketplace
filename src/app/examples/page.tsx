@@ -25,7 +25,7 @@ export default function ExamplesIndex() {
         {user ? (
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
             <div className="text-center">
-              <div className="text-green-500 text-6xl mb-4">✓</div>
+              <div className="text-green-500 text-6xl mb-4">Success</div>
               <h2 className="text-2xl font-bold mb-2">You're logged in!</h2>
               <p className="text-gray-600 mb-4">
                 Email: {user.email}

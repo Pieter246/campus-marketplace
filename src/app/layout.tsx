@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Footer from "@/components/ui/Footer";
 import Logo from "@/components/ui/Logo";
+import SessionManager from "@/components/SessionManager";
 
 const rubikSans = localFont({
   src: "./fonts/Rubik-Var.ttf",
@@ -29,16 +30,18 @@ export default function RootLayout({
       <body
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased flex flex-col min-h-screen`}
       >
-        <header className="p-4 bg-white shadow flex items-center sticky top-0 z-50">
-          <Logo className="h-10 w-auto" />
-          <h1 className="ml-4 text-xl font-bold">Campus Marketplace</h1>
-        </header>
+        <SessionManager>
+          <header className="p-4 bg-white shadow flex items-center sticky top-0 z-50">
+            <Logo className="h-10 w-auto" />
+            <h1 className="ml-4 text-xl font-bold">Campus Marketplace</h1>
+          </header>
 
-        {/* Main content grows to fill available space */}
-        <main className="flex-grow pt-10">{children}</main>
+          {/* Main content grows to fill available space */}
+          <main className="flex-grow pt-10">{children}</main>
 
-        {/* Footer at bottom */}
-        <Footer />
+          {/* Footer at bottom */}
+          <Footer />
+        </SessionManager>
       </body>
     </html>
   );
