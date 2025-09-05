@@ -3,6 +3,12 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import Logo from "@/components/Logo";
+import { AuthProvider } from "@/context/auth";
+import Link from "next/link";
+import { Toaster } from "@/components/ui/sonner";
+import AuthButtons from "@/components/auth-buttons";
+import Image from "next/image";
+import { HomeIcon } from "lucide-react";
 
 const rubikSans = localFont({
   src: "./fonts/Rubik-Var.ttf",
@@ -29,16 +35,33 @@ export default function RootLayout({
       <body
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased flex flex-col min-h-screen`}
       >
-        <header className="p-4 bg-white shadow flex items-center sticky top-0 z-50">
-          <Logo className="h-10 w-auto" />
-          <h1 className="ml-4 text-xl font-bold">Campus Marketplace</h1>
-        </header>
+        <AuthProvider>
+          <header className="bg-white shadow p-4 flex items-center sticky top-0 z-10">         
+            <div className="text-3xl tracking-widest flex gap-2 items-center uppercase">
+              <Logo />
+              <span>Campus Marketplace</span>
+            </div>    
+            {/* <Link href="/" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
+              <HomeIcon />
+              <span>Fire Homes</span>
+            </Link> */}
+            <ul className="flex gap-6 items-center">
+              <li>
+                <Link href="/property-search" className="uppercase tracking-widest hover:underline">Property search</Link>
+              </li>              
+              <li>
+                <AuthButtons />
+              </li>
+            </ul>
+          </header>
 
-        {/* Main content grows to fill available space */}
-        <main className="flex-grow ">{children}</main>
+          {/* Main content grows to fill available space */}
+          <main className="flex-grow">{children}</main>
 
-        {/* Footer at bottom */}
-        <Footer />
+          {/* Footer at bottom */}
+          <Footer />
+          <Toaster richColors closeButton />
+        </AuthProvider>
       </body>
     </html>
   );
