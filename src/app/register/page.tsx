@@ -12,7 +12,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     email: "",
-    username: "",
     password: "",
     confirmPassword: "",
     terms: false,
@@ -34,8 +33,6 @@ export default function RegisterPage() {
 
     const newErrors: { [key: string]: string } = {};
     if (!form.email.includes("@")) newErrors.email = "Please enter a valid email address";
-    if (!form.username || form.username.trim().length < 3)
-      newErrors.username = "Username must be at least 3 characters";
     if (!form.password || form.password.length < 6)
       newErrors.password = "Password must be at least 6 characters";
     if (form.password !== form.confirmPassword)
@@ -69,7 +66,6 @@ export default function RegisterPage() {
         body: JSON.stringify({
           uid: user.uid,
           email: user.email,
-          displayName: form.username, // Use the username as display name
           emailVerified: user.emailVerified,
           photoURL: null
         }),
