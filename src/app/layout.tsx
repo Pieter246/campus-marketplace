@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 //import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import SessionManager from "@/components/SessionManager";
 
 /*
 const geistSans = Geist({
@@ -41,7 +42,9 @@ export default function RootLayout({
         //className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased`}
       >
-        {children}
+        <SessionManager>
+          {children}
+        </SessionManager>
       </body>
     </html>
   );
