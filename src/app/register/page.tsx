@@ -161,7 +161,6 @@ export default function RegisterPage() {
 
   const inputs = [
     { name: "email", type: "email", label: "Email" },
-    { name: "username", type: "text", label: "Username" },
     { name: "password", type: "password", label: "Password" },
     { name: "confirmPassword", type: "password", label: "Confirm Password" },
   ];
