@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const { uid, email, displayName, emailVerified, photoURL } = body
-    console.log('Request body:', { uid, email, displayName, emailVerified: !!photoURL })
+    console.log('Request body:', { uid, email, displayName, emailVerified: !!emailVerified, photoURL: !!photoURL })
 
     // Verify the UID matches the token
     if (uid !== decodedToken.uid) {
@@ -71,43 +71,50 @@ export async function POST(req: NextRequest) {
       // Create new user document
       const [firstName, ...lastNameParts] = (displayName || "").split(" ")
 
-      await userDocRef.set({
-        userId: uid,
-        firstName: firstName || "",
-        lastName: lastNameParts.join(" ") || "",
-        email: email || "",
-        phoneNumber: "", // Will be filled later
-        createdAt: now,
-        updatedAt: now,
-        isActive: true,
-        emailVerified: emailVerified || false,
-        isAdmin: false // New users are not admins by default
-      })
+      try {
+        // Use Promise.all for parallel writes to reduce timeout risk
+        await Promise.all([
+          // Create user document
+          userDocRef.set({
+            userId: uid,
+            firstName: firstName || "",
+            lastName: lastNameParts.join(" ") || "",
+            email: email || "",
+            phoneNumber: "", // Will be filled later
+            createdAt: now,
+            updatedAt: now,
+            isActive: true,
+            emailVerified: emailVerified || false,
+            isAdmin: false // New users are not admins by default
+          }),
 
-      console.log('Creating user profile...')
-      // Create user profile document
-      await firestore().doc(`userProfiles/${uid}`).set({
-        userId: uid,
-        profilePictureUrl: photoURL || null,
-        bio: "",
-        preferredContactMethod: "email",
-        campusLocation: "",
-        studentNumber: "",
-        yearOfStudy: 1,
-        createdAt: now,
-        updatedAt: now
-      })
+          // Create user profile document
+          firestore().doc(`userProfiles/${uid}`).set({
+            userId: uid,
+            profilePictureUrl: photoURL || null,
+            bio: "",
+            preferredContactMethod: "email",
+            campusLocation: "",
+            studentNumber: "",
+            yearOfStudy: 1,
+            createdAt: now,
+            updatedAt: now
+          }),
 
-      console.log('Creating user cart...')
-      // Create user cart
-      await firestore().doc(`carts/${uid}`).set({
-        cartId: uid,
-        buyerId: uid,
-        createdAt: now,
-        updatedAt: now
-      })
+          // Create user cart
+          firestore().doc(`carts/${uid}`).set({
+            cartId: uid,
+            buyerId: uid,
+            createdAt: now,
+            updatedAt: now
+          })
+        ])
 
-      console.log('Successfully created new user:', uid)
+        console.log('Successfully created all user documents:', uid)
+      } catch (firestoreError) {
+        console.error('Firestore write error:', firestoreError)
+        throw new Error(`Failed to create user documents: ${firestoreError instanceof Error ? firestoreError.message : 'Unknown error'}`)
+      }
     } else {
       console.log('Updating existing user...')
       // Update existing user
