@@ -33,8 +33,8 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
-      <main className="flex-1 max-w-4xl mx-auto p-6 pt-12">
+    <div className="flex flex-col min-h-screen bg-gray-60 text-gray-900">
+      <main className="flex-1 max-w-5xl mx-auto p-6 pt-12">
         <header className="text-center mb-6">
           <h1 className="text-3xl font-bold text-center">Account Settings</h1>
           <p className="mt-1 text-gray-600">Manage your account information and orders</p>
@@ -51,15 +51,15 @@ export default function AccountPage() {
 
         <div className="flex flex-wrap bg-white rounded-lg shadow mb-6">
           {["profile", "password", "active-orders", "order-history"].map((t) => (
-            <button
+            <Button
               key={t}
+              variant={tab === t ? "secondary" : "outline"}
+              size="lg"
+              className="flex-1"
               onClick={() => setTab(t as any)}
-              className={`w-1/4 py-3 font-semibold ${
-                tab === t ? "bg-blue-500 text-white" : "text-gray-700 hover:bg-gray-100"
-              }`}
             >
               {t.replace("-", " ").toUpperCase()}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -74,7 +74,7 @@ export default function AccountPage() {
         )}
 
         {tab === "profile" && (
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div className="bg-white p-6 rounded-lg shadow max-w-md mx-auto">
             <h2 className="text-xl font-bold mb-4 text-center">Update Profile</h2>
             <div className="space-y-4">
               <Input
@@ -104,7 +104,7 @@ export default function AccountPage() {
         )}
 
         {tab === "password" && (
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div className="bg-white p-6 rounded-lg shadow max-w-md mx-auto">
             <h2 className="text-xl font-bold mb-4 text-center">Update Password</h2>
             <div className="space-y-4">
               <Input
@@ -142,7 +142,7 @@ export default function AccountPage() {
         )}
 
         {tab === "active-orders" && (
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div className="bg-white p-6 rounded-lg shadow max-w-md mx-auto">
             <h2 className="text-xl font-bold mb-4 text-center">Active Orders</h2>
             {activeOrders.length === 0 ? (
               <p className="text-gray-500">No active orders.</p>
@@ -162,7 +162,7 @@ export default function AccountPage() {
         )}
 
         {tab === "order-history" && (
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div className="bg-white p-6 rounded-lg shadow max-w-md mx-auto">
             <h2 className="text-xl font-bold mb-4 text-center">Order History</h2>
             {orderHistory.length === 0 ? (
               <p className="text-gray-500">No past orders.</p>
@@ -180,7 +180,7 @@ export default function AccountPage() {
             )}
           </div>
         )}
-      <div className="mt-6 text-center">
+      <div className="mt-6 max-w-md mx-auto">
         <Button
           variant="secondary"
           className="w-full"
