@@ -88,7 +88,7 @@ export default function NewItemToSellPage() {
               id="price"
               type="number"
               placeholder="250"
-              min="0" // 👈 prevents typing/pasting negatives
+              min="0" // prevents negatives values
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               className="w-full border rounded-md p-2"
