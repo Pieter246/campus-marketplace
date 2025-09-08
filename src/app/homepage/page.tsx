@@ -149,7 +149,7 @@ export default function Marketplace() {
               onClick={() => setSelectedCategory("All")}
             >
               All
-            </li>
+            </li> 
             <li 
               className={`cursor-pointer whitespace-nowrap px-3 ${selectedCategory === "Books" ? "font-bold border-b-2 border-black" : ""}`}
               onClick={() => setSelectedCategory("Books")}
