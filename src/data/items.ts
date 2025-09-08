@@ -1,8 +1,9 @@
-import { getTotalPages } from "@/firebase/server"
+import { auth, getTotalPages } from "@/firebase/server"
 import { Item } from "@/types/item"
 import { ItemCondition } from "@/types/itemCondition"
 import { ItemStatus } from "@/types/itemStatus"
 import { firestore } from "firebase-admin"
+import { cookies } from "next/headers"
 import "server-only"
 
 // Used for filtering and pagination
@@ -10,9 +11,10 @@ import "server-only"
 // Pagination for dashboard and item-search page
 type GetItemsOptions = {
     filters?: {
+        tokenID?: string | null
         minPrice?: number | null
         maxPrice?: number | null
-        condition?:  ItemCondition[] | null
+        condition?:  string | null
         status?: ItemStatus[] | null
     },
     pagination?: {
@@ -25,12 +27,15 @@ export const getItems = async (options?: GetItemsOptions) => {
     // Get page, page size, filters from options with default values for page and page size
     const page = options?.pagination?.page || 1;
     const pageSize = options?.pagination?.pageSize || 10;
-    const {minPrice, maxPrice, condition, status} = options?.filters || {};
-
+    const {tokenID, minPrice, maxPrice, condition, status} = options?.filters || {};
+    
     // Order by and desc/asc must be option for user choice (only desc by updated if null)
     let itemsQuery = firestore().collection("items").orderBy("updated", "desc");
 
     // Apply filters if they exist
+    if (!!tokenID) {
+        itemsQuery = itemsQuery.where("sellerID", "==", tokenID); // Get users items
+    }
     if (minPrice !== null && minPrice !== undefined) {
         itemsQuery = itemsQuery.where("price", ">=", minPrice);
     }
@@ -38,7 +43,10 @@ export const getItems = async (options?: GetItemsOptions) => {
         itemsQuery = itemsQuery.where("price", "<=", maxPrice);
     }
     if (condition) {
-        itemsQuery = itemsQuery.where("condition", "in", condition);
+        if (condition === "all")
+            itemsQuery = itemsQuery.where("condition", "in", ["new", "used", "fair", "poor"]);
+        else
+            itemsQuery = itemsQuery.where("condition", "==", condition);
     }
     if (status) {
         itemsQuery = itemsQuery.where("status", "in", status);
@@ -62,6 +70,38 @@ export const getItems = async (options?: GetItemsOptions) => {
     return { data: items, totalPages }
 }
 
+export const getUserItems = async (options?: GetItemsOptions) => {
+    const cookieStore = await cookies();
+    const token = await cookieStore.get("firebaseAuthToken")?.value;
+
+    // if no token, return empty object
+    if(!token){
+        return { data: [], totalPages: 0 };
+    }
+
+    // Get user token ID
+    const verifiedToken = await auth.verifyIdToken(token);
+
+    // if no verified token, return empty object
+    if(!verifiedToken){
+        return { data: [], totalPages: 0 };
+    }
+
+    // Ensure filter and pagination options are initialized with token ID
+    const safeOptions: GetItemsOptions = {
+        ...options,
+        filters: {
+            ...options?.filters,
+            tokenID: verifiedToken.uid,
+        },
+        pagination: {
+            ...options?.pagination
+        }
+    };
+    
+    return await getItems(safeOptions);
+}
+
 // Get a single item by its ID
 export const getItemById = async (itemId: string) => {
     const itemSnapshot = await firestore()
@@ -76,7 +116,6 @@ export const getItemById = async (itemId: string) => {
 
     return itemData;
 };
-
 
 // Get multiple items by their IDs (NOT USED AT MOMENT)
 export const getItemsById = async (propertyIds: string[]) => {

@@ -19,6 +19,7 @@ export async function middleware(request: NextRequest) {
 
     const { pathname  } = request.nextUrl;
 
+    // If a user is not logged in they are allowed to go to the login, register, forgot password and item-search page
     if(!token && 
         (pathname.startsWith("/login") ||
         pathname.startsWith("/register") ||
@@ -28,6 +29,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
+    // If a user is logged in they are not allowed to go to the login, register or forgot password page
     if(token && 
         (pathname.startsWith("/login") || 
         pathname.startsWith("/register") ||
@@ -60,18 +62,18 @@ export async function middleware(request: NextRequest) {
 
     // Only admins can access admin dashboard
     if(!decodedToken.admin &&
-        pathname.startsWith("/dashboard")
+        pathname.startsWith("/admin-dashboard")
     ){
         return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Only users can access my-favourites page
-    if(
-        decodedToken.admin && 
-        pathname.startsWith("/account/my-favourites")
-    ){
-        return NextResponse.redirect(new URL("/", request.url));
-    }
+    // Only users can access user dashboard page
+    // if(
+    //     decodedToken.admin && 
+    //     pathname.startsWith("/user-dashboard")
+    // ){
+    //     return NextResponse.redirect(new URL("/", request.url));
+    // }
 
     // User and admin can access account page and users can query data from the server with up to date auth token
     return NextResponse.next();
@@ -79,8 +81,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        "/dashboard",
-        "/dashboard/:path*",
+        "/admin-dashboard",
+        "/admin-dashboard/:path*",
+        "/user-dashboard",
+        "/user-dashboard/:path*",
         "/login",
         "/register",
         "/forgot-password",

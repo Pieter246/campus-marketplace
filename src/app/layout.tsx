@@ -41,7 +41,7 @@ export default function RootLayout({
             </Link>
             <ul className="flex gap-6 items-center">
               <li>
-                <Link href="/property-search" className="uppercase tracking-widest hover:underline">Item search</Link>
+                <Link href="/item-search" className="uppercase tracking-widest hover:underline">Item search</Link>
               </li>              
               <li>
                 <AuthButtons />

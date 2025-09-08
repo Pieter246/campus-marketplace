@@ -9,13 +9,13 @@ import { revalidatePath } from "next/cache";
 export const deleteItem = async (itemId: string, authToken: string) => {
 
     // Get token and verify that user is admin
-    const verifiedToken = await auth.verifyIdToken(authToken);
-    if(!verifiedToken.admin){
-        return {
-            error: true,
-            message: "Unauthorized",
-        };
-    }
+    // const verifiedToken = await auth.verifyIdToken(authToken);
+    // if(!verifiedToken.admin){
+    //     return {
+    //         error: true,
+    //         message: "Unauthorized",
+    //     };
+    // }
 
     // Delete item from Firestore
     await firestore.collection("items").doc(itemId).delete();
@@ -26,13 +26,13 @@ export const updateItem = async (data: Item, authToken: string) => {
     const { id, ...itemData} = data;
 
     // Get token and verify that user is admin
-    const verifiedToken = await auth.verifyIdToken(authToken);
-    if(!verifiedToken.admin){
-        return {
-            error: true,
-            message: "Unauthorized",
-        };
-    }
+    // const verifiedToken = await auth.verifyIdToken(authToken);
+    // if(!verifiedToken.admin){
+    //     return {
+    //         error: true,
+    //         message: "Unauthorized",
+    //     };
+    // }
 
     // Check that item data is valid according to schema
     const validation = itemDataSchema.safeParse(itemData);

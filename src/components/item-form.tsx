@@ -10,6 +10,8 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import MultiImageUploader, { ImageUpload } from "./multi-image-uploader";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 type Props = {
     submitButtonLabel: React.ReactNode;
@@ -21,19 +23,27 @@ export default function ItemForm({
     handleSubmit,
     submitButtonLabel,
     defaultValues
-}: Props){
+}: Props){   
+    const router = useRouter(); // Check for no issues
+    
     const combinedDefaultValues: z.infer<typeof itemSchema> = {
         ...{
             title: "",
             collectionAddress: "",
             description: "",
             price: 0,
-            status: "for-sale",
-            condition: "used",      
+            status: "pending",
+            condition: "used",
             images: []
         },
         ...defaultValues,
     }
+
+    useEffect(() => {
+        if (combinedDefaultValues.status === "sold") { //If the item is sold user cannot edit the item
+            router.push("/user-dashboard");
+        }
+    }, [combinedDefaultValues.status]);
 
     const form = useForm<z.infer<typeof itemSchema>>({
         resolver: zodResolver(itemSchema),
@@ -41,7 +51,7 @@ export default function ItemForm({
     });
 
     return <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+         <form onSubmit={form.handleSubmit(handleSubmit)}>
             <div className="grid grid-cols-2 gap-4">
                 <fieldset className="flex flex-col gap-2" disabled={form.formState.isSubmitting}>
                     <FormField 

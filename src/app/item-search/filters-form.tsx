@@ -23,9 +23,9 @@ export default function FiltersForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            minPrice: searchParams.get("minPrice") ?? "",
             maxPrice: searchParams.get("maxPrice") ?? "",
-            condition: searchParams.get("condition") ?? "",
-            minPrice: searchParams.get("minPrice") ?? ""
+            condition: searchParams.get("condition") ?? "all"
         }
     });
 
@@ -40,12 +40,12 @@ export default function FiltersForm() {
         if(data.maxPrice){
             newSearchParams.set("maxPrice", data.maxPrice);
         }
-        if(data.condition){
-            newSearchParams.set("condition", data.condition);
+        if (data.condition) {
+            newSearchParams.set("condition", data.condition); // Condition test
         }
 
         newSearchParams.set("page", "1");
-        router.push(`/item-search?${newSearchParams.toString()}`) //
+        router.push(`/item-search?${newSearchParams.toString()}`)
     };
 
     return <Form {...form}>
@@ -65,6 +65,7 @@ export default function FiltersForm() {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
                                 <SelectItem value="new">New</SelectItem>
                                 <SelectItem value="used">Used</SelectItem>
                                 <SelectItem value="fair">Fair</SelectItem>

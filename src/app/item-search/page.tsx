@@ -14,8 +14,9 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { auth } from "@/firebase/server";
 import { DecodedIdToken } from "firebase-admin/auth";
+import ItemConditionBadge from "@/components/item-condition-badge";
 
-export default async function PropertySearch({
+export default async function ItemSearch({
     searchParams
 }: {
     searchParams: Promise<any>
@@ -25,12 +26,16 @@ export default async function PropertySearch({
     const parsedPage = parseInt(searchParamsValues?.page);
     const parsedMinPrice = parseInt(searchParamsValues?.minPrice);
     const parsedMaxPrice = parseInt(searchParamsValues?.maxPrice);
-    const parsedCondition = parseInt(searchParamsValues?.condition);
+    // const parsedCondition = parseStr(searchParamsValues?.condition);
     
     const page = isNaN(parsedPage) ? 1 : parsedPage;
     const minPrice = isNaN(parsedMinPrice) ? null : parsedMinPrice;
     const maxPrice = isNaN(parsedMaxPrice) ? null : parsedMaxPrice;
-    const condition = isNaN(parsedCondition) ? null : parsedCondition;
+
+    const condition: string | null = searchParamsValues.condition ?? null;
+    //const condition = searchParamsValues.condition ? null : searchParamsValues.condition;
+    //const condition: string[] = searchParamsValues.condition ? searchParamsValues.condition.split(","): ["all"];
+    //const condition: string[] = searchParamsValues.condition?.split(",")[0] ?? null; // Get single value
 
     const {data, totalPages} = await getItems({
         pagination: {
@@ -40,7 +45,7 @@ export default async function PropertySearch({
         filters: {
             minPrice,
             maxPrice,
-            condition: ["new", "used", "fair", "poor"],
+            condition,
             status: ["for-sale"]
         }
     });
@@ -48,7 +53,7 @@ export default async function PropertySearch({
     // Get user favourites
     //const userFavourites = await getUserFavourites();
 
-    //console.log({ userFavourites });
+    //console.log({ data });
 
     // Get user token from the cookies
     const cookieStore = await cookies();
@@ -106,6 +111,8 @@ export default async function PropertySearch({
                                     )}
                                 </div>
                                 <div className="flex flex-col gap-5 p-5">
+                                    <p>{item.title}</p>
+                                    <ItemConditionBadge condition={item.condition} className="mr-auto text-base"/> 
                                     <p>{addressLines}</p>
                                     <p className="text-2xl">
                                         R{numeral(item.price).format("0,0")}
@@ -128,14 +135,13 @@ export default async function PropertySearch({
                         //This code is necessary to ensure that when switching to another page the filters are maintained
                         const newSearchParams = new URLSearchParams();
 
+                        // Filters
                         if(searchParamsValues?.minPrice){
                             newSearchParams.set("minPrice", searchParamsValues.minPrice)
                         }
-
                         if(searchParamsValues?.maxPrice){
                             newSearchParams.set("minPrice", searchParamsValues.maxPrice)
                         }
-
                         if(searchParamsValues?.minBedrooms){
                             newSearchParams.set("condition", searchParamsValues.condition)
                         }

@@ -80,7 +80,7 @@ export default function EditPropertyForm({
         });
 
         // Redirect user to dashboard
-        router.push("/dashboard");
+        router.push("/user-dashboard");
     };
     return (
         <div>

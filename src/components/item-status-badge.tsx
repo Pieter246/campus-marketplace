@@ -5,17 +5,17 @@ import { Badge } from "./ui/badge";
 // Left side references itemStatus values:"for-sale" | "pending" | "withdrawn" | "sold" Right side displays them
 const statusLabel = {
     "for-sale": "For Sale",
-    pending: "Withdrawn",
-    withdrawn: "Draft",
+    pending: "Pending",
+    withdrawn: "Withdrawn",
     sold: "Sold",
 }
 
 // Display status with specific color
 // Map itemStatus to badge variants
-const variant: {[key: string]: "primary" | "destructive" | "secondary" | "success"} = {
-    "for-sale": "primary",
-    pending: "destructive",
-    withdrawn: "secondary",
+const variant: {[key: string]: "imperfect" | "destructive" | "unsatisfactory" | "success"} = {
+    "for-sale": "imperfect",
+    pending: "unsatisfactory",
+    withdrawn: "destructive",
     sold: "success",
 }
 

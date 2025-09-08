@@ -12,11 +12,11 @@ const conditionLabel = {
 
 // Display status with specific color
 // Map itemStatus to badge variants
-const variant: {[key: string]: "primary" | "destructive" | "secondary" | "success"} = {
-    new: "primary",
-    used: "destructive",
-    fair: "secondary",
-    poor: "success",
+const variant: {[key: string]: "success" | "imperfect" | "unsatisfactory" | "destructive"} = {
+    new: "success",
+    used: "imperfect",
+    fair: "unsatisfactory",
+    poor: "destructive",
 }
 
 export default function ItemConditionBadge({

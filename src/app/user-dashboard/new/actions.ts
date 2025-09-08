@@ -14,15 +14,17 @@ export const createItem = async (data: {
 }, authToken: string) => {
     const verifiedToken = await auth.verifyIdToken(authToken);
 
-    if(!verifiedToken.admin){
+    // Admins cannot create items only users can
+    if(verifiedToken.admin){
         return {
             error: true,
             message: "Unauthorized",
-        };
+        };     
     }
 
     const validation = itemDataSchema.safeParse(data);
     if(!validation.success){
+        console.log("There is an error")
         return {
             error: true,
             message: validation.error.issues[0]?.message ?? "An error occurred",
@@ -31,6 +33,7 @@ export const createItem = async (data: {
 
     const item = await firestore.collection("items").add({
         ...data,
+        sellerID: verifiedToken.uid, // Add users token ID to item
         created: new Date(),
         updated: new Date()
     })

@@ -6,10 +6,11 @@ import z from "zod";
 export const saveItemImages = async ({itemId, images}: {
     itemId: string;
     images: string[];
-}, authToken: string) => {
+}, authToken: string) => {  
     const verifiedToken = await auth.verifyIdToken(authToken);
 
-    if(!verifiedToken.admin){
+    // Admins cannot create items only users can
+    if(verifiedToken.admin){
         return {
             error: true,
             message: "Unauthorized",

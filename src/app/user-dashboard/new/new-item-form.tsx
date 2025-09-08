@@ -50,7 +50,7 @@ export default function NewItemForm(){
             description: "Item created successfully"
         });
 
-        router.push("/dashboard");
+        router.push("/user-dashboard");
     }
     return <div>
         <ItemForm 

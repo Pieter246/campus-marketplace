@@ -1,9 +1,6 @@
-//import { Breadcrumbs } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { PlusCircleIcon } from "lucide-react";
-import Link from "next/link";
-import ItemsTable from "./items-table";
+import UserItemsTable from "./user-items-table";
 import { Breadcrumbs } from "@/components/ui/breadcrumb";
+import AuthItemOption from "@/components/auth-item-option";
 
 export default async function AdminDashboard({
     searchParams
@@ -12,6 +9,7 @@ export default async function AdminDashboard({
 }) {
     const searchParamsValue = await searchParams;
     console.log({ searchParamsValue });
+    
     return (
         <div>
             <Breadcrumbs 
@@ -21,13 +19,8 @@ export default async function AdminDashboard({
                     }
                 ]}>
             </Breadcrumbs>
-            <h1 className="text-4xl font-bold mt-6">Admin Dashboard</h1>
-            <Button asChild className="inline-flex pl-2 gap-2 mt-4">
-                <Link href="/dashboard/new">
-                    <PlusCircleIcon/> New Property
-                </Link>
-            </Button>
-            <ItemsTable
+            <AuthItemOption />
+            <UserItemsTable
                 page={searchParamsValue?.page ? parseInt(searchParamsValue.page) : 1}
             />
         </div>

@@ -19,7 +19,7 @@ export default async function EditProperty({
         <div>
             <Breadcrumbs items={[
                 {
-                    href: "/dashboard",
+                    href: "/user-dashboard",
                     label: "Dashboard"
                 }, 
                 {
@@ -30,11 +30,11 @@ export default async function EditProperty({
             <Card className="mt-5">
                 <CardHeader>
                     <CardTitle className="text-3xl font-bold flex justify-between">
-                        Edit Item 
+                        Edit Item                        
                         <DeleteItemButton 
                             itemId={item.id}
                             images={item.images || []}
-                        />
+                        />                        
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
