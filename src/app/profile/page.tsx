@@ -196,7 +196,7 @@ export default function AccountPage() {
             )}
 
             {/* Sign Out */}
-            <div className="mt-6">
+            <div className="mt-1">
               <Button
                 variant="secondary"
                 className="w-full"
