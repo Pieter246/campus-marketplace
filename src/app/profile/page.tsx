@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
@@ -17,6 +17,7 @@ export default function AccountPage() {
   const [tab, setTab] = useState<"profile" | "password" | "active-orders" | "order-history">("profile");
   const [alert, setAlert] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
 
   // These will eventually be fetched from backend
   const [user, setUser] = useState<{ username: string; email: string; membership: string } | null>({
@@ -29,7 +30,12 @@ export default function AccountPage() {
 
   function showAlert(message: string, type: "success" | "error") {
     setAlert({ message, type });
-    setTimeout(() => setAlert(null), 4000);
+    setAlertVisible(true);
+
+    setTimeout(() => {
+      setAlertVisible(false);
+      setTimeout(() => setAlert(null), 500);
+    }, 4000);
   }
 
   return (
@@ -51,7 +57,7 @@ export default function AccountPage() {
 
         {/* Browser-style tab navigation */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <nav className="">
+          <nav>
             <ul className="flex">
               {[
                 { key: "profile", label: "Profile" },
@@ -74,12 +80,14 @@ export default function AccountPage() {
             </ul>
           </nav>
 
-          <div className="p-6">
+          <div className="p-6 relative">
+            {/* Animated Alert */}
             {alert && (
               <div
-                className={`mb-4 p-4 rounded-md ${
-                  alert.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                }`}
+                className={`absolute left-1/2 transform -translate-x-1/2 top-0 w-full max-w-md transition-all duration-500 text-center
+                  ${alertVisible ? "opacity-95 translate-y-0" : "opacity-0  -translate-y-4"}
+                  mb-4 p-4 rounded-md ${alert.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                `}
               >
                 {alert.message}
               </div>
