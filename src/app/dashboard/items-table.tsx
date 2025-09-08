@@ -13,14 +13,15 @@ export default async function ItemsTable({page = 1}: {page?: number}) {
             pageSize: 2,
         }
     });
+    console.log({ data })
     return (
         <>
-            {!data && (
+            {!data.length && (
                 <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
                     You have no items
                 </h1>
             )}
-            {!!data &&
+            {!!data.length &&
                 <Table className="mt-5">
                     <TableHeader>
                         <TableRow>

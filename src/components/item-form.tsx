@@ -46,69 +46,6 @@ export default function ItemForm({
                 <fieldset className="flex flex-col gap-2" disabled={form.formState.isSubmitting}>
                     <FormField 
                         control={form.control}
-                        name="status" 
-                        render={({field}) => (
-                        <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <FormControl>
-                                <Select 
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="for-sale">For Sale</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="withdrawn">Withdrawn</SelectItem>
-                                        <SelectItem value="sold">Sold</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                    <FormField 
-                        control={form.control}
-                        name="title" 
-                        render={({field}) => (
-                        <FormItem>
-                            <FormLabel>Title</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                    <FormField 
-                        control={form.control}
-                        name="collectionAddress"
-                        render={({field}) => (
-                        <FormItem>
-                            <FormLabel>Collection Address</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                </fieldset>
-                <fieldset className="flex flex-col gap-2" disabled={form.formState.isSubmitting}>
-                    <FormField 
-                        control={form.control}
-                        name="price" 
-                        render={({field}) => (
-                        <FormItem>
-                            <FormLabel>Price</FormLabel>
-                            <FormControl>
-                                <Input type="number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                    <FormField 
-                        control={form.control}
                         name="condition"
                         render={({field}) => (
                         <FormItem>
@@ -131,52 +68,96 @@ export default function ItemForm({
                             </FormControl>
                             <FormMessage />
                         </FormItem>
-                    )}/>
-                    <FormField
+                    )}/>                    
+                </fieldset>
+                <fieldset className="flex flex-col gap-2" disabled={form.formState.isSubmitting}>
+                    <FormField 
                         control={form.control}
-                        name="description"
-                        render={({ field }) => (
+                        name="price" 
+                        render={({field}) => (
                         <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>Price</FormLabel>
                             <FormControl>
-                                <Textarea {...field} rows={5} className="resize-none" />
+                                <Input type="number" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
-                    )}/>
+                    )}/>                                    
                 </fieldset>
             </div>
-            <FormField 
-                control={form.control}
-                name="images" 
-                render={({field}) => (
-                <FormItem>
-                    <FormControl>
-                        <MultiImageUploader
-                            onImagesChange={(images: ImageUpload[]) => {
-                            form.setValue("images", images);
-                        }}
-                            images={field.value}
-                            urlFormatter={(image) => {
-                                if(!image.file){
-                                    return `https://firebasestorage.googleapis.com/v0/b/fire-homes-course-32c50.firebasestorage.app/o/${encodeURIComponent(
-                                        image.url
-                                    )}?alt=media`;
-                                }
-                                return image.url;
+            <fieldset className="flex flex-col gap-2" disabled={form.formState.isSubmitting}>
+                <FormField 
+                    control={form.control}
+                    name="title" 
+                    render={({field}) => (
+                    <FormItem>
+                        <FormLabel>Title</FormLabel>
+                        <FormControl>
+                            <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}/>
+                <FormField 
+                    control={form.control}
+                    name="collectionAddress"
+                    render={({field}) => (
+                    <FormItem>
+                        <FormLabel>Collection Address</FormLabel>
+                        <FormControl>
+                            <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}/>
+                <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                            <Textarea {...field} rows={5} className="resize-none"
+                                placeholder={
+                                    `## Title\n\n[Item description]\n\n## Key Features\n\n- ** Key feature 1 **\n- ** Key feature 2 **\n- ** Key feature 3 **`
+                                } 
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}/>
+                <FormField 
+                    control={form.control}
+                    name="images" 
+                    render={({field}) => (
+                    <FormItem>
+                        <FormControl>
+                            <MultiImageUploader
+                                onImagesChange={(images: ImageUpload[]) => {
+                                form.setValue("images", images);
                             }}
-                        />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-            )}/>         
-            <Button 
-                type="submit"
-                className="max-w-md mx-auto mt-2 w-full flex gap-2"
-                disabled={form.formState.isSubmitting}
-            >
-                {submitButtonLabel}
-            </Button>
+                                images={field.value}
+                                urlFormatter={(image) => {
+                                    if(!image.file){
+                                        return `https://firebasestorage.googleapis.com/v0/b/fire-homes-course-32c50.firebasestorage.app/o/${encodeURIComponent(
+                                            image.url
+                                        )}?alt=media`;
+                                    }
+                                    return image.url;
+                                }}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}/>         
+                <Button 
+                    type="submit"
+                    className="max-w-md mx-auto mt-2 w-full flex gap-2"
+                    disabled={form.formState.isSubmitting}
+                >
+                    {submitButtonLabel}
+                </Button>
+            </fieldset>          
         </form>
     </Form>
 }

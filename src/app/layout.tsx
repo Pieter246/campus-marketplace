@@ -34,14 +34,14 @@ export default function RootLayout({
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased flex flex-col min-h-screen`}
       >
         <AuthProvider>
-          <header className="bg-sky-950 shadow p-4 flex items-center justify-between sticky top-0 z-10"> {/* justify-between very important */}  
+          <header className="bg-blue-400 shadow p-4 flex items-center justify-between sticky top-0 z-10"> {/* justify-between very important */}  
             <Link href="/" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
               <Logo className="h-10 w-auto"/>
               <span>Campus Marketplace</span>
             </Link>
             <ul className="flex gap-6 items-center">
               <li>
-                <Link href="/property-search" className="uppercase tracking-widest hover:underline">Property search</Link>
+                <Link href="/property-search" className="uppercase tracking-widest hover:underline">Item search</Link>
               </li>              
               <li>
                 <AuthButtons />
