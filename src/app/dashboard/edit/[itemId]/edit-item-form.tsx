@@ -22,6 +22,7 @@ export default function EditPropertyForm({
     price,
     status,
     condition,
+    sellerId,
     images= []
 }: Props) {
     const router = useRouter();
@@ -80,7 +81,7 @@ export default function EditPropertyForm({
         });
 
         // Redirect user to dashboard
-        router.push("/user-dashboard");
+        router.push("/dashboard/user");
     };
     return (
         <div>
@@ -98,6 +99,7 @@ export default function EditPropertyForm({
                     price,
                     status,
                     condition,
+                    sellerId,
                     images: images.map(image => ({
                         id: image,
                         url: image

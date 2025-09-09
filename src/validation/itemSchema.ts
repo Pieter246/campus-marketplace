@@ -8,6 +8,7 @@ export const itemDataSchema = z.object({
     .min(40, "Description must contain at least 40 characters"),
   price: z.coerce.number<number>().positive("Price must be greater than zero"),
   status: z.enum(["for-sale", "pending", "withdrawn", "sold"]),
+  sellerId: z.string(), // Seller ID added
   condition: z.enum(["new", "used", "fair", "poor"])
 });
 

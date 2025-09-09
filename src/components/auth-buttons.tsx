@@ -41,19 +41,19 @@ export default function AuthButtons() {
                     <DropdownMenuItem asChild>
                         <Link href="/account">My Account</Link>
                     </DropdownMenuItem>
-                    {/* {!!auth.customClaims?.admin && (
+                    {!!auth.customClaims?.admin && (
                         <DropdownMenuItem asChild>
-                            <Link href="/admin-dashboard">Admin Dashboard</Link>
+                            <Link href="/dashboard/admin">Admin Dashboard</Link>
                         </DropdownMenuItem>
-                    )} */}
-                    {/* {!auth.customClaims?.admin && (
+                    )} 
+                    {!auth.customClaims?.admin && (
                         <DropdownMenuItem asChild>
-                            <Link href="/user-dashboard">My Dashboard</Link>
+                            <Link href="/dashboard/user">My Dashboard</Link>
                         </DropdownMenuItem>
-                    )}*/}
-                    <DropdownMenuItem asChild>
+                    )}
+                    {/* <DropdownMenuItem asChild>
                         <Link href="/user-dashboard">Dashboard</Link>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuItem 
                     onClick={async () => {
                         await auth.logout();

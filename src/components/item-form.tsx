@@ -34,6 +34,7 @@ export default function ItemForm({
             price: 0,
             status: "pending",
             condition: "used",
+            sellerId: "",
             images: []
         },
         ...defaultValues,
@@ -41,7 +42,7 @@ export default function ItemForm({
 
     useEffect(() => {
         if (combinedDefaultValues.status === "sold") { //If the item is sold user cannot edit the item
-            router.push("/user-dashboard");
+            router.push("/dashboard/user");
         }
     }, [combinedDefaultValues.status]);
 

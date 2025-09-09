@@ -19,7 +19,7 @@ export default async function EditProperty({
         <div>
             <Breadcrumbs items={[
                 {
-                    href: "/user-dashboard",
+                    href: "/dashboard/user",
                     label: "Dashboard"
                 }, 
                 {
@@ -46,6 +46,7 @@ export default async function EditProperty({
                         price={item.price}
                         status={item.status}
                         condition={item.condition}
+                        sellerId={item.sellerId}
                         images={item.images || []}
                     />
                 </CardContent>

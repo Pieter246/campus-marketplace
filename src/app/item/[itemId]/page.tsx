@@ -1,26 +1,46 @@
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { getItemById } from "@/data/items";
-import { ArrowLeft, BathIcon, BedIcon } from "lucide-react";
 import Image from "next/image";
 import numeral from "numeral";
-//import ReactMarkdown from "react-markdown"
 import BackButton from "./back-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import imageUrlFormatter from "@/lib/imageUrlFormatter";
 import ItemConditionBadge from "@/components/item-condition-badge";
 import ReactMarkdown from "react-markdown"
+import { cookies } from "next/headers";
+import { DecodedIdToken } from "firebase-admin/auth";
+import { auth } from "@/firebase/server";
+import BuyButton from "./buy-button";
+import { redirect } from "next/navigation";
+import ApproveButton from "./approve-button";
 
-export const dynamic = "force-static"; //caching for Vercel
+export const dynamic = "force-dynamic"; //caching for Vercel
 
-export default async function Property({params}: {
+export default async function Item({params}: {
     params: Promise<any>
 }) {
+    // Get user token from the cookies
+    const cookieStore = await cookies();
+    const token = cookieStore.get("firebaseAuthToken")?.value;
+    let verifiedToken: DecodedIdToken | null = null;
+
+    // Grab verified token if there is a token
+    if(token){
+        verifiedToken = await auth.verifyIdToken(token);
+    }
+
     // Parameter gets itemId because route is /dashboard/edit/[itemId]
     const paramsValue = await params;
     const item = await getItemById(paramsValue.itemId);
 
-    console.log({ item });
+    console.log("verifiedToken.uid:", verifiedToken?.uid);
+    console.log("item.sellerId:", item.sellerId);
+    console.log("verifiedToken.admin:", verifiedToken?.admin);
+    console.log("BuyButton condition:", 
+    !verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)
+    );
+
 
     // Get item address information and filter out empty optional fields
     const addressLines = [
@@ -96,9 +116,19 @@ export default async function Property({params}: {
                     </h1>
                         <div className="item-description max-w-screen-md px-4">   {/*mx-auto*/}
                         <ReactMarkdown>{item.description}</ReactMarkdown>
-                    </div>
-                </CardContent>               
+                    </div>                    
+                    {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && ( //Show the Buy button if the user is not logged in, or if they are logged in but not an admin, and they are not the seller of the item.
+                        <BuyButton id={item.id} />
+                    )}                   
+                </CardContent>
             </Card>
+            {verifiedToken && verifiedToken.admin && ( // Only admins can approve items
+                <Card>
+                    <CardContent>
+                        <ApproveButton id={item.id} condition={item.condition}/>                       
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 }

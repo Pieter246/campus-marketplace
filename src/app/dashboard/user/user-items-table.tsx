@@ -1,54 +1,28 @@
 import ItemStatusBadge from "@/components/item-status-badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useAuth } from "@/context/auth";
-import { getItems, getUserItems } from "@/data/items";
+import { getUserItems } from "@/data/items";
 import { EyeIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
 import numeral from 'numeral';
 
 export default async function UserItemsTable({page = 1}: {page?: number}) {
-    const auth = useAuth();
-    let data, totalPages;
-
-    if (auth?.customClaims?.admin) { // Get data for admin
-        const result = await getItems({
-            pagination: {
-                page,
-                pageSize: 2,        
-            },
-            filters: {
-                status: ["pending"]
-            }
-        });
-        ({ data, totalPages } = result);
-    } else { // Get data for user
-        const result = await getUserItems({
-            pagination: {
-            page,
-            pageSize: 2,
-            },
-        });
-        ({ data, totalPages } = result);
-    }
+    const { data, totalPages } = await getUserItems({ // Get data for user
+        pagination: {
+        page,
+        pageSize: 2,
+        },
+    });
 
     console.log({ data })
     
     return (
         <>
             {!data.length && (
-            <>
-                {auth?.customClaims?.admin ? ( // For admin
-                    <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
-                        There are no items to approve
-                    </h1>
-                ) : ( // For user
-                    <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
-                        You have no items
-                    </h1>
-                )}                
-            </>
-            )}
+                <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
+                    You have no items
+                </h1>
+            )}                
             {!!data.length && (
             <>
                 <Table className="mt-5">
@@ -83,7 +57,7 @@ export default async function UserItemsTable({page = 1}: {page?: number}) {
                                         </Button>
                                         {!item.status.includes("sold") &&
                                             <Button asChild variant="outline" size="sm">
-                                                <Link href={`/user-dashboard/edit/${item.id}`}>
+                                                <Link href={`/dashboard/edit/${item.id}`}>
                                                     <PencilIcon />
                                                 </Link>
                                             </Button>
@@ -104,7 +78,7 @@ export default async function UserItemsTable({page = 1}: {page?: number}) {
                                         variant="outline"
                                         className="mx-1"
                                     >
-                                        <Link href={`/user-dashboard?page=${i + 1}`}>{i + 1}</Link>
+                                        <Link href={`/dashboard/user?page=${i + 1}`}>{i + 1}</Link>
                                     </Button>
                                 ))}
                             </TableCell>

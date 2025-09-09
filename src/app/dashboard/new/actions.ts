@@ -33,7 +33,7 @@ export const createItem = async (data: {
 
     const item = await firestore.collection("items").add({
         ...data,
-        sellerID: verifiedToken.uid, // Add users token ID to item
+        sellerId: verifiedToken.uid, // Add users token ID to item
         created: new Date(),
         updated: new Date()
     })

@@ -9,5 +9,6 @@ export type Item = {
     price: number;
     status: ItemStatus;
     condition: ItemCondition;
+    sellerId: string;
     images?: string[];
 }

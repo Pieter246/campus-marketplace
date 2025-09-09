@@ -34,7 +34,7 @@ export const getItems = async (options?: GetItemsOptions) => {
 
     // Apply filters if they exist
     if (!!tokenID) {
-        itemsQuery = itemsQuery.where("sellerID", "==", tokenID); // Get users items
+        itemsQuery = itemsQuery.where("sellerId", "==", tokenID); // Get users items
     }
     if (minPrice !== null && minPrice !== undefined) {
         itemsQuery = itemsQuery.where("price", ">=", minPrice);
