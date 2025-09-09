@@ -21,23 +21,10 @@
   --font-mono: var(--font-rubik-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary: #EFD6AC;   /* Dark slate grey/green */
-    --foreground: #EFD6AC;
-    --color-secondary: #432534; /* Dark purple */
-    --color-accent: #C44900;    /* Mahogany */
-    --color-background: #183A37;/* Wheat/cream */
-    --color-text: #ededed;      /* Rich black */
-    /*
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    */
-  }
-}
-
 body {
   background: var(--color-background);
   color: var(--color-primary);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
