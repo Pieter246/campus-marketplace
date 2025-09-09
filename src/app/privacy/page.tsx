@@ -1,8 +1,8 @@
 // app/privacy/page.tsx
 "use client";
 
-import Link from "next/link";
 import Button from "@/components/Button";
+import { redirect } from "next/navigation";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -61,11 +61,11 @@ export default function PrivacyPolicyPage() {
 
         <div className="mt-8 text-center">
             <Button
-                onClick={() => window.location.href = "/register"}
+                onClick={() => redirect("/item-search")}
                 variant="secondary"
                 size="md"
             >
-                Back to Register
+                Back
             </Button>
         </div>
       </div>
