@@ -6,6 +6,7 @@ import {DragDropContext, Draggable, Droppable, DropResult} from "@hello-pangea/d
 import Image from "next/image";
 import { Badge } from "./ui/badge";
 import { MoveIcon, XIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export type ImageUpload = {
     id: string;
@@ -28,18 +29,44 @@ export default function MultiImageUploader({
 
     console.log({ images });
 
+    // User can only upload up to 3 images
+    const MAX_IMAGES = 3;
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        const newImages = files.map((file, index) => {
-            return {
-                id: `${Date.now()}-${index}-${file.name}`,
-                url: URL.createObjectURL(file),
-                file
-            }
-        });
+        const remainingSlots = MAX_IMAGES - images.length;
 
-        onImagesChange([...images, ...newImages])
+        // Display message if user tries to upload more than 3 images
+        if (remainingSlots <= 0) {
+            toast.info("", {
+                description: `You can only upload ${MAX_IMAGES} images`,
+            });
+            return;
+        }
+
+        const limitedFiles = files.slice(0, remainingSlots);
+
+        const newImages = limitedFiles.map((file, index) => ({
+            id: `${Date.now()}-${index}-${file.name}`,
+            url: URL.createObjectURL(file),
+            file,
+        }));
+
+        onImagesChange([...images, ...newImages]);
     };
+
+    // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const files = Array.from(e.target.files || []);
+    //     const newImages = files.map((file, index) => {
+    //         return {
+    //             id: `${Date.now()}-${index}-${file.name}`,
+    //             url: URL.createObjectURL(file),
+    //             file
+    //         }
+    //     });
+
+    //     onImagesChange([...images, ...newImages])
+    // };
 
     const handleDragEnd = (result: DropResult) => {
         if(!result.destination){
@@ -73,7 +100,7 @@ export default function MultiImageUploader({
                 type="button"
                 onClick={() => uploadInputRef?.current?.click()}
             >
-                Upload images
+                Upload images (Max 3)
             </Button>
             <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="property-images" direction="vertical">
