@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { getItemById } from "@/data/items";
 import Image from "next/image";
@@ -12,7 +11,6 @@ import { cookies } from "next/headers";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { auth } from "@/firebase/server";
 import BuyButton from "./buy-button";
-import { redirect } from "next/navigation";
 import ApproveButton from "./approve-button";
 
 export const dynamic = "force-dynamic"; //caching for Vercel
@@ -33,14 +31,6 @@ export default async function Item({params}: {
     // Parameter gets itemId because route is /dashboard/edit/[itemId]
     const paramsValue = await params;
     const item = await getItemById(paramsValue.itemId);
-
-    console.log("verifiedToken.uid:", verifiedToken?.uid);
-    console.log("item.sellerId:", item.sellerId);
-    console.log("verifiedToken.admin:", verifiedToken?.admin);
-    console.log("BuyButton condition:", 
-    !verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)
-    );
-
 
     // Get item address information and filter out empty optional fields
     const addressLines = [
@@ -77,13 +67,11 @@ export default async function Item({params}: {
                                             <CarouselItem key={image} className="sm:basis-1/2 md:basis-1/3">
                                                 <div className="relative p-4">
                                                     <Card className="h-50">
-                                                        <Image 
-                                                            src={`https://firebasestorage.googleapis.com/v0/b/fire-homes-course-32c50.firebasestorage.app/o/${encodeURIComponent(
-                                                                image
-                                                            )}?alt=media`}
-                                                            alt={`Image ${index + 1}`}
+                                                        <Image
                                                             fill
                                                             className="object-cover"
+                                                            src={imageUrlFormatter(image)}
+                                                            alt={`Image ${index + 1}`}                                                            
                                                         />                                            
                                                     </Card>
                                                 </div>

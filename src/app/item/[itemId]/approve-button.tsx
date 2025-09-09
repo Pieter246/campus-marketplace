@@ -2,7 +2,7 @@
 
 import { approveItem } from "@/app/dashboard/edit/[itemId]/actions";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/context/auth"
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 
-// Filter schema
 const formSchema = z.object({
     realCondition: z.string(),
 })
@@ -43,7 +42,7 @@ export default function ApproveButton({
             return;
         }
 
-        // Update item data set seller ID and status to sold
+        // Update item data set seller ID and status to "for sale"
         const response = await approveItem(id, data.realCondition, tokenResult.token);
         // If item update is not successful show message
         if(!!response?.error){
@@ -53,12 +52,12 @@ export default function ApproveButton({
             return;
         }
 
-        // Display message property added or removed from favourites
+        // Display message item approved
         toast.success("Success!", {
             description: `Item was approved`
         });
 
-        // Redirect user to dashboard to show item bought
+        // Redirect user to dashboard to show item is no longer pending
         router.push("/dashboard/admin")
     };
 

@@ -2,7 +2,6 @@
 
 import { auth, firestore } from "@/firebase/server";
 import { itemDataSchema } from "@/validation/itemSchema";
-import z from "zod";
 
 export const createItem = async (data: {
     title: string;

@@ -12,6 +12,7 @@ import { Button } from "./ui/button";
 import MultiImageUploader, { ImageUpload } from "./multi-image-uploader";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import imageUrlFormatter from "@/lib/imageUrlFormatter";
 
 type Props = {
     submitButtonLabel: React.ReactNode;
@@ -150,9 +151,7 @@ export default function ItemForm({
                                 images={field.value}
                                 urlFormatter={(image) => {
                                     if(!image.file){
-                                        return `https://firebasestorage.googleapis.com/v0/b/fire-homes-course-32c50.firebasestorage.app/o/${encodeURIComponent(
-                                            image.url
-                                        )}?alt=media`;
+                                        return imageUrlFormatter(image.url)
                                     }
                                     return image.url;
                                 }}

@@ -51,9 +51,6 @@ export default function AuthButtons() {
                             <Link href="/dashboard/user">My Dashboard</Link>
                         </DropdownMenuItem>
                     )}
-                    {/* <DropdownMenuItem asChild>
-                        <Link href="/user-dashboard">Dashboard</Link>
-                    </DropdownMenuItem> */}
                     <DropdownMenuItem 
                     onClick={async () => {
                         await auth.logout();

@@ -2,7 +2,7 @@ import ItemStatusBadge from "@/components/item-status-badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getItems } from "@/data/items";
-import { EyeIcon, PencilIcon } from "lucide-react";
+import { EyeIcon } from "lucide-react";
 import Link from "next/link";
 import numeral from 'numeral';
 

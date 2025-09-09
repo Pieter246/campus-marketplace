@@ -27,10 +27,10 @@ export default function BuyButton({
             return;
         }
 
-        // Deleting animation start
+        // Buying animation start
         setIsBuying(true)
 
-        // Update item data set seller ID and status to sold
+        // Update item data set buyer ID and status to sold
         const response = await buyItem(id, tokenResult.token);
         // If item update is not successful show message
         if(!!response?.error){
@@ -40,15 +40,15 @@ export default function BuyButton({
             return;
         }
 
-        // Deleting animation finish
+        // Buying animation finish
         setIsBuying(false);
 
-        // Display message property added or removed from favourites
+        // Display message item bought
         toast.success("Success!", {
             description: `you have bought an item!`
         });
 
-        // Redirect user to dashboard to show item bought
+        // Redirect user to dashboard to show item bought (Will not show query not implemented)
         router.push("/dashboard/user")
     };
 
