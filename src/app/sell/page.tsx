@@ -6,7 +6,6 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { authFetch } from "@/lib/authFetch";
 
 export default function SellPage() {
   const router = useRouter();
@@ -17,9 +16,9 @@ export default function SellPage() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
-
+      
       if (!currentUser) {
-        router.push("/login");
+        router.push('/login');
       }
     });
 
@@ -44,7 +43,9 @@ export default function SellPage() {
   const MAX_PHOTOS = 5;
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) {
     const target = e.target;
 
@@ -84,15 +85,16 @@ export default function SellPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!user) {
+   if (!user) {
       alert("You must be logged in to create an item");
-      router.push("/login");
+      router.push('/login');
       return;
     }
 
     const newErrors: { [key: string]: string } = {};
     if (!form.title.trim()) newErrors.title = "Title is required";
-    if (!form.description.trim()) newErrors.description = "Description is required";
+    if (!form.description.trim())
+      newErrors.description = "Description is required";
 
     const priceNum = Number(form.price);
     if (!form.price) newErrors.price = "Price is required";
@@ -107,11 +109,14 @@ export default function SellPage() {
     if (Object.keys(newErrors).length > 0) return;
 
     try {
-      // Send to API route using authFetch (token automatically added)
-      const response = await authFetch("/api/items/create", {
+      const idToken = await user.getIdToken();
+
+      // Send to API route
+      const response = await fetch("/api/items/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          'Authorization': `Bearer ${idToken}`
         },
         body: JSON.stringify({
           title: form.title.trim(),
@@ -124,6 +129,7 @@ export default function SellPage() {
         }),
       });
 
+      // Handle result
       const result = await response.json();
 
       if (!response.ok) {
@@ -133,14 +139,17 @@ export default function SellPage() {
 
       alert("Item created successfully!");
       console.log("Created item:", result.item);
-
-      router.push("/displayItems");
+      
+      // Redirect to success page or back to items list
+      router.push('/displayItems');
+      
     } catch (error) {
       console.error("Error creating item:", error);
       alert("Failed to create item. Please try again.");
     }
   }
 
+  // Show loading while checking authentication
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -149,7 +158,10 @@ export default function SellPage() {
     );
   }
 
-  if (!user) return null;
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="flex justify-center items-center p-4">
@@ -157,6 +169,7 @@ export default function SellPage() {
         <h1 className="text-2xl font-bold mb-6 text-center">Sell Your Item</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title */}
           <Input
             id="title"
             label="Title"
@@ -166,6 +179,7 @@ export default function SellPage() {
             error={errors.title}
           />
 
+          {/* Description */}
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-medium">
               Description
@@ -185,6 +199,7 @@ export default function SellPage() {
             )}
           </div>
 
+          {/* Price */}
           <Input
             id="price"
             label="Price (ZAR)"
@@ -196,6 +211,7 @@ export default function SellPage() {
             error={errors.price}
           />
 
+          {/* Category */}
           <div className="space-y-2">
             <label htmlFor="category" className="text-sm font-medium">
               Category
@@ -218,6 +234,7 @@ export default function SellPage() {
             )}
           </div>
 
+          {/* Condition */}
           <div className="space-y-2">
             <label htmlFor="condition" className="text-sm font-medium">
               Condition
@@ -236,6 +253,7 @@ export default function SellPage() {
             </select>
           </div>
 
+          {/* Collection Address */}
           <Input
             id="collectionAddress"
             label="Collection Address (Optional)"
@@ -244,6 +262,7 @@ export default function SellPage() {
             onChange={handleChange}
           />
 
+          {/* Collection Instructions */}
           <div className="space-y-2">
             <label htmlFor="collectionInstructions" className="text-sm font-medium">
               Collection Instructions (Optional)
@@ -258,15 +277,20 @@ export default function SellPage() {
             />
           </div>
 
+          {/* Photo upload */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Item photos — up to {MAX_PHOTOS}
             </label>
+
             <label
               htmlFor="fileInput"
-              className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition ${
-                isDragging ? "bg-blue-50 border-blue-400" : "hover:bg-gray-50"
-              }`}
+              className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition 
+                ${
+                  isDragging
+                    ? "bg-blue-50 border-blue-400"
+                    : "hover:bg-gray-50"
+                }`}
               onDragOver={(e) => {
                 e.preventDefault();
                 setIsDragging(true);
@@ -275,9 +299,11 @@ export default function SellPage() {
               onDrop={(e) => {
                 e.preventDefault();
                 setIsDragging(false);
+
                 const files = Array.from(e.dataTransfer.files).filter((file) =>
                   file.type.startsWith("image/")
                 );
+
                 if (files.length > 0) addPhotos(files);
               }}
             >
@@ -293,9 +319,11 @@ export default function SellPage() {
                 className="hidden"
               />
             </label>
+
             {errors.photos && (
               <p className="text-red-500 text-sm">{errors.photos}</p>
             )}
+
             {photoPreviews.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {photoPreviews.map((preview, i) => (
@@ -318,6 +346,7 @@ export default function SellPage() {
             )}
           </div>
 
+          {/* Terms & Conditions checkbox */}
           <div className="flex items-start">
             <input
               type="checkbox"
