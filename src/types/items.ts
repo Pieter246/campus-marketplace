@@ -1,3 +1,4 @@
+import { ItemCategory } from "./itemCategory";
 import { ItemCondition } from "./itemCondition";
 import { ItemStatus } from "./itemStatus";
 
@@ -9,6 +10,7 @@ export type Item = {
     price: number;
     status: ItemStatus;
     condition: ItemCondition;
+    category: ItemCategory;
     sellerId: string;
     images?: string[];
 }

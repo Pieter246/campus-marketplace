@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useAuth } from "@/context/auth";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "@/components/Input";
 import Logo from "@/components/ui/Logo";
 import { toast } from "sonner";
 import { registerUser } from "./actions";

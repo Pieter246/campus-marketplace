@@ -57,7 +57,7 @@ export default function NewItemForm(){
             handleSubmit={handleSubmit} 
             submitButtonLabel={
             <>
-                <PlusCircle/> Create Item
+                Add Item Listing
             </>
         } 
     />
