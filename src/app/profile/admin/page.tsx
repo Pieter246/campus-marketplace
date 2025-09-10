@@ -11,13 +11,6 @@ export default async function AdminDashboard({
     
     return (
         <div>
-            <Breadcrumbs 
-                items={[
-                    {
-                        label: "Dashboard",
-                    }
-                ]}>
-            </Breadcrumbs>
             <h1 className="text-4xl font-bold mt-6">Approve Items</h1>
             <AdminItemsTable
                 page={searchParamsValue?.page ? parseInt(searchParamsValue.page) : 1}
