@@ -56,6 +56,52 @@ export const updateItem = async (data: Item, authToken: string) => {
     revalidatePath(`/item/${id}`) //caching for Vercel
 }
 
+// User sells an item
+export const withdrawItem = async (id: string, authToken: string) =>{
+    const verifiedToken = await auth.verifyIdToken(authToken);
+
+    // if no token, return error
+    if(!verifiedToken){
+        return {
+            error: true,
+            message: "Unauthorized"
+        }
+    }
+
+    // Set item status to pending
+    await firestore
+        .collection("items")
+        .doc(id)
+        .update({
+            status: "draft",
+            buyerId: verifiedToken.uid,
+            updated: new Date()
+        });
+}
+
+// User sells an item
+export const sellItem = async (id: string, authToken: string) =>{
+    const verifiedToken = await auth.verifyIdToken(authToken);
+
+    // if no token, return error
+    if(!verifiedToken){
+        return {
+            error: true,
+            message: "Unauthorized"
+        }
+    }
+
+    // Set item status to pending
+    await firestore
+        .collection("items")
+        .doc(id)
+        .update({
+            status: "pending",
+            buyerId: verifiedToken.uid,
+            updated: new Date()
+        });
+}
+
 // User buys an item
 export const buyItem = async (id: string, authToken: string) =>{
     const verifiedToken = await auth.verifyIdToken(authToken);
@@ -68,7 +114,7 @@ export const buyItem = async (id: string, authToken: string) =>{
         }
     }
 
-    // remove the favourite
+    // Set item status to sold
     await firestore
         .collection("items")
         .doc(id)

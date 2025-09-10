@@ -6,30 +6,39 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 
 /////////////////////////////////////////////////
-const Breadcrumbs = ({items}: {
+const Breadcrumbs = ({
+  items,
+  className,
+}: {
   items: {
     href?: string;
     label: string;
-  }[]
+  }[];
+  className?: string;
 }) => {
   return (
     <Breadcrumb>
-      <BreadcrumbList>
+      <BreadcrumbList className={className}>
         {items.map((item, i) => (
-          <React.Fragment key={i}>          
+          <React.Fragment key={i}>
             <BreadcrumbItem>
-              {!!item.href && <Link href={item.href}>{item.label}</Link>} 
-              {!item.href && <BreadcrumbPage>{item.label}</BreadcrumbPage>}
+              {!!item.href ? (
+                <Link href={item.href} className={className}>
+                  {item.label}
+                </Link>
+              ) : (
+                <BreadcrumbPage className={className}>
+                  {item.label}
+                </BreadcrumbPage>
+              )}
             </BreadcrumbItem>
-            {i < items.length - 1 && (
-              <BreadcrumbSeparator />
-            )}
+            {i < items.length - 1 && <BreadcrumbSeparator />}
           </React.Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>
-  )
-}
+  );
+};
 Breadcrumbs.displayName = "Breadcrumbs";
 ///////////////////////////////////////////////
 

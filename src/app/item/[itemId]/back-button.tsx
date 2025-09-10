@@ -8,8 +8,8 @@ export default function BackButton() {
     const router = useRouter();
 
     return (
-        <Button variant="secondary" onClick={() => router.back()}>
-            <ArrowLeft /> Back
+        <Button className="flex-1" variant="secondary" onClick={() => router.back()}>
+            Back
         </Button>
     );
 }

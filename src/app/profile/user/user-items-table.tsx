@@ -36,7 +36,7 @@ export default async function UserItemsTable({page = 1}: {page?: number}) {
         }
     });
 
-    console.log({ data })
+    //console.log({ data })
     
     return (
         <>
@@ -77,13 +77,13 @@ export default async function UserItemsTable({page = 1}: {page?: number}) {
                                                 <EyeIcon />
                                             </Link>
                                         </Button>
-                                        {!item.status.includes("sold") &&
+                                        {!["sold", "pending"].includes(item.status) && (
                                             <Button asChild variant="outline" size="sm">
                                                 <Link href={`/profile/edit/${item.id}`}>
-                                                    <PencilIcon />
+                                                <PencilIcon />
                                                 </Link>
                                             </Button>
-                                        }
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             );

@@ -100,3 +100,40 @@ body {
   }
 }
 
+/* /////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+
+.item-description h1 {
+  @apply text-5xl font-bold my-4;
+}
+
+.item-description h2 {
+  @apply text-4xl font-bold my-4;
+}
+
+.item-description h3 {
+  @apply text-3xl font-bold my-4;
+}
+
+.item-description h4 {
+  @apply text-2xl font-bold my-4;
+}
+
+.item-description h5 {
+  @apply text-xl font-bold my-4;
+}
+
+.item-description h6 {
+  @apply text-lg font-bold my-4;
+}
+
+.item-description p {
+  @apply my-4 font-normal text-base;
+}
+
+.item-description ul {
+  @apply list-disc my-4 ml-4;
+}
+
+.item-description ol {
+  @apply list-decimal my-4 ml-4;
+}

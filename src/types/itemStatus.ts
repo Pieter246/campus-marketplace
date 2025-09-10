@@ -1,1 +1,1 @@
-export type ItemStatus = "for-sale" | "pending" | "withdrawn" | "sold";
+export type ItemStatus = "draft" | "pending" | "for-sale" | "sold" | "withdrawn";

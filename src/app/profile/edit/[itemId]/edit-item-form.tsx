@@ -38,7 +38,7 @@ export default function EditPropertyForm({
         const token = await auth?.currentUser?.getIdToken();
         if(!token){
             return;
-        }
+        }        
 
         // Destructure images and rest of data from data
         const {images: newImages, ...rest} = data;
@@ -90,20 +90,22 @@ export default function EditPropertyForm({
     };
     return (
         <div className="flex flex-col justify-center items-center p-4">
-            <Breadcrumbs items={[
-                {
-                    href: "/profile/user",
-                    label: "Profile"
-                }, 
-                {
-                    label: "New item"
-                }
-                ]}
+            <Breadcrumbs 
+                className="text-2xl pb-2"
+                items={[
+                    {
+                        href: "/profile/user",
+                        label: "Profile"
+                    }, 
+                    {
+                        label: "Edit item"
+                    }
+                    ]}
             />
             <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
-                {!!auth?.customClaims?.admin && ( //Admins cannot delete the item                
-                    <div className="text-3xl font-bold flex justify-between mb-6">
-                        <h1 className="text-2xl font-bold">Sell Your Item</h1>                        
+                {!auth?.customClaims?.admin && ( //Admins cannot delete the item                
+                    <div className="text-3xl font-bold flex justify-end mb-6">
+                        {/* <h1 className="text-2xl font-bold">Sell Your Item</h1> */}
                         <DeleteItemButton 
                             itemId={id}
                             images={images || []}

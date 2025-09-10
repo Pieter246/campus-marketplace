@@ -77,13 +77,6 @@ export default async function UserPurchaseTable({page = 1}: {page?: number}) {
                                                 <EyeIcon />
                                             </Link>
                                         </Button>
-                                        {!item.status.includes("sold") &&
-                                            <Button asChild variant="outline" size="sm">
-                                                <Link href={`/profile/edit/${item.id}`}>
-                                                    <PencilIcon />
-                                                </Link>
-                                            </Button>
-                                        }
                                     </TableCell>
                                 </TableRow>
                             );

@@ -49,7 +49,7 @@ export default function FiltersForm() {
     };
 
     return <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="grid grid-cols-4 gap-2">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
             <FormField 
                 control={form.control}
                 name="condition"
@@ -96,9 +96,6 @@ export default function FiltersForm() {
                 name="maxPrice" 
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>
-                            Max price
-                        </FormLabel>
                         <FormControl>
                             <Input 
                                 {...field}
@@ -110,7 +107,7 @@ export default function FiltersForm() {
                     </FormItem>
                 )} 
             />
-            <Button type="submit" className="mt-auto">
+            <Button type="submit" className="">
                 Search
             </Button>
         </form>

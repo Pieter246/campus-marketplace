@@ -8,7 +8,7 @@ export const createItem = async (data: {
     collectionAddress: string;
     description: string;
     price: number;
-    status: "for-sale" | "pending" | "withdrawn" | "sold";
+    status: "draft" | "pending" | "for-sale" | "sold" | "withdrawn";
     condition: "new" | "used" | "fair" | "poor";
     category: "books" | "electronics" | "clothing";
 }, authToken: string) => {

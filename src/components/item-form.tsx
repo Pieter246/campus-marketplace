@@ -36,7 +36,7 @@ export default function ItemForm({
             collectionAddress: "",
             description: "",
             price: 0,
-            status: "pending",
+            status: "draft",
             condition: "used",
             category: "books",
             sellerId: "",

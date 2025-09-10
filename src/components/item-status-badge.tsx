@@ -4,6 +4,7 @@ import { Badge } from "./ui/badge";
 // Display status to user in better format (without dashes)
 // Left side references itemStatus values:"for-sale" | "pending" | "withdrawn" | "sold" Right side displays them
 const statusLabel = {
+    draft: "Draft",
     "for-sale": "For Sale",
     pending: "Pending",
     withdrawn: "Withdrawn",
@@ -12,7 +13,8 @@ const statusLabel = {
 
 // Display status with specific color
 // Map itemStatus to badge variants
-const variant: {[key: string]: "imperfect" | "destructive" | "unsatisfactory" | "success"} = {
+const variant: {[key: string]: "nowhere" | "imperfect" | "destructive" | "unsatisfactory" | "success"} = {
+    draft: "nowhere",
     "for-sale": "imperfect",
     pending: "unsatisfactory",
     withdrawn: "destructive",

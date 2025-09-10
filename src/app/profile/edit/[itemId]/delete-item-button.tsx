@@ -69,7 +69,7 @@ export default function DeleteItemButton({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel disabled={isDeleting} >Cancel</AlertDialogCancel>
                     <Button onClick={handleDeleteClick} disabled={isDeleting}>
                         {isDeleting ? "Deleting..." : "Delete Item"}
                     </Button>

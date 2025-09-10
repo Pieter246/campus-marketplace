@@ -15,7 +15,7 @@ const formSchema = z.object({
     realCondition: z.string(),
 })
 
-export default function ApproveButton({
+export default function ApproveForm({
     id,
     condition
 }: {

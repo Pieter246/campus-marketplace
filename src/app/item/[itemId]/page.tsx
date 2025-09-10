@@ -11,8 +11,10 @@ import { cookies } from "next/headers";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { auth } from "@/firebase/server";
 import BuyButton from "./buy-button";
-import ApproveButton from "./approve-button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import ApproveForm from "./approve-form";
+import SellButton from "./sell-button";
+import WithdrawButton from "./withdraw-button";
 
 export const dynamic = "force-dynamic"; //caching for Vercel
 
@@ -41,8 +43,7 @@ export default async function Item({params}: {
     return (
         <div>
             <Card>
-                <CardHeader >
-                    <BackButton />
+                <CardHeader>               
                     <CardTitle className="text-3xl font-bold">{item.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -112,13 +113,24 @@ export default async function Item({params}: {
                     </div>                    
                     {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && ( //Show the Buy button if the user is not logged in, or if they are logged in but not an admin, and they are not the seller of the item.
                         <BuyButton id={item.id} />
-                    )}                   
+                    )}              
+                    <div className="pt-5 mt-5 border-t-2"></div>
+
+                    <div className="flex gap-3 pt-2">
+                        {(verifiedToken && verifiedToken.uid === item.sellerId && item.status === "draft") && ( //Show the Sell button only if the user is logged in and their item's status is draft
+                            <SellButton id={item.id} />
+                        )} 
+                        {((verifiedToken && verifiedToken.uid === item.sellerId) && (item.status === "pending" || item.status === "for-sale")) && ( //Show the Withdrawn button only if the user is logged in and their item's status is pending or for-sale which wil set to draft state
+                            <WithdrawButton id={item.id} />
+                        )}
+                        <BackButton />                 
+                    </div>                                                       
                 </CardContent>
             </Card>
             {verifiedToken && verifiedToken.admin && ( // Only admins can approve items
                 <Card>
                     <CardContent>
-                        <ApproveButton id={item.id} condition={item.condition}/>                       
+                        <ApproveForm id={item.id} condition={item.condition}/>                       
                     </CardContent>
                 </Card>
             )}

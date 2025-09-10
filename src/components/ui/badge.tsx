@@ -26,7 +26,9 @@ const badgeVariants = cva(
         imperfect:
           "bg-lime-500 text-white border-transparent",
         unsatisfactory:
-          "bg-amber-600 text-white border-transparent"
+          "bg-amber-600 text-white border-transparent",
+        nowhere:
+          "bg-gray-500 text-white border-transparent"
       },
     },
     defaultVariants: {

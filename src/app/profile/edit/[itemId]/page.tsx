@@ -13,7 +13,7 @@ export default async function EditProperty({
     // Parameter gets itemId because route is /dashboard/edit/[itemId]
     const paramsValue = await params;
     const item = await getItemById(paramsValue.itemId);
-    console.log({ item });
+    //console.log({ item });
 
     return ( 
         <div>
