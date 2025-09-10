@@ -184,12 +184,6 @@ export default function LoginForm() {
             Reset it
           </Link>
         </p>
-
-        <div className="mt-6 text-center text-gray-500 text-sm">
-          Demo User:<br />
-          Email: user@example.com<br />
-          Password: password12345
-        </div>
       </div>
     </div>
   );

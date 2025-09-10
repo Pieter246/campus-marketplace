@@ -1,10 +1,20 @@
-// app/privacy/page.tsx
 "use client";
 
-import Link from "next/link";
 import Button from "@/components/ui/Button";
+import { useRouter } from "next/navigation";
 
 export default function PrivacyPolicyPage() {
+  const router = useRouter();
+
+  const handleBack = () => {
+    // Go back if possible, otherwise fallback to home page
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <div className="flex justify-center items-center p-4">
       <div className="max-w-3xl w-full bg-white rounded-2xl shadow p-8">
@@ -60,13 +70,14 @@ export default function PrivacyPolicyPage() {
         </p>
 
         <div className="mt-8 text-center">
-            <Button
-                onClick={() => window.location.href = "/register"}
-                variant="secondary"
-                size="md"
-            >
-                Back to Register
-            </Button>
+          <Button
+            onClick={handleBack}
+            variant="secondary"
+            className="w-full"
+            size="md"
+          >
+            Go Back
+          </Button>
         </div>
       </div>
     </div>
