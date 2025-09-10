@@ -8,7 +8,7 @@ import Link from "next/link";
 import numeral from 'numeral';
 import { auth } from "@/firebase/server"
 
-export default async function UserItemsTable({page = 1}: {page?: number}) {
+export default async function UserPurchaseTable({page = 1}: {page?: number}) {
     //Get user token from cookies
     const cookieStore = await cookies();
     const token = await cookieStore.get("firebaseAuthToken")?.value;
@@ -25,14 +25,14 @@ export default async function UserItemsTable({page = 1}: {page?: number}) {
     if(!verifiedToken){
         return;
     }
-    
+
     const { data, totalPages } = await getItems({ // Get data for user
         pagination: {
             page,
             pageSize: 2,
         },
         filters: {
-            sellerId: verifiedToken.uid
+            buyerId: verifiedToken.uid
         }
     });
 
@@ -42,7 +42,7 @@ export default async function UserItemsTable({page = 1}: {page?: number}) {
         <>
             {!data.length && (
                 <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
-                    You have no items
+                    You have no purchases
                 </h1>
             )}                
             {!!data.length && (

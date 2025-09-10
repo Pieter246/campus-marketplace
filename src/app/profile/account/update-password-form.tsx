@@ -7,6 +7,7 @@ import { useAuth } from "@/context/auth";
 import { passwordValidation } from "@/validation/registerUser";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -27,7 +28,9 @@ const formSchema = z.object({
 });
 
 export default function UpdatePasswordForm(){
+    const router = useRouter();
     const auth = useAuth();
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -64,26 +67,22 @@ export default function UpdatePasswordForm(){
     };
 
     return (
-        <div className="pt-5 mt-5 border-t">
-            <h2 className="text-2xl font-bold pb-2">Update Password</h2>
+        <>
+            <h2 className="text-2xl font-bold mb-5 text-center">Update Password</h2>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)}>
                     <fieldset 
                         className="flex flex-col gap-4" 
                         disabled={form.formState.isSubmitting}
                     >          
-                        <FormField 
+                        <FormField
                             control={form.control} 
                             name="currentPassword" 
                             render={({field}) => (
                                 <FormItem>
-                                    <FormLabel>
-                                        Current password
-                                    </FormLabel>
                                     <FormControl>
-                                        <Input {...field} placeholder="Current Password" type="password" label="current password"/>
+                                        <Input {...field} type="password" label="Current password"/>
                                     </FormControl>
-                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
@@ -92,13 +91,9 @@ export default function UpdatePasswordForm(){
                             name="newPassword" 
                             render={({field}) => (
                                 <FormItem>
-                                    <FormLabel>
-                                        New password
-                                    </FormLabel>
                                     <FormControl>
-                                        <Input {...field} placeholder="New Password" type="password" label="New Password"/>
+                                        <Input {...field} type="password" label="New Password"/>
                                     </FormControl>
-                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
@@ -107,22 +102,31 @@ export default function UpdatePasswordForm(){
                             name="newPasswordConfirm" 
                             render={({field}) => (
                                 <FormItem>
-                                    <FormLabel>
-                                        Confirm New password
-                                    </FormLabel>
                                     <FormControl>
-                                        <Input {...field} placeholder="Confirm New password" type="password" label="Confirm password"/>
+                                        <Input {...field} type="password" label="Confirm password"/>
                                     </FormControl>
-                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
-                        <Button type="submit">
-                            Update password
+                        <Button 
+                            type="submit"
+                            disabled={form.formState.isSubmitting}
+                        >
+                            Update Password
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            disabled={form.formState.isSubmitting}   
+                            onClick={async () => {
+                                await auth?.logout();
+                                router.refresh();
+                            }}>                                         
+                            Sign Out
                         </Button>
                     </fieldset>
                 </form>
             </Form>
-        </div>        
+        </>        
     )
 }

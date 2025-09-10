@@ -27,18 +27,16 @@ export default async function Account() {
         (provider) => provider.providerId === "password"
     );
 
-    return <div className="">
-        <Card className="mt-10">
-            <CardHeader>
-                <CardTitle className="text-3xl font-bold">My Account</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Label>Email</Label>
-                <div>{decodedToken.email}</div>
-                {!!isPasswordProvider && 
-                    <UpdatePasswordForm />
-                }
-            </CardContent>
-        </Card>
-    </div>
+    return (
+        <div className="flex justify-center">
+            <Card className="mt-10 w-full max-w-md">
+                <CardContent>
+                    {!!isPasswordProvider && 
+                        <UpdatePasswordForm />
+                    }
+                </CardContent>
+            </Card>
+        </div>
+    );
+    
 }
