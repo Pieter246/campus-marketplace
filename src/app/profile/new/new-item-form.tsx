@@ -11,6 +11,7 @@ import { ref, uploadBytesResumable, UploadTask } from 'firebase/storage'
 import { storage } from '@/firebase/client'
 import { PlusCircle } from 'lucide-react'
 import z from 'zod'
+import { Breadcrumbs } from '@/components/ui/breadcrumb'
 
 export default function NewItemForm(){
     const auth = useAuth();
@@ -52,14 +53,29 @@ export default function NewItemForm(){
 
         router.push("/profile/user");
     }
-    return <div>
-        <ItemForm 
-            handleSubmit={handleSubmit} 
-            submitButtonLabel={
-            <>
-                Add Item Listing
-            </>
-        } 
-    />
-    </div>
+    return (
+        <div className="flex flex-col justify-center items-center p-4">
+            <Breadcrumbs items={[
+                {
+                    href: "/profile/user",
+                    label: "Profile"
+                }, 
+                {
+                    label: "New item"
+                }
+                ]}
+            />
+            <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
+                <ItemForm 
+                    handleSubmit={handleSubmit} 
+                    submitButtonLabel={
+                    <>
+                        Add Item Listing
+                    </>
+                    } 
+                />
+            </div>
+        </div>
+    );
+          
 }

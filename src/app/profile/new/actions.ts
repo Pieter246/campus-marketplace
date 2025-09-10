@@ -10,6 +10,7 @@ export const createItem = async (data: {
     price: number;
     status: "for-sale" | "pending" | "withdrawn" | "sold";
     condition: "new" | "used" | "fair" | "poor";
+    category: "books" | "electronics" | "clothing";
 }, authToken: string) => {
     const verifiedToken = await auth.verifyIdToken(authToken);
 
