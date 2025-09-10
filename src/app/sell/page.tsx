@@ -82,33 +82,6 @@ export default function SellPage() {
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    // Send to firebase
-    const response = await fetch("/api/items/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: form.title.trim(),
-        description: form.description.trim(),
-        price: priceNum,
-        categoryId: form.category, // assuming this maps directly
-        condition: "good", // hardcoded for now, or add to form
-        collectionAddress: "", // optional
-        collectionInstructions: "", // optional
-      }),
-    });
-
-    // Handle result
-    const result = await response.json();
-
-    if (!response.ok) {
-      alert(`Error: ${result.message}`);
-      return;
-    }
-
-    alert("Item created successfully!");
-    
     console.log({
       ...form,
       price: priceNum,

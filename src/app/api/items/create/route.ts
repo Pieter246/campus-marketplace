@@ -16,7 +16,7 @@ interface CreateItemRequest {
 
 export async function POST(req: NextRequest) {
   try {
-    // Authenticate the request
+    //Authenticate the request
     const user = await authenticateRequest(req)
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
