@@ -1,9 +1,9 @@
-// 7-day session timeout hook
+// 30-minute session timeout hook
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/firebase'
 
-const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+const THIRTY_MINUTES = 30 * 60 * 1000 // 30 minutes in milliseconds
 
 export function useSessionTimeout() {
   const router = useRouter()
@@ -15,8 +15,8 @@ export function useSessionTimeout() {
       if (loginTime) {
         const timeSinceLogin = Date.now() - parseInt(loginTime)
         
-        if (timeSinceLogin > SEVEN_DAYS) {
-          // Auto logout after 7 days
+        if (timeSinceLogin > THIRTY_MINUTES) {
+          // Auto logout after 30 minutes
           localStorage.removeItem('loginTime')
           auth.signOut()
           router.push('/login?reason=session-expired')
@@ -35,8 +35,8 @@ export function useSessionTimeout() {
     checkSession()
     setLoginTime()
 
-    // Check session every hour
-    const intervalId = setInterval(checkSession, 60 * 60 * 1000) // 1 hour
+    // Check session every 5 minutes
+    const intervalId = setInterval(checkSession, 5 * 60 * 1000) // 5 minutes
 
     // Listen for auth state changes
     const unsubscribe = auth.onAuthStateChanged((user) => {
