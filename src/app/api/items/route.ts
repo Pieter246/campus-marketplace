@@ -1,3 +1,4 @@
+/* NO LONGER NEEDED UNLESS USING ADMIN SDK
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 
@@ -36,3 +37,4 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+*/
