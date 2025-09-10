@@ -1,19 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 export default function SellPage() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+      
+      if (!currentUser) {
+        router.push('/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   const [form, setForm] = useState({
     title: "",
     description: "",
     price: "",
     category: "",
-    terms: false, // added for checkbox
+    condition: "good" as "new" | "like_new" | "good" | "fair" | "poor",
+    collectionAddress: "",
+    collectionInstructions: "",
+    terms: false,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
@@ -65,6 +85,12 @@ export default function SellPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+   if (!user) {
+      alert("You must be logged in to create an item");
+      router.push('/login');
+      return;
+    }
+
     const newErrors: { [key: string]: string } = {};
     if (!form.title.trim()) newErrors.title = "Title is required";
     if (!form.description.trim())
@@ -82,40 +108,59 @@ export default function SellPage() {
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    // Send to firebase
-    const response = await fetch("/api/items/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: form.title.trim(),
-        description: form.description.trim(),
-        price: priceNum,
-        categoryId: form.category, // assuming this maps directly
-        condition: "good", // hardcoded for now, or add to form
-        collectionAddress: "", // optional
-        collectionInstructions: "", // optional
-      }),
-    });
+    try {
+      const idToken = await user.getIdToken();
 
-    // Handle result
-    const result = await response.json();
+      // Send to API route
+      const response = await fetch("/api/items/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          title: form.title.trim(),
+          description: form.description.trim(),
+          price: priceNum,
+          categoryId: form.category,
+          condition: form.condition,
+          collectionAddress: form.collectionAddress.trim(),
+          collectionInstructions: form.collectionInstructions.trim(),
+        }),
+      });
 
-    if (!response.ok) {
-      alert(`Error: ${result.message}`);
-      return;
+      // Handle result
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${result.message}`);
+        return;
+      }
+
+      alert("Item created successfully!");
+      console.log("Created item:", result.item);
+      
+      // Redirect to success page or back to items list
+      router.push('/displayItems');
+      
+    } catch (error) {
+      console.error("Error creating item:", error);
+      alert("Failed to create item. Please try again.");
     }
+  }
 
-    alert("Item created successfully!");
-    
-    console.log({
-      ...form,
-      price: priceNum,
-      photos: photoFiles,
-    });
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
 
-    alert("Form submitted (Firestore code is commented out)");
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
   }
 
   return (
@@ -187,6 +232,49 @@ export default function SellPage() {
             {errors.category && (
               <p className="text-red-500 text-sm">{errors.category}</p>
             )}
+          </div>
+
+          {/* Condition */}
+          <div className="space-y-2">
+            <label htmlFor="condition" className="text-sm font-medium">
+              Condition
+            </label>
+            <select
+              id="condition"
+              className="w-full border rounded-md p-2 border-gray-300"
+              value={form.condition}
+              onChange={handleChange}
+            >
+              <option value="new">New</option>
+              <option value="like_new">Like New</option>
+              <option value="good">Good</option>
+              <option value="fair">Fair</option>
+              <option value="poor">Poor</option>
+            </select>
+          </div>
+
+          {/* Collection Address */}
+          <Input
+            id="collectionAddress"
+            label="Collection Address (Optional)"
+            placeholder="e.g. Campus Library, Res Hall 3"
+            value={form.collectionAddress}
+            onChange={handleChange}
+          />
+
+          {/* Collection Instructions */}
+          <div className="space-y-2">
+            <label htmlFor="collectionInstructions" className="text-sm font-medium">
+              Collection Instructions (Optional)
+            </label>
+            <textarea
+              id="collectionInstructions"
+              rows={2}
+              placeholder="e.g. Meet at the main entrance, Available after 2pm"
+              value={form.collectionInstructions}
+              onChange={handleChange}
+              className="w-full border rounded-md p-2 border-gray-300"
+            />
           </div>
 
           {/* Photo upload */}
