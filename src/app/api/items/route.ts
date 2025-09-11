@@ -1,6 +1,21 @@
-/* NO LONGER NEEDED UNLESS USING ADMIN SDK
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
+
+// Initialize Firebase Admin SDK
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
+
+const adminAuth = getAuth();
+const adminDb = getAdminFirestore();
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,13 +29,38 @@ export async function GET(req: NextRequest) {
     const decodedToken = await adminAuth.verifyIdToken(idToken);
     console.log("Authenticated user:", decodedToken.uid);
 
-    // Query items from Firestore
-    const itemsSnapshot = await adminDb
-      .collection("items")
-      .where("itemStatus", "==", "available")
-      .orderBy("postedAt", "desc")
-      .limit(10)
-      .get();
+    // Get query parameters
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 50); // Max 50 items
+    const status = searchParams.get("status") || "available";
+    const categoryId = searchParams.get("categoryId");
+    const sellerId = searchParams.get("sellerId");
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
+
+    // Build Firestore query
+    let query = adminDb.collection("items").where("itemStatus", "==", status);
+
+    if (categoryId) {
+      query = query.where("categoryId", "==", categoryId);
+    }
+    
+    if (sellerId) {
+      query = query.where("sellerId", "==", sellerId);
+    }
+
+    if (minPrice) {
+      query = query.where("price", ">=", parseFloat(minPrice));
+    }
+
+    if (maxPrice) {
+      query = query.where("price", "<=", parseFloat(maxPrice));
+    }
+
+    // Order by most recent and limit results
+    query = query.orderBy("postedAt", "desc").limit(limit);
+
+    const itemsSnapshot = await query.get();
 
     const items = itemsSnapshot.docs.map((doc) => ({
       itemId: doc.id,
@@ -28,7 +68,12 @@ export async function GET(req: NextRequest) {
       postedAt: doc.data().postedAt?.toDate?.()?.toISOString(),
     }));
 
-    return NextResponse.json({ success: true, items });
+    return NextResponse.json({ 
+      success: true, 
+      items,
+      count: items.length,
+      hasMore: items.length === limit 
+    });
   } catch (error: any) {
     console.error("Get items error:", error);
     return NextResponse.json(
@@ -37,4 +82,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-*/

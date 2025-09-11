@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
 export default function DisplayItemsPage() {
@@ -26,15 +25,24 @@ export default function DisplayItemsPage() {
 
     const fetchItems = async () => {
       try {
-        const itemsRef = collection(db, "items");
-        const q = query(itemsRef, where("itemStatus", "==", "available"), orderBy("postedAt", "desc"));
-        const snapshot = await getDocs(q);
-        const fetchedItems = snapshot.docs.map((doc) => ({
-          itemId: doc.id,
-          ...doc.data(),
-          postedAt: doc.data().postedAt?.toDate?.()?.toISOString(),
-        }));
-        setItems(fetchedItems);
+        const idToken = await user.getIdToken();
+        
+        const itemsResponse = await fetch("/api/items?limit=10&status=available", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${idToken}`,
+          },
+        });
+
+        const itemsData = await itemsResponse.json();
+
+        if (!itemsResponse.ok) {
+          console.error("Failed to fetch items:", itemsData.message);
+          setError(itemsData.message || "Failed to fetch items.");
+        } else {
+          console.log("Fetched items:", itemsData.items);
+          setItems(itemsData.items || []);
+        }
       } catch (err: any) {
         console.error("Fetch items error:", err);
         setError("Failed to fetch items.");
