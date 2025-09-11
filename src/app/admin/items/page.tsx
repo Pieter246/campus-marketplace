@@ -40,7 +40,7 @@ export default function AdminItemsPage() {
     }, 800);
   }, []);
 
-  if (loading) return <p>Loading items...</p>;
+  if (loading) return <><h1 className="text-2xl font-bold mb-6 text-primary">Manage Items</h1><p>Loading items...</p></>;
 
   return (
     <div>

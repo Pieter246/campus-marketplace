@@ -38,7 +38,7 @@ export default function ManageUsersPage() {
   );
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div className=" min-h-screen">
       <h1 className="text-2xl font-bold mb-6">Manage Users</h1>
 
       {/* Search bar */}
@@ -47,7 +47,7 @@ export default function ManageUsersPage() {
         placeholder="Search users..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-6 w-full max-w-md px-4 py-2 border rounded-lg shadow-sm"
+        className="mb-6 w-full max-w-sm px-4 py-2 border rounded-lg shadow-sm"
       />
 
       {/* Users table */}
