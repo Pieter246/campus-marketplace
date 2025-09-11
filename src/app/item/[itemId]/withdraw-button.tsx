@@ -45,7 +45,7 @@ export default function WithdrawButton({
 
         // Display message item placed under review for sale
         toast.success("Success!", {
-            description: `Your item has been withdraw and is now placed as draft`
+            description: `The item has been withdraw and is now placed as draft`
         });
 
         // Redirect user to dashboard to show item bought (Will not show query not implemented)
@@ -56,7 +56,8 @@ export default function WithdrawButton({
         <Button 
             className="flex-1"
             onClick={handleWithdrawClick} 
-            disabled={isWithdrawing}>
+            disabled={isWithdrawing}
+        >
             {isWithdrawing ? "Withdrawing..." : "Withdraw Item"}
         </Button>             
     );

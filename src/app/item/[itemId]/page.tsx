@@ -100,40 +100,69 @@ export default async function Item({params}: {
                         </h2>                                                             
                         <ItemConditionBadge condition={item.condition} className="mr-auto text-base"/>                                                      
                     </div>
-                    <h1 className="text-3xl font-semibold p-4">
-                        {addressLines.map((addressLine, index) => (
-                            <div key={index}>
-                                {addressLine}
-                                {index < addressLines.length - 1 && ","}
-                            </div>
-                        ))}
-                    </h1>
+                        <h1 className="text-3xl font-semibold p-4">
+                            {addressLines.map((addressLine, index) => (
+                                <div key={index}>
+                                    {addressLine}
+                                    {index < addressLines.length - 1 && ","}
+                                </div>
+                            ))}
+                        </h1>
                         <div className="item-description max-w-screen-md px-4">   {/*mx-auto*/}
                         <ReactMarkdown>{item.description}</ReactMarkdown>
-                    </div>                    
-                    {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && ( //Show the Buy button if the user is not logged in, or if they are logged in but not an admin, and they are not the seller of the item.
-                        <BuyButton id={item.id} />
-                    )}              
-                    <div className="pt-5 mt-5 border-t-2"></div>
+                    </div> 
+                    <div className="pt-5 mt-5 border-t-2"></div>         
+                    {item.status !== "sold" &&
+                        <>                          
+                            {/* Render Buy/Sell/Withdraw/Back only if ApproveForm is NOT shown */}
+                            {!(verifiedToken?.admin && item.status === "pending") && (
+                                <>
+                                    <div className="grid grid-cols-2 gap-3 pt-2">
+                                        {/* Buy button */}
+                                        {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && (
+                                            <div className="flex flex-col gap-2">
+                                                <BuyButton id={item.id} />
+                                            </div>
+                                        )}
 
-                    <div className="flex gap-3 pt-2">
-                        {(verifiedToken && verifiedToken.uid === item.sellerId && item.status === "draft") && ( //Show the Sell button only if the user is logged in and their item's status is draft
-                            <SellButton id={item.id} />
-                        )} 
-                        {((verifiedToken && verifiedToken.uid === item.sellerId) && (item.status === "pending" || item.status === "for-sale")) && ( //Show the Withdrawn button only if the user is logged in and their item's status is pending or for-sale which wil set to draft state
-                            <WithdrawButton id={item.id} />
-                        )}
-                        <BackButton />                 
-                    </div>                                                       
+                                        {/* Sell button */}
+                                        {(verifiedToken?.uid === item.sellerId && item.status === "draft") && (
+                                            <div className="flex flex-col gap-2">
+                                                <SellButton id={item.id} />
+                                            </div>
+                                        )}
+
+                                        {/* Withdraw button */}
+                                        {(
+                                            (verifiedToken?.admin && item.status === "for-sale") ||
+                                            (verifiedToken?.uid === item.sellerId && ["pending", "for-sale"].includes(item.status))
+                                            ) && (
+                                                <div className="flex flex-col gap-2">
+                                                    <WithdrawButton id={item.id} />
+                                                </div>
+                                        )}
+
+                                        {/* Back button */}
+                                        <div className="flex flex-col gap-2">
+                                            <BackButton />
+                                        </div>
+                                    </div>   
+                                </>
+                            )}                                                    
+
+                            {/* Approve form (self-contained with its own BackButton) */}
+                            {verifiedToken?.admin && item.status === "pending" && (
+                                <ApproveForm id={item.id} condition={item.condition} />
+                            )}
+                        </>
+                    }
+                    {item.status === "sold" && // Only show back button if Item is sold                    
+                        <div>
+                            <BackButton />
+                        </div>    
+                    }                                                                                                                             
                 </CardContent>
             </Card>
-            {verifiedToken && verifiedToken.admin && ( // Only admins can approve items
-                <Card>
-                    <CardContent>
-                        <ApproveForm id={item.id} condition={item.condition}/>                       
-                    </CardContent>
-                </Card>
-            )}
         </div>
     )
 }

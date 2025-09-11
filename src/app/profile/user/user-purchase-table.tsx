@@ -29,7 +29,7 @@ export default async function UserPurchaseTable({page = 1}: {page?: number}) {
     const { data, totalPages } = await getItems({ // Get data for user
         pagination: {
             page,
-            pageSize: 2,
+            pageSize: 10,
         },
         filters: {
             buyerId: verifiedToken.uid
@@ -86,14 +86,14 @@ export default async function UserPurchaseTable({page = 1}: {page?: number}) {
                         <TableRow>
                             <TableCell colSpan={4} className="text-center">
                                 {Array.from({length: totalPages}).map((_, i) => (
-                                    <Button 
+                                    <Button
                                         disabled={page === i + 1}
                                         key={i}
                                         asChild={page !== i + 1}
                                         variant="outline"
                                         className="mx-1"
                                     >
-                                        <Link href={`/profile/user?page=${i + 1}`}>{i + 1}</Link>
+                                        <Link href={`/profile/user?tab=purchases&page=${i + 1}`}>{i + 1}</Link>
                                     </Button>
                                 ))}
                             </TableCell>

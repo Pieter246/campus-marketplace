@@ -49,11 +49,15 @@ export default function BuyButton({
         });
 
         // Redirect user to dashboard to show item bought (Will not show query not implemented)
-        router.push("/profile/user")
+        router.push("/profile/user?tab=purchases")
     };
 
     return (
-        <Button onClick={handleBuyClick} disabled={isBuying}>
+        <Button 
+            className="flex-1" 
+            onClick={handleBuyClick} 
+            disabled={isBuying}
+        >
             {isBuying ? "Buying..." : "Buy Item"}
         </Button>             
     );

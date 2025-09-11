@@ -56,7 +56,8 @@ export default function SellButton({
         <Button 
             className="flex-1"
             onClick={handleSellClick} 
-            disabled={isSelling}>
+            disabled={isSelling}
+        >
             {isSelling ? "Selling..." : "Sell Item"}
         </Button>             
     );

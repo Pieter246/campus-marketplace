@@ -9,7 +9,6 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { ref, uploadBytesResumable, UploadTask } from 'firebase/storage'
 import { storage } from '@/firebase/client'
-import { PlusCircle } from 'lucide-react'
 import z from 'zod'
 import { Breadcrumbs } from '@/components/ui/breadcrumb'
 
@@ -75,5 +74,4 @@ export default function NewItemForm(){
             </div>
         </div>
     );
-          
 }

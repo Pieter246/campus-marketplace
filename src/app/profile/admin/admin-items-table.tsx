@@ -11,14 +11,14 @@ export default async function AdminItemsTable({page = 1}: {page?: number}) {
     const { data, totalPages } = await getItems({ // Get data for admin
         pagination: {
             page,
-            pageSize: 2,        
+            pageSize: 10,        
         },
         filters: {
-            status: ["for-sale", "pending", "withdrawn", "sold"] //pending
+            status: ["for-sale", "pending"]
         }
     });     
     
-    console.log({ data })
+    console.log({ data });
     
     return (
         <>
@@ -75,7 +75,7 @@ export default async function AdminItemsTable({page = 1}: {page?: number}) {
                                         variant="outline"
                                         className="mx-1"
                                     >
-                                        <Link href={`/dashboard/admin?page=${i + 1}`}>{i + 1}</Link>
+                                        <Link href={`/dashboard/admin?tab=dashboard&page=${i + 1}`}>{i + 1}</Link>
                                     </Button>
                                 ))}
                             </TableCell>

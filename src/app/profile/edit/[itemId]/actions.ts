@@ -74,7 +74,6 @@ export const withdrawItem = async (id: string, authToken: string) =>{
         .doc(id)
         .update({
             status: "draft",
-            buyerId: verifiedToken.uid,
             updated: new Date()
         });
 }
@@ -97,7 +96,6 @@ export const sellItem = async (id: string, authToken: string) =>{
         .doc(id)
         .update({
             status: "pending",
-            buyerId: verifiedToken.uid,
             updated: new Date()
         });
 }
