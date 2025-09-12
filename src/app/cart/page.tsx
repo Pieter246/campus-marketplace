@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button"
 
 export default function CartPage() {
   const [cart, setCart] = useState([
@@ -25,16 +25,34 @@ export default function CartPage() {
       name: "USB Flash Drive 32GB",
       price: 120,
       quantity: 1,
-      image: "", // example empty -> will show placeholder
+      image: "", // empty → placeholder
     },
   ])
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const vat = (subtotal * 15) / 115 // extracts VAT portion (15% included in price)
-  const [loading, setLoading] = useState(false);
+  const vat = (subtotal * 15) / 115
+  const [loading, setLoading] = useState(false)
 
-  function handlePayNow() {
-    alert("This would redirect to payment. (Demo)")
+  async function handlePayNow() {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/payfast/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url // redirect to PayFast sandbox
+      } else {
+        alert("Error initiating payment: " + (data.message || ""))
+      }
+    } catch (err) {
+      console.error(err)
+      alert("Failed to initiate payment")
+    } finally {
+      setLoading(false)
+    }
   }
 
   function handleDelete(id: number) {
@@ -52,33 +70,22 @@ export default function CartPage() {
           <>
             <ul className="divide-y divide-gray-200">
               {cart.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex justify-between items-center py-4"
-                >
-                  {/* Left side: thumbnail + details */}
+                <li key={item.id} className="flex justify-between items-center py-4">
+                  {/* Left: thumbnail + details */}
                   <div className="flex items-center gap-4">
-                    {/* Thumbnail container (always rendered) */}
                     <div className="relative w-16 h-16 rounded-md bg-gray-200 overflow-hidden flex-shrink-0">
-                      {/* Image: if it exists, try to display it; on error hide it so placeholder shows */}
                       {item.image ? (
                         <img
                           src={item.image}
                           alt={item.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // hide the broken image so the gray placeholder remains visible
-                            (e.currentTarget as HTMLImageElement).style.display = "none"
-                          }}
+                          onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
                         />
                       ) : null}
-
-                      {/* Placeholder visible underneath image (or alone if image missing/errored) */}
                       <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs select-none">
                         No Image
                       </div>
                     </div>
-
                     <div>
                       <p className="font-medium text-gray-800">{item.name}</p>
                       <p className="text-sm text-gray-500">
@@ -87,7 +94,7 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  {/* Right side: price + delete */}
+                  {/* Right: price + delete */}
                   <div className="flex items-center gap-4">
                     <p className="font-semibold text-gray-700">
                       R{item.price * item.quantity}
@@ -104,7 +111,7 @@ export default function CartPage() {
               ))}
             </ul>
 
-            {/* Full-width summary strip */}
+            {/* Summary strip */}
             <div className="mt-8 -mx-8 px-8 py-4 bg-gray-50 text-gray-700 space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
@@ -120,9 +127,9 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Checkout button */}
+            {/* PayFast button */}
             <Button
-              type="submit"
+              type="button"
               className="w-full mt-8"
               loading={loading}
               onClick={handlePayNow}
@@ -130,12 +137,9 @@ export default function CartPage() {
               Pay Now
             </Button>
 
-            {/* Continue shopping link */}
+            {/* Continue shopping */}
             <div className="mt-4 text-center">
-              <Link
-                href="/shop"
-                className="text-sm text-gray-600 hover:text-blue-600 transition"
-              >
+              <Link href="/shop" className="text-sm text-gray-600 hover:text-blue-600 transition">
                 ← Continue Shopping
               </Link>
             </div>
