@@ -36,7 +36,7 @@ export default async function ItemSearch({
     const {data, totalPages} = await getItems({
         pagination: {
             page,
-            pageSize: 3
+            pageSize: 10
         },
         filters: {
             minPrice,
