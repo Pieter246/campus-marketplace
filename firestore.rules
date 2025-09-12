@@ -1,92 +1,102 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if user is admin
+
+    // Helper function to check if user is admin (only if user document exists)
     function isAdmin() {
-      return request.auth != null && 
+      return request.auth != null &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
-    
-    // Testing workflow changes - updated comment to trigger workflow
-    // Testing workflow changes - users can only access their own data
-    // Users collection - users can only access their own data, admins can access all
+
+    // Helper function to check if user document exists
+    function userExists() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Users collection - users can create their own document, read/write their own data, admins can access all
     match /users/{userId} {
-      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      // Allow create for new users (when document doesn't exist yet)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow read/write for existing users
+      allow read, update, delete: if request.auth != null && (request.auth.uid == userId || isAdmin());
       // Only admins can update isAdmin field
-      allow update: if request.auth != null && 
+      allow update: if request.auth != null &&
         (request.auth.uid == userId || isAdmin()) &&
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']) || isAdmin());
     }
-    
+
     // User profiles - users can read all profiles but only edit their own
     match /userProfiles/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Allow create for new users
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow update for existing profiles
+      allow update, delete: if request.auth != null && request.auth.uid == userId;
     }
-    
+
+    // Carts - users can only access their own cart
+    match /carts/{cartId} {
+      allow read, write: if request.auth != null && request.auth.uid == cartId;
+    }
+
     // Categories - read-only for all authenticated users, admins can manage
     match /categories/{categoryId} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
-    
+
     // Items - users can read all, but only edit their own; admins can moderate
     match /items/{itemId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == resource.data.sellerId;
-      allow update, delete: if request.auth != null && 
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.sellerId;
+      allow update, delete: if request.auth != null &&
         (request.auth.uid == resource.data.sellerId || isAdmin());
     }
-    
+
     // Item photos - linked to items ownership
-    match /itemPhotos/{photoId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        exists(/databases/$(database)/documents/items/$(resource.data.itemId)) &&
-        get(/databases/$(database)/documents/items/$(resource.data.itemId)).data.sellerId == request.auth.uid;
-    }
-    
-    // Carts - users can only access their own cart
-    match /carts/{cartId} {
-      allow read, write: if request.auth != null && request.auth.uid == cartId;
-    }
-    
+    // match /itemPhotos/{photoId} {
+    //   allow read: if request.auth != null;
+    //   allow write: if request.auth != null &&
+    //     exists(/databases/$(database)/documents/items/$(resource.data.itemId)) &&
+    //     get(/databases/$(database)/documents/items/$(resource.data.itemId)).data.sellerId == request.auth.uid;
+    // }
+
     // Cart items - users can only access items in their cart
     match /cartItems/{cartItemId} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
         exists(/databases/$(database)/documents/carts/$(resource.data.cartId)) &&
         get(/databases/$(database)/documents/carts/$(resource.data.cartId)).data.buyerId == request.auth.uid;
     }
-    
+
     // Orders - users can access orders where they are buyer or seller
     match /orders/{orderId} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
         (request.auth.uid == resource.data.buyerId || request.auth.uid == resource.data.sellerId);
     }
-    
+
     // Order items - linked to order access
     match /orderItems/{orderItemId} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
         exists(/databases/$(database)/documents/orders/$(resource.data.orderId)) &&
         (get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.buyerId == request.auth.uid ||
          get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.sellerId == request.auth.uid);
     }
-    
+
     // Payments - linked to order access
     match /payments/{paymentId} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
         exists(/databases/$(database)/documents/orders/$(resource.data.orderId)) &&
         (get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.buyerId == request.auth.uid ||
          get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.sellerId == request.auth.uid);
     }
-    
+
     // Messages - users can access messages they sent or received; admins can moderate
     match /messages/{messageId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.senderId || 
-         request.auth.uid == resource.data.receiverId || 
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == resource.data.senderId ||
+         request.auth.uid == resource.data.receiverId ||
          isAdmin());
     }
   }

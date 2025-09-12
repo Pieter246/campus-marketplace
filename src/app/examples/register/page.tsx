@@ -55,20 +55,31 @@ export default function RegisterForm() {
       // Get Firebase ID token
       const idToken = await user.getIdToken()
       
-      // Sync user with Firestore database
-      await fetch("/api/auth/sync-user", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          displayName: null,
-          emailVerified: user.emailVerified
+      // Sync user with Firestore database (with timeout)
+      const syncResponse = await Promise.race([
+        fetch("/api/auth/sync-user", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            displayName: null,
+            emailVerified: user.emailVerified
+          }),
         }),
-      })
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Sync timeout after 30 seconds')), 30000)
+        )
+      ]) as Response
+
+      const syncResult = await syncResponse.json()
+
+      if (!syncResponse.ok) {
+        throw new Error(`Sync failed: ${syncResult.message || syncResult.error || 'Unknown error'}`)
+      }
 
       router.push("/")
     } catch (error: any) {
@@ -92,21 +103,32 @@ export default function RegisterForm() {
       // Get Firebase ID token
       const idToken = await user.getIdToken()
       
-      // Sync user with Firestore database
-      await fetch("/api/auth/sync-user", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          emailVerified: user.emailVerified,
-          photoURL: user.photoURL
+      // Sync user with Firestore database (with timeout)
+      const syncResponse = await Promise.race([
+        fetch("/api/auth/sync-user", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            emailVerified: user.emailVerified,
+            photoURL: user.photoURL
+          }),
         }),
-      })
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Sync timeout after 30 seconds')), 30000)
+        )
+      ]) as Response
+
+      const syncResult = await syncResponse.json()
+
+      if (!syncResponse.ok) {
+        throw new Error(`Sync failed: ${syncResult.message || syncResult.error || 'Unknown error'}`)
+      }
 
       router.push("/")
     } catch (error: any) {
