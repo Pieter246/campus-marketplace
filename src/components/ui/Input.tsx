@@ -1,11 +1,17 @@
+import * as React from "react"
+
 import { cn } from "@/lib/utils";
+import { useFormField } from "./form";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
 };
 
-export default function Input({ label, error, className, ...props }: InputProps) {
+export default function Input({ label, className, ...props }: InputProps) {
+  const { error, formMessageId } = useFormField()
+  const body = error ? String(error?.message ?? "") : props.children
+
   return (
     <div className="relative w-full mb-5">
       <input
@@ -32,7 +38,9 @@ export default function Input({ label, error, className, ...props }: InputProps)
       >
         {label}
       </label>
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+      {error && <p className="mt-1 text-sm text-red-500">{body}</p>}
     </div>
   );
 }
+
+export { Input }
