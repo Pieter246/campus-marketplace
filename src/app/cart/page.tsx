@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Trash2 } from "lucide-react" //npm install lucide-react
 
 export default function CartPage() {
   const [cart, setCart] = useState([
@@ -45,7 +44,7 @@ export default function CartPage() {
                       className="text-red-500 hover:text-red-700"
                       aria-label="Remove item"
                     >
-                      <Trash2 size={20} />
+                      X
                     </button>
                   </div>
                 </li>
