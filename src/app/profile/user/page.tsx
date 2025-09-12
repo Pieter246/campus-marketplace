@@ -22,13 +22,13 @@ export default async function UserDashboard({
             <Tabs defaultValue={tab} className="w-full">
                 <TabsList className="w-full h-20">
                     <TabsTrigger value="dashboard" asChild className="text-2xl font-bold tracking-widest rounded-none data-[state=active]:bg-sky-700 data-[state=active]:text-white">
-                        <Link href="/profile/user?tab=dashboard">Dashboard</Link>
+                        <Link href="/profile/user?tab=dashboard">Active orders</Link>
                     </TabsTrigger>
                     <TabsTrigger value="purchases" asChild className="text-2xl font-bold tracking-widest rounded-none data-[state=active]:bg-sky-700 data-[state=active]:text-white">
                         <Link href="/profile/user?tab=purchases">Purchase history</Link>
                     </TabsTrigger>
                     <TabsTrigger value="account" asChild className="text-2xl font-bold tracking-widest rounded-none data-[state=active]:bg-sky-700 data-[state=active]:text-white">
-                        <Link href="/profile/user?tab=account">Account</Link>
+                        <Link href="/profile/user?tab=account">Password</Link>
                     </TabsTrigger>
                 </TabsList>
 
