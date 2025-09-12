@@ -40,38 +40,49 @@ export default function AdminItemsPage() {
     }, 800);
   }, []);
 
-  if (loading) return <><h1 className="text-2xl font-bold mb-6 text-primary">Manage Items</h1><p>Loading items...</p></>;
+  if (loading)
+    return (
+      <>
+        <h1 className="text-2xl font-bold mb-6 text-primary">Manage Items</h1>
+        <p>Loading items...</p>
+      </>
+    );
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6 text-primary">Manage Items</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <ul className="divide-y divide-gray-200">
         {items.map((item) => (
-          <div
+          <li
             key={item.id}
-            className="bg-white shadow rounded-lg p-4 flex gap-4 items-start"
+            className="flex items-center justify-between gap-4 py-3 hover:bg-gray-50 px-2 rounded"
           >
-            <img
-              src={item.thumbnail}
-              alt={item.title}
-              className="w-24 h-24 object-cover rounded-lg"
-            />
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold">{item.title}</h2>
-              <p className="text-gray-600 text-sm">
-                Seller: {item.seller.name} ({item.seller.email})
-              </p>
-              <p className="text-primary font-bold mt-1">${item.price}</p>
+            <div className="flex items-center gap-4">
+              <img
+                src={item.thumbnail}
+                alt={item.title}
+                className="w-12 h-12 object-cover rounded-md flex-shrink-0"
+              />
+              <div className="flex flex-col">
+                <span className="font-semibold">{item.title}</span>
+                <span className="text-gray-500 text-sm">
+                  {item.seller.name} ({item.seller.email})
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <span className="text-primary font-bold">${item.price}</span>
               <Link
                 href={`/admin/items/${item.id}`}
-                className="inline-block mt-2 text-sm text-blue-600 hover:underline"
+                className="text-sm hover:underline cursor-pointer"
               >
-                Review Item →
+                Review →
               </Link>
             </div>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
