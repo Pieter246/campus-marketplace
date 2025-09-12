@@ -6,12 +6,12 @@ Repository for the Campus Marketplace web app for CMPG323-2025.
 R. Van Heerden
 
 *Project Leaders*  
-P. Bekker  
+P. Meyer  
 D. De Jager
 
 *Developers*  
 D. Malatji  
-P. Meyer  
+P. Bekker  
 B. Motsiri  
 J. Nell  
 T. Nkashe  

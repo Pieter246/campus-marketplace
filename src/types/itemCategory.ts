@@ -1,0 +1,1 @@
+export type ItemCategory = "books" | "electronics" | "clothing";

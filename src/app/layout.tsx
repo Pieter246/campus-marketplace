@@ -4,6 +4,10 @@ import "./globals.css";
 import Footer from "@/components/ui/Footer";
 import Logo from "@/components/ui/Logo";
 import SessionManager from "@/components/SessionManager";
+import Link from "next/link";
+import { Toaster } from "sonner";
+import { AuthProvider } from "@/context/auth";
+import AuthButtons from "@/components/auth-buttons";
 
 const rubikSans = localFont({
   src: "./fonts/Rubik-Var.ttf",
@@ -30,10 +34,20 @@ export default function RootLayout({
       <body
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased flex flex-col min-h-screen`}
       >
-        <SessionManager>
-          <header className="p-4 bg-white shadow flex items-center sticky top-0 z-50">
-            <Logo className="h-10 w-auto" />
-            <h1 className="ml-4 text-xl font-bold">Campus Marketplace</h1>
+        <AuthProvider>
+          <header className="bg-white shadow p-4 flex items-center justify-between sticky top-0 z-10"> {/* justify-between very important */}  
+            <Link href="/" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
+              <Logo className="h-10 w-auto"/>
+              <span>Campus Marketplace</span>
+            </Link>
+            <ul className="flex gap-6 items-center">
+              <li>
+                <Link href="/item-search" className="uppercase tracking-widest hover:underline">Item search</Link>
+              </li>              
+              <li>
+                <AuthButtons />
+              </li>
+            </ul>
           </header>
 
           {/* Main content grows to fill available space */}
@@ -41,7 +55,8 @@ export default function RootLayout({
 
           {/* Footer at bottom */}
           <Footer />
-        </SessionManager>
+          <Toaster richColors closeButton />
+        </AuthProvider>
       </body>
     </html>
   );
