@@ -15,7 +15,7 @@ export default function AuthButtons() {
         <div>
             {!!auth?.currentUser && (
             <DropdownMenu>
-                <DropdownMenuTrigger>
+                <DropdownMenuTrigger className="cursor-pointer">
                     <Avatar>
                         {!!auth.currentUser.photoURL && (
                             <Image 
@@ -23,14 +23,15 @@ export default function AuthButtons() {
                                 alt={`${auth.currentUser.displayName} avatar`}
                                 width={70}
                                 height={70}
+                                className="cursor-pointer"
                             />
                         )}
-                        <AvatarFallback className="text-sky-950">
+                        <AvatarFallback className="cursor-pointer">
                             {(auth.currentUser.displayName || auth.currentUser.email)?.[0]}
                         </AvatarFallback>
                     </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="mr-4 mt-5">
                     <DropdownMenuLabel>
                         <div>{auth.currentUser.displayName}</div>
                         <div className="font-normal text-xs">
@@ -43,19 +44,21 @@ export default function AuthButtons() {
                     </DropdownMenuItem> */}
                     {!!auth.customClaims?.admin && (
                         <DropdownMenuItem asChild>
-                            <Link href="/profile/admin">Admin Profile</Link>
+                            <Link href="/profile/admin" className="cursor-pointer">Admin Profile</Link>
                         </DropdownMenuItem>
                     )} 
                     {!auth.customClaims?.admin && (
                         <DropdownMenuItem asChild>
-                            <Link href="/profile/user">My Profile</Link>
+                            <Link href="/profile/user" className="cursor-pointer">My Profile</Link>
                         </DropdownMenuItem>
                     )}
                     <DropdownMenuItem 
                     onClick={async () => {
                         await auth.logout();
                         router.refresh();
-                    }}>
+                    }}
+                    className="cursor-pointer"
+                    >
                         Logout
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -63,9 +66,9 @@ export default function AuthButtons() {
             )}
             {!auth?.currentUser &&
                 <div className="flex gap-2 items-center">
-                    <Link href="/login" className="uppercase tracking-widest hover:underline">Login</Link>
-                    <div className="h-8 w-[1px] bg-black/50"/>
-                    <Link href="/register" className="uppercase tracking-widest hover:underline">Signup</Link>
+                    <Link href="/login" className="hover:underline">Login</Link>
+                    <div className="h-6 w-[1px] bg-gray-500/50"/>
+                    <Link href="/register" className="hover:underline">Sign Up</Link>
                 </div>
             }
         </div>

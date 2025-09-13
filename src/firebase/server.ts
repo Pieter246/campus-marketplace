@@ -1,7 +1,7 @@
 import {Firestore, getFirestore} from 'firebase-admin/firestore';
 import { getApps, ServiceAccount } from 'firebase-admin/app';
 import admin from 'firebase-admin';
-import { Auth, getAuth } from 'firebase-admin/auth';
+import { Auth, getAuth, DecodedIdToken } from 'firebase-admin/auth';
 
 const serviceAccount = {
   "type": "service_account",
@@ -34,6 +34,26 @@ if (!currentApps.length) {
 }
 
 export { firestore, auth };
+
+/** START NEW CODE DDJ (also the DecodedIdToken import)
+ * Safely verify a Firebase ID token.
+ * Returns null if token is missing or expired.
+ */
+export const verifyTokenSafe = async (token?: string): Promise<DecodedIdToken | null> => {
+  if (!token) return null;
+
+  try {
+    return await auth.verifyIdToken(token);
+  } catch (err: any) {
+    if (err.code === 'auth/id-token-expired') {
+      console.warn('Firebase ID token expired');
+      return null; // token expired, treat user as unauthenticated
+    }
+    console.error('Error verifying Firebase token:', err);
+    return null; // treat any verification error as unauthenticated
+  }
+};
+/* END NEW CODE DDJ */
 
 export const getTotalPages = async (
   firestoreQuery: FirebaseFirestore.Query<

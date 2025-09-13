@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps } from "firebase/app";
-import { Auth, getAuth } from "firebase/auth";
+import { Auth, getAuth, User } from "firebase/auth";
 import { FirebaseStorage, getStorage } from "firebase/storage";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -32,5 +32,22 @@ if (!currentApps.length) {
    auth = getAuth(app);
    storage = getStorage(app);
 }
+
+// -------------------
+// NEW DDJ: get a fresh token from the current user
+// -------------------
+const getFreshToken = async (): Promise<string | null> => {
+  const user: User | null = auth.currentUser;
+  if (!user) return null;
+
+  try {
+    // force refresh the ID token if expired
+    const token = await user.getIdToken(true);
+    return token;
+  } catch (err) {
+    console.error("Error getting fresh Firebase token:", err);
+    return null;
+  }
+};
 
 export { auth, storage  };
