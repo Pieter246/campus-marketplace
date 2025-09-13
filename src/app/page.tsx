@@ -9,145 +9,138 @@ import numeral from "numeral";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { auth } from "@/firebase/server";
-import { DecodedIdToken } from "firebase-admin/auth";
+import { verifyTokenSafe } from "@/firebase/server";
 import ItemConditionBadge from "@/components/item-condition-badge";
+import SortDropdown from "@/components/ui/SortDropdown";
+import Logo from "@/components/ui/Logo";
 
-export default async function Home({
-    searchParams
-}: {
-    searchParams: Promise<any>
-}) {
-    const searchParamsValues = await searchParams;
 
-    const parsedPage = parseInt(searchParamsValues?.page);
-    const parsedMinPrice = parseInt(searchParamsValues?.minPrice);
-    const parsedMaxPrice = parseInt(searchParamsValues?.maxPrice);
-    
-    const page = isNaN(parsedPage) ? 1 : parsedPage;
-    const minPrice = isNaN(parsedMinPrice) ? null : parsedMinPrice;
-    const maxPrice = isNaN(parsedMaxPrice) ? null : parsedMaxPrice;
+export default async function Home({ searchParams }: { searchParams: Promise<any> }) {
+  const searchParamsValues = await searchParams;
 
-    const condition: string | null = searchParamsValues.condition ?? null;
-    //const condition = searchParamsValues.condition ? null : searchParamsValues.condition;
-    //const condition: string[] = searchParamsValues.condition ? searchParamsValues.condition.split(","): ["all"];
-    //const condition: string[] = searchParamsValues.condition?.split(",")[0] ?? null; // Get single value
+  const parsedPage = parseInt(searchParamsValues?.page);
+  const parsedMinPrice = parseInt(searchParamsValues?.minPrice);
+  const parsedMaxPrice = parseInt(searchParamsValues?.maxPrice);
 
-    const {data, totalPages} = await getItems({
-        pagination: {
-            page,
-            pageSize: 10
-        },
-        filters: {
-            minPrice,
-            maxPrice,
-            condition,
-            status: ["for-sale"]
-        }
-    });
+  const page = isNaN(parsedPage) ? 1 : parsedPage;
+  const minPrice = isNaN(parsedMinPrice) ? null : parsedMinPrice;
+  const maxPrice = isNaN(parsedMaxPrice) ? null : parsedMaxPrice;
 
-    // Get user token from the cookies
-    const cookieStore = await cookies();
-    const token = cookieStore.get("firebaseAuthToken")?.value;
-    let verifiedToken: DecodedIdToken | null;
+  const condition: string | null = searchParamsValues.condition ?? null;
+  const searchTerm: string | null = searchParamsValues.search ?? null;
 
-    // Grab verified token if there is a token
-    if(token){
-        verifiedToken = await auth.verifyIdToken(token);
-    }
+  // Get user token from cookies
+  const cookieStore = await cookies();
+  const token = cookieStore.get("firebaseAuthToken")?.value;
+  const verifiedToken = await verifyTokenSafe(token); // safe verification
 
-    return (
-        <div className="max-w-screen-lg mx-auto">
-            <h1 className="text-4xl font-bold p-5">Item search</h1>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Filters</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Suspense>
-                        <FiltersForm />
-                    </Suspense>             
-                </CardContent>
-            </Card>
-            <div className="grid grid-cols-3 mt-5 gap-5">
-                {data.map(item => {
-                    const addressLines = [
-                        item.collectionAddress,
-                    ]
-                    .filter(addressLine => !!addressLine)
-                    .join(", ");
-                    return(                 
-                        <Card key={item.id} className="overflow-hidden pt-0 pb-0">
-                            <CardContent className="px-0">
-                                <div className="h-40 relative bg-sky-50 text-zinc-400 flex flex-col justify-center items-center">
-                                    {!!item.images?.[0] && (
-                                        <Image 
-                                            fill
-                                            className="object-cover"
-                                            src={imageUrlFormatter(item.images[0])}
-                                            alt=""
-                                        />
-                                    )}
-                                    {!item.images?.[0] && (
-                                        <>
-                                            <BookMarked />
-                                            <small>No Image</small>
-                                        </>
-                                    )}
-                                </div>
-                                <div className="flex flex-col gap-5 p-5">
-                                    <p>{item.title}</p>
-                                    <ItemConditionBadge condition={item.condition} className="mr-auto text-base"/> 
-                                    <p>{addressLines}</p>
-                                    <p className="text-2xl">
-                                        R{numeral(item.price).format("0,0")}
-                                    </p>
-                                    <Button asChild>
-                                        <Link href={`/item/${item.id}`}>
-                                            View item
-                                        </Link>
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )
-                })}              
-            </div>
-            <div>
-                <div className="flex gap-2 items-center justify-center py-10">
-                    {Array.from({ length: totalPages }).map((_, i) => {
+  // Fetch items with filters + search
+  const { data, totalPages } = await getItems({
+    pagination: { page, pageSize: 10 },
+    filters: { minPrice, maxPrice, condition, status: ["for-sale"], searchTerm },
+  });
 
-                        //This code is necessary to ensure that when switching to another page the filters are maintained
-                        const newSearchParams = new URLSearchParams();
+  return (
+    <div className="max-w-screen-lg mx-auto px-2">
 
-                        // Filters
-                        if(searchParamsValues?.minPrice){
-                            newSearchParams.set("minPrice", searchParamsValues.minPrice)
-                        }
-                        if(searchParamsValues?.maxPrice){
-                            newSearchParams.set("minPrice", searchParamsValues.maxPrice)
-                        }
-                        if(searchParamsValues?.minBedrooms){
-                            newSearchParams.set("condition", searchParamsValues.condition)
-                        }
+      <h1 className="text-2xl font-bold pb-2 text-center">Welcome to Campus Marketplace!</h1>
+      <p className="text-center pb-10">Buy and sell textbooks, technology, and more.</p>
 
-                        newSearchParams.set("page", `${i + 1}`);
 
-                        return (
-                            <Button 
-                                asChild={page !== i + 1}
-                                disabled={page === i + 1} 
-                                variant="outline"
-                                key={i}
-                            >
-                                <Link href={`/item-search?${newSearchParams.toString()}`}>
-                                    {i + 1}
-                                </Link>
-                            </Button>
-                        );
-                    })}
-                </div>
-            </div>
+      {/* Search */}
+      <div className="space-y-4 bg-white rounded-xl">
+        <form method="get" className="flex gap-2 p-4">
+          <input
+            type="text"
+            name="search"
+            defaultValue={searchTerm ?? ""}
+            placeholder="Search items..."
+            className="flex-1 border border-gray-300 rounded-md p-2"
+          />
+          <Button type="submit">Search</Button>
+        </form>
+      </div>
+      <div className="flex flex-col md:flex-row gap-5 mt-5 bg-white items-center rounded-xl px-6 py-4">
+        {/* Sort card */}
+        <div className="flex-1 w-full md:w-auto">
+          <SortDropdown />
         </div>
-    );
+        {/* Filters card */}
+        <div className="flex-shrink-0 w-full md:w-auto">
+          <FiltersForm />
+        </div>
+      </div>
+
+      {/* Items grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-5 gap-5">
+        {data.map((item) => {
+          const addressLines = [item.collectionAddress].filter(Boolean).join(", ");
+          return (
+            <Card key={item.id} className="overflow-hidden pt-0 pb-0">
+              <CardContent className="px-0 flex flex-col h-full">
+                {/* Image */}
+                <div className="h-40 relative bg-sky-50 text-zinc-400 flex flex-col justify-center items-center">
+                  {!!item.images?.[0] && (
+                    <Image
+                      fill
+                      className="object-cover"
+                      src={imageUrlFormatter(item.images[0])}
+                      alt=""
+                    />
+                  )}
+                  {!item.images?.[0] && (
+                    <>
+                      <BookMarked />
+                      <small>No Image</small>
+                    </>
+                  )}
+                </div>
+
+                {/* Top content: title, condition, address */}
+                <div className="flex flex-col gap-2 p-5 flex-1">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <p className="font-semibold truncate">{item.title}</p>
+                    <ItemConditionBadge
+                      condition={item.condition}
+                      className="capitalize text-base flex-shrink-0 text-xs"
+                    />
+                  </div>
+                  <p className="text-sm text-zinc-500">{addressLines}</p>
+                </div>
+
+                {/* Bottom content: price + button */}
+                <div className="flex flex-col gap-2 p-5 pt-0">
+                  <p className="text-2xl font-bold">R{numeral(item.price).format("0,0")}</p>
+                  <Button asChild>
+                    <Link href={`/item/${item.id}`}>View item</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+
+      {/* Pagination */}
+      <div className="flex gap-2 items-center justify-center py-10">
+        {Array.from({ length: totalPages }).map((_, i) => {
+          const newSearchParams = new URLSearchParams();
+
+          if (searchParamsValues?.minPrice) newSearchParams.set("minPrice", searchParamsValues.minPrice);
+          if (searchParamsValues?.maxPrice) newSearchParams.set("maxPrice", searchParamsValues.maxPrice);
+          if (searchParamsValues?.condition) newSearchParams.set("condition", searchParamsValues.condition);
+          if (searchTerm) newSearchParams.set("search", searchTerm);
+
+          newSearchParams.set("page", `${i + 1}`);
+
+          return (
+            <Button asChild={page !== i + 1} disabled={page === i + 1} variant="outline" key={i}>
+              <Link href={`/?${newSearchParams.toString()}`}>{i + 1}</Link>
+            </Button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

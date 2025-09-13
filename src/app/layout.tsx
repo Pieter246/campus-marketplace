@@ -21,7 +21,7 @@ const rubikItalic = localFont({
 
 export const metadata: Metadata = {
   title: "Campus Marketplace",
-  description: "Buy and sell textbooks and other items on campus",
+  description: "Buy and sell on campus",
 };
 
 export default function RootLayout({
@@ -36,14 +36,11 @@ export default function RootLayout({
       >
         <AuthProvider>
           <header className="bg-white shadow p-4 flex items-center justify-between sticky top-0 z-10"> {/* justify-between very important */}  
-            <Link href="/" className="text-3xl tracking-widest flex gap-2 items-center uppercase">
+            <Link href="/" className="text-1xl flex gap-2 items-center">
               <Logo className="h-10 w-auto"/>
               <span>Campus Marketplace</span>
             </Link>
-            <ul className="flex gap-6 items-center">
-              <li>
-                <Link href="/item-search" className="uppercase tracking-widest hover:underline">Item search</Link>
-              </li>              
+            <ul className="flex gap-6 items-center mr-2">             
               <li>
                 <AuthButtons />
               </li>
