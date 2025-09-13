@@ -114,16 +114,6 @@ export default function UpdatePasswordForm(){
                         >
                             Update Password
                         </Button>
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            disabled={form.formState.isSubmitting}   
-                            onClick={async () => {
-                                await auth?.logout();
-                                router.refresh();
-                            }}>                                         
-                            Sign Out
-                        </Button>
                     </fieldset>
                 </form>
             </Form>
