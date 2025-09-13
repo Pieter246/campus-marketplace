@@ -45,7 +45,7 @@ export default function FiltersForm() {
         }
 
         newSearchParams.set("page", "1");
-        router.push(`/item-search?${newSearchParams.toString()}`)
+        router.push(`/?${newSearchParams.toString()}`)
     };
 
     return <Form {...form}>
