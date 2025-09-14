@@ -54,8 +54,8 @@ interface CreateItemRequest {
   title: string
   description: string
   price: number
-  categoryId: string
-  condition: 'new' | 'like_new' | 'good' | 'fair' | 'poor'
+  category: string
+  condition: 'new' | 'used' | 'fair' | 'poor'
   collectionAddress?: string
   collectionInstructions?: string
 }
@@ -73,14 +73,14 @@ export async function POST(req: NextRequest) {
       title, 
       description, 
       price, 
-      categoryId, 
+      category, 
       condition,
       collectionAddress = "",
       collectionInstructions = ""
     } = body
 
     // Validation
-    if (!title || !description || !categoryId || price < 0) {
+    if (!title || !description || !category || price < 0) {
       return NextResponse.json({ 
         message: "Missing required fields or invalid price" 
       }, { status: 400 })
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     // Create item document using Client SDK with user authentication
     const itemRef = await addDoc(collection(db, "items"), {
       sellerId: user.uid,
-      categoryId,
+      category,
       title: title.trim(),
       description: description.trim(),
       price: Number(price),

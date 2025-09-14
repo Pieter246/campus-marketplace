@@ -102,7 +102,7 @@ export async function initializeDatabase() {
     await setDoc(doc(db, 'items', sampleItemId), {
       itemId: sampleItemId,
       sellerId: sampleUserId,
-      categoryId: 'textbooks',
+      category: 'textbooks',
       title: 'Sample Item',
       description: 'Sample description',
       price: 0,
@@ -259,11 +259,11 @@ export async function createSampleData() {
     await setDoc(doc(db, 'items', sampleItemId), {
       itemId: sampleItemId,
       sellerId: sampleUserId,
-      categoryId: 'textbooks',
+      category: 'textbooks',
       title: 'Introduction to Computer Science Textbook',
       description: 'Excellent condition CS101 textbook. Used for one semester only.',
       price: 450.00,
-      condition: 'like_new',
+      condition: 'used',
       itemStatus: 'available',
       collectionAddress: 'Main Campus Library',
       collectionInstructions: 'Meet at the front desk during library hours',

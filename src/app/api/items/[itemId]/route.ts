@@ -8,8 +8,8 @@ interface UpdateItemRequest {
   title?: string
   description?: string
   price?: number
-  categoryId?: string
-  condition?: 'new' | 'like_new' | 'good' | 'fair' | 'poor'
+  category?: string
+  condition?: 'new' | 'used' | 'fair' | 'poor'
   itemStatus?: 'available' | 'sold' | 'reserved' | 'inactive'
   collectionAddress?: string
   collectionInstructions?: string
@@ -101,8 +101,8 @@ export async function PUT(
     if (body.price !== undefined) {
       updateData.price = Number(body.price)
     }
-    if (body.categoryId !== undefined) {
-      updateData.categoryId = body.categoryId
+    if (body.category !== undefined) {
+      updateData.category = body.category
     }
     if (body.condition !== undefined) {
       updateData.condition = body.condition
