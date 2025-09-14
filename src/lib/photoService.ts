@@ -226,13 +226,14 @@ export async function completeItemPhotoUpload(
   photoUrls: string[]
 ): Promise<{ photoDocIds: string[]; success: boolean }> {
   try {
-    // Save photo records to database
-    const photoDocIds = await uploadAndSaveItemPhotos(itemId, photoUrls);
-    
-    // Update item's updated timestamp
+    // Update item document with new image URLs
     await updateDoc(doc(db, 'items', itemId), {
+      images: photoUrls,
       updatedAt: serverTimestamp()
     });
+
+    // Save photo records to database (optional - for detailed tracking)
+    const photoDocIds = await uploadAndSaveItemPhotos(itemId, photoUrls);
     
     return { photoDocIds, success: true };
     
