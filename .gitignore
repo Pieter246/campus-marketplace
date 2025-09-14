@@ -38,7 +38,8 @@ yarn-error.log*
 next-env.d.ts
 
 # documentation folder
+
 docs/
 
-
+#.env.local
 .env.local
