@@ -33,20 +33,27 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 50); // Max 50 items
     const status = searchParams.get("status") || "available";
-    const categoryId = searchParams.get("categoryId");
+    const category = searchParams.get("category");
     const sellerId = searchParams.get("sellerId");
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
+    const searchTerm = searchParams.get("search") || searchParams.get("q");
+    const condition = searchParams.get("condition");
+    const sortBy = searchParams.get("sortBy") || "newest"; // newest, oldest, price_low, price_high
 
     // Build Firestore query
     let query = adminDb.collection("items").where("itemStatus", "==", status);
 
-    if (categoryId) {
-      query = query.where("categoryId", "==", categoryId);
+    if (category) {
+      query = query.where("category", "==", category);
     }
     
     if (sellerId) {
       query = query.where("sellerId", "==", sellerId);
+    }
+
+    if (condition) {
+      query = query.where("condition", "==", condition);
     }
 
     if (minPrice) {
@@ -57,22 +64,59 @@ export async function GET(req: NextRequest) {
       query = query.where("price", "<=", parseFloat(maxPrice));
     }
 
-    // Order by most recent and limit results
-    query = query.orderBy("postedAt", "desc").limit(limit);
+    // Add sorting based on sortBy parameter
+    switch (sortBy) {
+      case "oldest":
+        query = query.orderBy("postedAt", "asc");
+        break;
+      case "price_low":
+        query = query.orderBy("price", "asc");
+        break;
+      case "price_high":
+        query = query.orderBy("price", "desc");
+        break;
+      case "newest":
+      default:
+        query = query.orderBy("postedAt", "desc");
+        break;
+    }
+
+    // Apply limit
+    query = query.limit(limit);
 
     const itemsSnapshot = await query.get();
 
-    const items = itemsSnapshot.docs.map((doc) => ({
+    let items = itemsSnapshot.docs.map((doc) => ({
       itemId: doc.id,
       ...doc.data(),
       postedAt: doc.data().postedAt?.toDate?.()?.toISOString(),
+      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString(),
     }));
+
+    // Apply text search filter (client-side for simplicity)
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      items = items.filter((item: any) => 
+        item.title?.toLowerCase().includes(searchLower) ||
+        item.description?.toLowerCase().includes(searchLower)
+      );
+    }
 
     return NextResponse.json({ 
       success: true, 
       items,
       count: items.length,
-      hasMore: items.length === limit 
+      hasMore: items.length === limit,
+      filters: {
+        status,
+        category,
+        sellerId,
+        condition,
+        minPrice,
+        maxPrice,
+        search: searchTerm,
+        sortBy
+      }
     });
   } catch (error: any) {
     console.error("Get items error:", error);
