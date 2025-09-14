@@ -13,6 +13,7 @@ interface UpdateItemRequest {
   itemStatus?: 'available' | 'sold' | 'reserved' | 'inactive'
   collectionAddress?: string
   collectionInstructions?: string
+  images?: string[]
 }
 
 // GET single item
@@ -90,7 +91,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = { updatedAt: serverTimestamp() }
+    const updateData: Partial<UpdateItemRequest> & { updatedAt: any } = { updatedAt: serverTimestamp() }
 
     if (body.title !== undefined) {
       updateData.title = body.title.trim()
@@ -115,6 +116,9 @@ export async function PUT(
     }
     if (body.collectionInstructions !== undefined) {
       updateData.collectionInstructions = body.collectionInstructions.trim()
+    }
+    if (body.images !== undefined) {
+      updateData.images = body.images
     }
 
     // Update item document
