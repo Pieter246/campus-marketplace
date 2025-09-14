@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/firebase/client";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "@/components/Input";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -93,16 +93,16 @@ export default function ResetPasswordPage() {
           )}
 
           {success && (
-            <div className="bg-green-100 text-green-700 px-4 py-3 rounded text-center">
+            <div className="bg-green-100 text-green-700 px-4 py-3 mb-4 rounded-lg text-center">
               <p className="font-medium">Password reset instructions sent!</p>
               <p className="text-sm mt-1">
-                Check your email at <strong>{form.email}</strong> for instructions to reset your password.
+                If <strong>{form.email}</strong> is registered, check your email for password reset instructions.
               </p>
             </div>
           )}
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-1 text-center">
           <Button
             type="button"
             variant="secondary"

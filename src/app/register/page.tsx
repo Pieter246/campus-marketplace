@@ -3,16 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { useAuth } from "@/context/auth";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "@/components/Input";
 import Logo from "@/components/ui/Logo";
+import { toast } from "sonner";
+import { registerUser } from "./actions";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const auth = useAuth();
+  
   const [form, setForm] = useState({
     email: "",
-    username: "",
     password: "",
     confirmPassword: "",
     terms: false,
@@ -34,8 +37,6 @@ export default function RegisterPage() {
 
     const newErrors: { [key: string]: string } = {};
     if (!form.email.includes("@")) newErrors.email = "Please enter a valid email address";
-    if (!form.username || form.username.trim().length < 3)
-      newErrors.username = "Username must be at least 3 characters";
     if (!form.password || form.password.length < 6)
       newErrors.password = "Password must be at least 6 characters";
     if (form.password !== form.confirmPassword)
@@ -48,41 +49,20 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
-      // 1. Create user with Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        form.email, 
-        form.password
-      );
-      const user = userCredential.user;
-      
-      // 2. Get Firebase ID token
-      const idToken = await user.getIdToken();
-      
-      // 3. Sync user with Firestore database
-      const syncResponse = await fetch("/api/auth/sync-user", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          displayName: form.username, // Use the username as display name
-          emailVerified: user.emailVerified,
-          photoURL: null
-        }),
-      });
+      const response = await registerUser(form.email, form.password);
 
-      if (!syncResponse.ok) {
-        throw new Error("Failed to sync user data");
-      }
+        if(!!response?.error){
+            toast.error("Error!", {
+                description: response.message
+            });
+            return;
+        }
 
-      // Success! Firebase Auth handles token storage automatically
-      
-      // Redirect to home page (consistent with login)
-      router.push("/");
+        toast.success("Success!", {
+            description: "Your account was created successfully"
+        });
+
+        router.push("/login"); // Back to login screen
       
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -108,37 +88,12 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-      
-      // Get Firebase ID token
-      const idToken = await user.getIdToken();
-      
-      // Sync user with Firestore database
-      const syncResponse = await fetch("/api/auth/sync-user", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName, // Google provides display name
-          emailVerified: user.emailVerified,
-          photoURL: user.photoURL
-        }),
-      });
-
-      if (!syncResponse.ok) {
-        throw new Error("Failed to sync user data");
+      try {
+        await auth?.loginWithGoogle(); 
+        router.refresh(); // Back to home screen
+      } catch (error: any) {} finally {
+        setLoading(false);
       }
-
-      // Success! Firebase Auth handles token storage automatically
-      
-      // Redirect to home page (consistent with login)
-      router.push("/");
       
     } catch (error: any) {
       console.error("Google registration error:", error);
@@ -161,7 +116,6 @@ export default function RegisterPage() {
 
   const inputs = [
     { name: "email", type: "email", label: "Email" },
-    { name: "username", type: "text", label: "Username" },
     { name: "password", type: "password", label: "Password" },
     { name: "confirmPassword", type: "password", label: "Confirm Password" },
   ];

@@ -14,13 +14,24 @@ if (!getApps().length) {
 }
 
 /**
- * Verify Firebase ID Token
+ * Verify Firebase ID Token with 30-minute expiration check
  * @param idToken - Firebase ID token from client
- * @returns Decoded token or null if invalid
+ * @returns Decoded token or null if invalid/expired
  */
 export async function verifyIdToken(idToken: string) {
   try {
     const decodedToken = await auth().verifyIdToken(idToken)
+    
+    // Check if token is older than 30 minutes
+    const now = Math.floor(Date.now() / 1000) // Current time in seconds
+    const tokenAge = now - decodedToken.iat // iat = issued at time
+    const THIRTY_MINUTES_IN_SECONDS = 30 * 60 // 30 minutes
+    
+    if (tokenAge > THIRTY_MINUTES_IN_SECONDS) {
+      console.log("Token expired: older than 30 minutes")
+      return null
+    }
+    
     return decodedToken
   } catch (error) {
     console.error("Token verification error:", error)
