@@ -23,7 +23,7 @@ export default async function AdminItemsTable({page = 1}: {page?: number}) {
     return (
         <>
             {!data.length && (       
-                <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
+                <h1 className="text-center text-zinc-400 py-20 font-bold text-1xl">
                     There are no items to approve
                 </h1>            
             )}
@@ -66,14 +66,14 @@ export default async function AdminItemsTable({page = 1}: {page?: number}) {
                     </TableBody>
                     <TableFooter>
                         <TableRow>
-                            <TableCell colSpan={4} className="text-center">
+                            <TableCell colSpan={4} className="text-center bg-white">
                                 {Array.from({length: totalPages}).map((_, i) => (
                                     <Button 
                                         disabled={page === i + 1}
                                         key={i}
                                         asChild={page !== i + 1}
                                         variant="outline"
-                                        className="mx-1"
+                                        className="mx-1 mt-5"
                                     >
                                         <Link href={`/profile/admin?tab=dashboard&page=${i + 1}`}>{i + 1}</Link>
                                     </Button>
