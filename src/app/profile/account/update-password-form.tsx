@@ -68,7 +68,6 @@ export default function UpdatePasswordForm(){
 
     return (
         <>
-            <h2 className="text-2xl font-bold mb-5 text-center">Update Password</h2>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)}>
                     <fieldset 
@@ -113,16 +112,6 @@ export default function UpdatePasswordForm(){
                             disabled={form.formState.isSubmitting}
                         >
                             Update Password
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            disabled={form.formState.isSubmitting}   
-                            onClick={async () => {
-                                await auth?.logout();
-                                router.refresh();
-                            }}>                                         
-                            Sign Out
                         </Button>
                     </fieldset>
                 </form>
