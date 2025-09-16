@@ -56,7 +56,7 @@ export const updateItem = async (data: Item, authToken: string) => {
     revalidatePath(`/item/${id}`) //caching for Vercel
 }
 
-// User sells an item
+// User withdraws an item
 export const withdrawItem = async (id: string, authToken: string) =>{
     const verifiedToken = await auth.verifyIdToken(authToken);
 
@@ -73,10 +73,42 @@ export const withdrawItem = async (id: string, authToken: string) =>{
         .collection("items")
         .doc(id)
         .update({
-            status: "draft",
+            status: "withdrawn",
             updated: new Date()
         });
 }
+
+// User publishes an item (that has been withdrawn previously)
+export const publishItem = async (id: string, authToken: string) => {
+    const verifiedToken = await auth.verifyIdToken(authToken);
+
+    // If no token, return error
+    if (!verifiedToken) {
+        return {
+            error: true,
+            message: "Unauthorized"
+        };
+    }
+
+    try {
+        // Set item status to published
+        await firestore
+            .collection("items")
+            .doc(id)
+            .update({
+                status: "draft",
+                updated: new Date()
+            });
+
+        return { success: true };
+    } catch (err: any) {
+        return {
+            error: true,
+            message: err.message || "Failed to publish item"
+        };
+    }
+};
+
 
 // User sells an item
 export const sellItem = async (id: string, authToken: string) =>{

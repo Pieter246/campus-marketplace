@@ -14,6 +14,7 @@ import BuyButton from "./buy-button";
 import ApproveForm from "./approve-form";
 import SellButton from "./sell-button";
 import WithdrawButton from "./withdraw-button";
+import PublishButton from "./publish-button";
 import Script from "next/script";
 
 export const dynamic = "force-dynamic";
@@ -186,29 +187,36 @@ export default async function Item({ params }: { params: Promise<any> }) {
               </div>
 
               {/* ACTIONS / APPROVALS */}
-              <div className="mt-4">
-                {item.status !== "sold" ? (
-                  <>
-                    {!(verifiedToken?.admin && item.status === "pending") && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && (
-                          <BuyButton id={item.id} />
-                        )}
-                        {verifiedToken?.uid === item.sellerId && item.status === "draft" && <SellButton id={item.id} />}
-                        {((verifiedToken?.admin && item.status === "for-sale") ||
-                          (verifiedToken?.uid === item.sellerId && ["pending", "for-sale"].includes(item.status))) && (
-                          <WithdrawButton id={item.id} />
-                        )}
-                        <BackButton />
-                      </div>
-                    )}
-                    {verifiedToken?.admin && item.status === "pending" && (
-                      <ApproveForm id={item.id} condition={item.condition} />
-                    )}
-                  </>
-                ) : (
-                  <BackButton />
-                )}
+{/* ACTIONS / APPROVALS */}
+<div className="mt-4">
+  {item.status !== "sold" ? (
+    <>
+      {!(verifiedToken?.admin && item.status === "draft") && (
+        <div className="grid grid-cols-2 gap-2">
+          {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && (
+            <BuyButton id={item.id} />
+          )}
+          {verifiedToken?.uid === item.sellerId && item.status === "draft" && <SellButton id={item.id} />}
+          {((verifiedToken?.admin && item.status === "for-sale") ||
+            (verifiedToken?.uid === item.sellerId && ["draft", "for-sale"].includes(item.status))) && (
+            <WithdrawButton id={item.id} />
+          )}
+
+          {/* Publish button logic */}
+          {((verifiedToken?.admin || verifiedToken?.uid === item.sellerId) && item.status === "withdrawn") && (
+            <PublishButton id={item.id} />
+          )}
+
+          <BackButton />
+        </div>
+      )}
+      {verifiedToken?.admin && item.status === "draft" && (
+        <ApproveForm id={item.id} condition={item.condition} />
+      )}
+    </>
+  ) : (
+    <BackButton />
+  )}
               </div>
             </div>
           </div>

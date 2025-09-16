@@ -14,7 +14,7 @@ export default async function AdminItemsTable({page = 1}: {page?: number}) {
             pageSize: 10,        
         },
         filters: {
-            status: ["for-sale", "pending"]
+            status: ["draft", "for-sale", "pending"]
         }
     });     
     
@@ -75,7 +75,7 @@ export default async function AdminItemsTable({page = 1}: {page?: number}) {
                                         variant="outline"
                                         className="mx-1"
                                     >
-                                        <Link href={`/dashboard/admin?tab=dashboard&page=${i + 1}`}>{i + 1}</Link>
+                                        <Link href={`/profile/admin?tab=dashboard&page=${i + 1}`}>{i + 1}</Link>
                                     </Button>
                                 ))}
                             </TableCell>

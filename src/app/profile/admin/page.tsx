@@ -30,7 +30,7 @@ export default async function AdminDashboard({
                 <Suspense fallback={<div>Loading...</div>}>
                     {tab === "dashboard" && (
                         <TabsContent value="dashboard">
-                            <h1 className="text-4xl font-bold mt-6">Approve Items</h1>
+                            <h1 className="text-2xl font-bold mt-6">Approve Items</h1>
                             <AdminItemsTable page={page} />
                         </TabsContent>
                     )}
