@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Button from "@/components/ui/Button";
 
 type Item = {
   id: string;
@@ -50,7 +51,7 @@ export default function ItemReviewPage() {
     <div>
       <button
         onClick={() => router.back()}
-        className="mb-4 text-sm text-blue-600 hover:underline"
+        className="mb-4 text-sm hover:underline cursor-pointer"
       >
         ← Back to Items
       </button>
@@ -89,13 +90,23 @@ export default function ItemReviewPage() {
       </div>
 
       {/* Admin Actions */}
-      <div className="flex gap-4">
-        <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-          ✅ Approve Item
-        </button>
-        <button className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-          ❌ Reject Item
-        </button>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          className="w-full py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 cursor-pointer"
+          variant="secondary"
+          onClick={() => router.push("/admin/items")}
+        >
+          Approve Item
+        </Button>
+        <Button
+          type="button"
+          className="w-full py-2 bg-red-800 text-white rounded-lg hover:bg-red-700 cursor-pointer"
+          variant="secondary"
+          onClick={() => router.push("/admin/items")}
+        >
+          Reject Item
+        </Button>
       </div>
     </div>
   );

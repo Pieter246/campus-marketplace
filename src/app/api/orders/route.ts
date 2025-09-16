@@ -1,6 +1,6 @@
 // src/app/api/orders/route.ts
 import { NextRequest, NextResponse } from "next/server"
-import { collection, doc, addDoc, getDocs, query, where, orderBy, serverTimestamp, getDoc, updateDoc, writeBatch } from "firebase/firestore"
+import { collection, doc, addDoc, getDocs, query, where, orderBy, serverTimestamp, getDoc, deleteDoc, updateDoc, writeBatch } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { authenticateRequest } from "@/lib/auth-middleware"
 
@@ -204,3 +204,56 @@ export async function POST(req: NextRequest) {
     )
   }
 }
+
+//DELETE - Delete order once cancelled
+export async function DELETE(req: NextRequest, 
+  { params }: { params: { orderId: string } }
+){
+  try {
+    const user = await authenticateRequest(req)
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    }
+
+    const {orderId} = params
+
+     // Check if order exists and belongs to user
+        const orderDoc = await getDoc(doc(db, "orders", orderId))
+        if (!orderDoc.exists()) {
+          return NextResponse.json({ message: "Oder not found" }, { status: 404 })
+        }
+    
+        const orderData = orderDoc.data()
+        // Check if user has access to this order
+        if (orderData.buyerId !== user.uid && orderData.sellerId !== user.uid) {
+          return NextResponse.json({ message: "Forbidden: Cannot access this order" }, { status: 403 })
+        }
+    
+        // Delete order items and order
+        const orderItemsQuery = query(collection(db, "orderItems"), where("orderId", "==", orderId))
+        
+        const orderItemsSnapshot = await getDocs(orderItemsQuery)
+        for (const orderItemDoc of orderItemsSnapshot.docs){
+          const orderItemData = orderItemDoc.data()
+
+          await deleteDoc(orderItemDoc.ref)
+        }
+
+        await deleteDoc(doc(db, "orders", orderId))
+    
+        return NextResponse.json({
+          success: true,
+          message: "Order removed"
+        })
+    
+      } catch (error) {
+        console.error("Remove order error:", error)
+        return NextResponse.json(
+          { 
+            message: "Failed to remove order",
+            error: error instanceof Error ? error.message : "Unknown error"
+          },
+          { status: 500 }
+        )
+      }
+    }
