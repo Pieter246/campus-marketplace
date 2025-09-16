@@ -13,16 +13,16 @@ export default async function AdminDashboard({
     const tab = searchParamsValue?.tab || "dashboard"; // Default to 'dashboard'
     const page = searchParamsValue?.page ? parseInt(searchParamsValue.page) : 1;
 
-    console.log({ searchParamsValue });
+    //console.log({ searchParamsValue });
 
     return (
         <>
             <Tabs defaultValue={tab} className="w-full">
-                <TabsList className="w-full h-20">
-                    <TabsTrigger value="dashboard" asChild className="text-2xl font-bold tracking-widest rounded-none data-[state=active]:bg-sky-700 data-[state=active]:text-white">
+                <TabsList className="w-full">
+                    <TabsTrigger value="dashboard" asChild className="text-xl rounded-md data-[state=active]:primary data-[state=active]:text-white">
                         <Link href="/profile/admin?tab=dashboard">Dashboard</Link>
                     </TabsTrigger>
-                    <TabsTrigger value="account" asChild className="text-2xl font-bold tracking-widest rounded-none data-[state=active]:bg-sky-700 data-[state=active]:text-white">
+                    <TabsTrigger value="account" asChild className="text-xl rounded-md data-[state=active]:primary data-[state=active]:text-white">
                         <Link href="/profile/admin?tab=account">Account</Link>
                     </TabsTrigger>
                 </TabsList>
@@ -30,12 +30,13 @@ export default async function AdminDashboard({
                 <Suspense fallback={<div>Loading...</div>}>
                     {tab === "dashboard" && (
                         <TabsContent value="dashboard">
-                            <h1 className="text-4xl font-bold mt-6">Approve Items</h1>
+                            <h1 className="text-2xl font-bold mt-2 ml-2">Approve Items</h1>
                             <AdminItemsTable page={page} />
                         </TabsContent>
                     )}
                     {tab === "account" && (
                         <TabsContent value="account">
+                            <h1 className="text-2xl font-bold mt-2 ml-2">Update password</h1>
                             <Account />
                         </TabsContent>
                     )}

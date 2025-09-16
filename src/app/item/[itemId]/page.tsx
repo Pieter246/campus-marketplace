@@ -14,6 +14,7 @@ import BuyButton from "./buy-button";
 import ApproveForm from "./approve-form";
 import SellButton from "./sell-button";
 import WithdrawButton from "./withdraw-button";
+import PublishButton from "./publish-button";
 import Script from "next/script";
 
 export const dynamic = "force-dynamic";
@@ -35,8 +36,7 @@ export default async function Item({ params }: { params: Promise<any> }) {
   return (
     <div className="max-w-5xl mx-auto p-4">
       {/* Gallery Script */}
-      <Script id="gallery-logic" strategy="afterInteractive">
-        {`
+      <Script id="gallery-logic" strategy="afterInteractive">{`
 (function () {
   if (window.__GalleryPollStarted) return;
   window.__GalleryPollStarted = true;
@@ -84,17 +84,14 @@ export default async function Item({ params }: { params: Promise<any> }) {
     root?.__Cleanup && root.__Cleanup();
   });
 })();
-        `}
-      </Script>
+      `}</Script>
 
       <Card className="shadow-sm">
         <CardContent className="space-y-6">
-          {/* Two-column responsive layout */}
           <div className="flex flex-col md:flex-row md:gap-6">
             {/* IMAGES */}
             {!!images.length && (
               <div id="item-gallery-root" className="w-full md:w-1/2 space-y-4">
-                {/* Big image */}
                 <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden">
                   {images.length === 1 ? (
                     <Image
@@ -125,7 +122,6 @@ export default async function Item({ params }: { params: Promise<any> }) {
                   )}
                 </div>
 
-                {/* Thumbnails - scrollable on mobile */}
                 {images.length > 1 && (
                   <Carousel opts={{ align: "start" }} className="w-full px-2 overflow-x-auto">
                     <CarouselContent className="flex gap-4">
@@ -138,12 +134,7 @@ export default async function Item({ params }: { params: Promise<any> }) {
                             aria-label={`Show image ${index + 1}`}
                           >
                             <Card className="cursor-pointer relative aspect-[4/3] overflow-hidden rounded-lg">
-                              <Image
-                                fill
-                                className="object-cover"
-                                src={imageUrlFormatter(img)}
-                                alt={`Thumbnail ${index + 1}`}
-                              />
+                              <Image fill className="object-cover" src={imageUrlFormatter(img)} alt={`Thumbnail ${index + 1}`} />
                             </Card>
                           </button>
                         </CarouselItem>
@@ -158,14 +149,11 @@ export default async function Item({ params }: { params: Promise<any> }) {
             <div className="w-full md:w-1/2 flex flex-col justify-between">
               <div className="space-y-4">
                 <h1 className="text-2xl font-bold">{item.title}</h1>
-
-                {/* PRICE + CONDITION */}
                 <div className="flex items-center gap-2">
                   <h2 className="text-2xl font-light">R{numeral(item.price).format("0,0")}</h2>
                   <ItemConditionBadge condition={item.condition} className="capitalize text-base" />
                 </div>
 
-                {/* ADDRESS */}
                 <div className="space-y-1">
                   <h3 className="text-lg font-light">Location:</h3>
                   <p className="text-lg">
@@ -178,36 +166,61 @@ export default async function Item({ params }: { params: Promise<any> }) {
                   </p>
                 </div>
 
-                {/* DESCRIPTION */}
                 <div className="max-w-screen-md leading-relaxed">
                   <h3 className="text-lg font-light">Description:</h3>
                   <ReactMarkdown>{item.description}</ReactMarkdown>
                 </div>
               </div>
 
-              {/* ACTIONS / APPROVALS */}
+              {/* ACTIONS */}
               <div className="mt-4">
                 {item.status !== "sold" ? (
                   <>
-                    {!(verifiedToken?.admin && item.status === "pending") && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && (
+
+                    <div className="flex flex-wrap gap-2">
+                      {/* Buy button for non-admin & non-seller */}
+                      {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && (
+                        <div className="w-full flex-1">
                           <BuyButton id={item.id} />
-                        )}
-                        {verifiedToken?.uid === item.sellerId && item.status === "draft" && <SellButton id={item.id} />}
-                        {((verifiedToken?.admin && item.status === "for-sale") ||
-                          (verifiedToken?.uid === item.sellerId && ["pending", "for-sale"].includes(item.status))) && (
+                        </div>
+                      )}
+
+                      {/* Sell button for seller if draft */}
+                      {verifiedToken?.uid === item.sellerId && item.status === "draft" && (
+                        <div className="w-full flex-1">
+                          <SellButton id={item.id} />
+                        </div>
+                      )}
+
+                      {/* Withdraw button - only for the item owner, admin has own */}
+                      {verifiedToken?.uid === item.sellerId && ["draft", "for-sale"].includes(item.status) && (
+                        <div className="w-full flex-1">
                           <WithdrawButton id={item.id} />
-                        )}
+                        </div>
+                      )}
+
+                      {/* Publish button for withdrawn */}
+                      {((verifiedToken?.admin || verifiedToken?.uid === item.sellerId) && item.status === "withdrawn") && (
+                        <div className="w-full flex-1">
+                          <PublishButton id={item.id} />
+                        </div>
+                      )}
+
+                      <div className="w-full flex-1">
                         <BackButton />
                       </div>
-                    )}
-                    {verifiedToken?.admin && item.status === "pending" && (
-                      <ApproveForm id={item.id} condition={item.condition} />
+                    </div>
+
+                    {/* Admin-only approval form */}
+                    {verifiedToken?.admin && (
+                      <div className="mt-4">
+                        <ApproveForm id={item.id} condition={item.condition} />
+                      </div>
                     )}
                   </>
                 ) : (
-                  <BackButton />
+                    // I DON'T THINK THIS POINT IS EVER REACHED
+                    <BackButton />
                 )}
               </div>
             </div>

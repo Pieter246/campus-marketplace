@@ -54,11 +54,11 @@ export default function WithdrawButton({
 
     return (
         <Button 
-            className="flex-1"
+            className="flex-1 w-full"
             onClick={handleWithdrawClick} 
             disabled={isWithdrawing}
         >
-            {isWithdrawing ? "Withdrawing..." : "Withdraw Item"}
+            {isWithdrawing ? "Withdrawing..." : "Withdraw"}
         </Button>             
     );
 }

@@ -54,7 +54,7 @@ export default function SellButton({
 
     return (
         <Button 
-            className="flex-1"
+            className="flex-1 w-full"
             onClick={handleSellClick} 
             disabled={isSelling}
         >

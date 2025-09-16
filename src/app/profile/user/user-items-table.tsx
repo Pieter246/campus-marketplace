@@ -91,14 +91,14 @@ export default async function UserItemsTable({page = 1}: {page?: number}) {
                     </TableBody>
                     <TableFooter>
                         <TableRow>
-                            <TableCell colSpan={4} className="text-center">
+                            <TableCell colSpan={4} className="text-center bg-white">
                                 {Array.from({length: totalPages}).map((_, i) => (
                                     <Button
                                         disabled={page === i + 1}
                                         key={i}
                                         asChild={page !== i + 1}
                                         variant="outline"
-                                        className="mx-1"
+                                        className="mx-1 mt-5"
                                     >
                                         <Link href={`/profile/user?tab=dashboard&page=${i + 1}`}>{i + 1}</Link>
                                     </Button>
