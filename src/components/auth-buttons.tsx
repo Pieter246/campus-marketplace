@@ -39,19 +39,27 @@ export default function AuthButtons() {
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {/* <DropdownMenuItem asChild>
-                        <Link href="/account">My Account</Link>
-                    </DropdownMenuItem> */}
-                    {!!auth.customClaims?.admin && (
-                        <DropdownMenuItem asChild>
-                            <Link href="/profile/admin" className="cursor-pointer">Admin Profile</Link>
-                        </DropdownMenuItem>
-                    )} 
-                    {!auth.customClaims?.admin && (
-                        <DropdownMenuItem asChild>
-                            <Link href="/profile/user" className="cursor-pointer">My Profile</Link>
-                        </DropdownMenuItem>
+                    
+                    <>
+                    {/* The Admin link */}
+                    {auth.customClaims?.admin && (
+                    <DropdownMenuItem
+                        onClick={() => router.push("/profile/admin")}
+                        className="cursor-pointer"
+                    >
+                        Admin Dashboard
+                    </DropdownMenuItem>
                     )}
+                    </>
+
+                    {/* User link (always show for logged-in users) */}
+                    <DropdownMenuItem asChild>
+                    <Link href="/profile/user" className="cursor-pointer">
+                        My Profile
+                    </Link>
+                    </DropdownMenuItem>
+
+
                     <DropdownMenuItem 
                     onClick={async () => {
                         await auth.logout();

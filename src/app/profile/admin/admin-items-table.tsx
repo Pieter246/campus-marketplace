@@ -14,7 +14,7 @@ export default async function AdminItemsTable({page = 1}: {page?: number}) {
             pageSize: 10,        
         },
         filters: {
-            status: ["draft", "for-sale", "pending"]
+            status: ["withdrawn", "draft", "for-sale", "pending"]
         }
     });     
     

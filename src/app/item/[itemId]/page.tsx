@@ -180,13 +180,17 @@ export default async function Item({ params }: { params: Promise<any> }) {
                     <div className="flex flex-wrap gap-2">
                       {/* Buy button for non-admin & non-seller */}
                       {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && (
-                        <BuyButton id={item.id} />
+                        <div className="w-full flex-1">
+                          <BuyButton id={item.id} />
+                        </div>
                       )}
 
                       {/* Sell button for seller if draft */}
-                      <div className="w-full flex-1">
-                        {verifiedToken?.uid === item.sellerId && item.status === "draft" && <SellButton id={item.id} />}
-                      </div>
+                      {verifiedToken?.uid === item.sellerId && item.status === "draft" && (
+                        <div className="w-full flex-1">
+                          <SellButton id={item.id} />
+                        </div>
+                      )}
 
                       {/* Withdraw button - only for the item owner, admin has own */}
                       {verifiedToken?.uid === item.sellerId && ["draft", "for-sale"].includes(item.status) && (

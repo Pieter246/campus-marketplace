@@ -13,7 +13,7 @@ export default async function AdminDashboard({
     const tab = searchParamsValue?.tab || "dashboard"; // Default to 'dashboard'
     const page = searchParamsValue?.page ? parseInt(searchParamsValue.page) : 1;
 
-    console.log({ searchParamsValue });
+    //console.log({ searchParamsValue });
 
     return (
         <>
