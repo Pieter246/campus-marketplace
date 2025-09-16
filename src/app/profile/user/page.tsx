@@ -18,7 +18,7 @@ export default async function UserDashboard({
     console.log({ searchParamsValue });
 
     return (
-        <>
+        <div className="max-w-screen-lg mx-auto px-4 py-10">
             <Tabs defaultValue={tab} className="w-full">
                 <TabsList className="w-full h-20">
                     <TabsTrigger value="dashboard" asChild className="text-2xl font-bold tracking-widest rounded-none data-[state=active]:bg-sky-700 data-[state=active]:text-white">
@@ -55,6 +55,6 @@ export default async function UserDashboard({
                     )}
                 </Suspense>
             </Tabs>
-        </>
+        </div>
     );
 }

@@ -49,7 +49,10 @@ export default function WithdrawButton({
         });
 
         // Redirect user to dashboard to show item bought (Will not show query not implemented)
-        router.push("/profile/user")
+        if (auth?.customClaims?.admin)
+            router.push("/profile/admin/items")
+        else
+            router.push("/profile/user")
     };
 
     return (

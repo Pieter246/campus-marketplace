@@ -59,7 +59,8 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
       description: `Item was approved`,
     });
 
-    router.push("/profile/admin");
+    // Redirect user to dashboard to show item bought (Will not show query not implemented)
+    router.push("/profile/admin/items");
   };
 
   return (

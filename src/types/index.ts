@@ -33,20 +33,38 @@ export interface Category {
   createdAt: Date;
 }
 
+// export interface Item {
+//   itemId: string;
+//   sellerId: string;
+//   categoryId: string;
+//   title: string;
+//   description: string;
+//   price: number;
+//   condition: 'new' | 'like_new' | 'good' | 'fair' | 'poor';
+//   itemStatus: 'available' | 'sold' | 'pending' | 'removed';
+//   collectionAddress: string;
+//   collectionInstructions?: string;
+//   postedAt: Date;
+//   updatedAt: Date;
+//   viewsCount: number;
+// }
+
+// Meiring se item
 export interface Item {
   itemId: string;
   sellerId: string;
-  categoryId: string;
+  category: "books" | "electronics" | "clothing"; //changed categoryId: string;
   title: string;
   description: string;
   price: number;
-  condition: 'new' | 'like_new' | 'good' | 'fair' | 'poor';
-  itemStatus: 'available' | 'sold' | 'pending' | 'removed';
+  condition: "new" | "used" | "fair" | "poor"; // changed condition: 'new' | 'like_new' | 'good' | 'fair' | 'poor';
+  status: "draft" | "pending" | "for-sale" | "sold" | "withdrawn"; // changed itemStatus: 'available' | 'sold' | 'pending' | 'removed';
   collectionAddress: string;
-  collectionInstructions?: string;
-  postedAt: Date;
-  updatedAt: Date;
-  viewsCount: number;
+  //collectionInstructions?: string;
+  postedAt?: Date;
+  updatedAt?: Date;
+  viewsCount?: number;
+  images?: string[];
 }
 
 export interface ItemPhoto {
@@ -121,7 +139,7 @@ export interface Message {
 // Helper types
 export interface ItemWithDetails extends Item {
   seller: User;
-  category: Category;
+  //category: Category;
   photos: ItemPhoto[];
 }
 

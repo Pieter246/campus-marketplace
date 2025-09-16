@@ -16,7 +16,7 @@ export default async function EditProperty({
     //console.log({ item });
 
     return ( 
-        <div>
+        <div className="max-w-screen-lg mx-auto px-4 py-10">
             <EditItemForm
                 id={item.id}
                 title={item.title}

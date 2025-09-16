@@ -21,5 +21,4 @@ export const itemImagesSchema = z.object({
   ).min(1, "At least one image is required")
 })
 
-
 export const itemSchema = itemDataSchema.and(itemImagesSchema);

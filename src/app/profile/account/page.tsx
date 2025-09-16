@@ -28,15 +28,17 @@ export default async function Account() {
     );
 
     return (
-        <div className="flex justify-center">
-            <Card className="mt-10 w-full max-w-md">
-                <CardContent>
-                    {!!isPasswordProvider && 
-                        <UpdatePasswordForm />
-                    }
-                </CardContent>
-            </Card>
-        </div>
+        <div className="max-w-screen-lg mx-auto px-4 py-10">
+            <div className="flex justify-center">
+                <Card className="mt-10 w-full max-w-md">
+                    <CardContent>
+                        {!!isPasswordProvider && 
+                            <UpdatePasswordForm />
+                        }
+                    </CardContent>
+                </Card>
+            </div>
+        </div>      
     );
     
 }

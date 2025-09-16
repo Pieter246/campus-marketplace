@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/context/auth";
+import { onAuthStateChanged } from "@firebase/auth";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -17,28 +19,47 @@ type Item = {
 export default function AdminItemsPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const auth = useAuth();
 
+  // Fetch items
   useEffect(() => {
-    setTimeout(() => {
-      setItems([
-        {
-          id: "1",
-          title: "MacBook Pro 13” 2022",
-          price: 1200,
-          thumbnail: "/test-photos/macbook.jpg",
-          seller: { name: "Alex Johnson", email: "alex.johnson@university.edu" },
-        },
-        {
-          id: "2",
-          title: "Calculus Textbook",
-          price: 80,
-          thumbnail: "/test-photos/textbook.jpg",
-          seller: { name: "Sarah Chen", email: "sarah.chen@university.edu" },
-        },
-      ]);
-      setLoading(false);
-    }, 800);
-  }, []);
+    const fetchItems = async () => {
+      try {
+        const token = await auth?.currentUser?.getIdToken();
+
+        if (!token) {
+          setError("No auth token found.");
+          setLoading(false);
+          return;
+        }
+
+        const itemsResponse = await fetch("/api/items?limit=10&status=available", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const itemsData = await itemsResponse.json();
+
+        if (!itemsResponse.ok) {
+          console.error("Failed to fetch items:", itemsData.message);
+          setError(itemsData.message || "Failed to fetch items.");
+        } else {
+          console.log("Fetched items:", itemsData.items);
+          setItems(itemsData.items || []);
+        }
+      } catch (err: any) {
+        console.error("Fetch items error:", err);
+        setError("Failed to fetch items.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, [auth]);
 
   if (loading)
     return (
@@ -66,7 +87,8 @@ export default function AdminItemsPage() {
               <div className="flex flex-col">
                 <span className="font-semibold">{item.title}</span>
                 <span className="text-gray-500 text-sm">
-                  {item.seller.name} ({item.seller.email})
+                  {/* {item.seller.name} ({item.seller.email}) */}
+                  {"Seller name"} ({"seller email"})
                 </span>
               </div>
             </div>

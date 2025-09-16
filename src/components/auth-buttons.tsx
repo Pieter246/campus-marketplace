@@ -44,14 +44,14 @@ export default function AuthButtons() {
                     </DropdownMenuItem> */}
                     {!!auth.customClaims?.admin && (
                         <DropdownMenuItem asChild>
-                            <Link href="/profile/admin" className="cursor-pointer">Admin Profile</Link>
+                            <Link href="/profile/admin/items" className="cursor-pointer">Admin Profile</Link>
                         </DropdownMenuItem>
                     )} 
-                    {!auth.customClaims?.admin && (
+                    {/* {!auth.customClaims?.admin && ( */}
                         <DropdownMenuItem asChild>
                             <Link href="/profile/user" className="cursor-pointer">My Profile</Link>
                         </DropdownMenuItem>
-                    )}
+                    {/* )} */}
                     <DropdownMenuItem 
                     onClick={async () => {
                         await auth.logout();

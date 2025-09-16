@@ -3,7 +3,7 @@
 import NewItemForm from "./new-item-form";
 
 export default function NewItem() {
-    return <div>
+    return <div className="max-w-screen-lg mx-auto px-4 py-10">
         <NewItemForm />
     </div>
 }

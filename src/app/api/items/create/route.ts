@@ -51,13 +51,13 @@ const getAuthenticatedFirestore = async (uid: string) => {
 }
 
 interface CreateItemRequest {
-  title: string
-  description: string
-  price: number
-  category: string
-  condition: 'new' | 'used' | 'fair' | 'poor'
-  collectionAddress?: string
-  collectionInstructions?: string
+  title: string;
+  collectionAddress: string;
+  description: string;
+  price: number;
+  status: "draft" | "pending" | "for-sale" | "sold" | "withdrawn";
+  condition: "new" | "used" | "fair" | "poor";
+  category: "books" | "electronics" | "clothing";
 }
 
 export async function POST(req: NextRequest) {
@@ -70,17 +70,19 @@ export async function POST(req: NextRequest) {
 
     const body: CreateItemRequest = await req.json()
     const { 
-      title, 
-      description, 
-      price, 
-      category, 
+      title,
+      collectionAddress,
+      description,
+      price,
+      status,
       condition,
-      collectionAddress = "",
-      collectionInstructions = ""
+      category,
     } = body
 
+    console.log("Received body:", body);
+
     // Validation
-    if (!title || !description || !category || price < 0) {
+    if (!title || !collectionAddress || !description || price < 0 || !status || !condition || !category ) {
       return NextResponse.json({ 
         message: "Missing required fields or invalid price" 
       }, { status: 400 })
@@ -92,14 +94,14 @@ export async function POST(req: NextRequest) {
     // Create item document using Client SDK with user authentication
     const itemRef = await addDoc(collection(db, "items"), {
       sellerId: user.uid,
-      category,
       title: title.trim(),
-      description: description.trim(),
-      price: Number(price),
-      condition,
-      itemStatus: 'available',
       collectionAddress: collectionAddress.trim(),
-      collectionInstructions: collectionInstructions.trim(),
+      description: description.trim(),
+      price: price,
+      status: 'draft',
+      condition,
+      category,
+      //
       postedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       viewsCount: 0
@@ -112,10 +114,6 @@ export async function POST(req: NextRequest) {
       message: "Item created successfully",
       item: {
         itemId: itemRef.id,
-        title,
-        price,
-        itemStatus: 'available',
-        postedAt: new Date().toISOString()
       }
     }, { status: 201 })
 

@@ -1,46 +1,34 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AdminItemsTable from "./admin-items-table";
-import Account from "../account/page";
-import { Suspense } from "react";
-import Link from "next/link";
+"use client";
 
-export default async function AdminDashboard({
-    searchParams
-}: {
-    searchParams?: Promise<any>;
-}) {
-    const searchParamsValue = await searchParams;
-    const tab = searchParamsValue?.tab || "dashboard"; // Default to 'dashboard'
-    const page = searchParamsValue?.page ? parseInt(searchParamsValue.page) : 1;
+export default function AdminPage() {
+  return (
+    <div className="min-h-screen">
+      <h1 className="text-2xl font-bold mb-8 text-primary">
+        Admin Dashboard
+      </h1>
 
-    console.log({ searchParamsValue });
-
-    return (
-        <>
-            <Tabs defaultValue={tab} className="w-full">
-                <TabsList className="w-full h-20">
-                    <TabsTrigger value="dashboard" asChild className="text-2xl font-bold tracking-widest rounded-none data-[state=active]:bg-sky-700 data-[state=active]:text-white">
-                        <Link href="/profile/admin?tab=dashboard">Dashboard</Link>
-                    </TabsTrigger>
-                    <TabsTrigger value="account" asChild className="text-2xl font-bold tracking-widest rounded-none data-[state=active]:bg-sky-700 data-[state=active]:text-white">
-                        <Link href="/profile/admin?tab=account">Account</Link>
-                    </TabsTrigger>
-                </TabsList>
-
-                <Suspense fallback={<div>Loading...</div>}>
-                    {tab === "dashboard" && (
-                        <TabsContent value="dashboard">
-                            <h1 className="text-4xl font-bold mt-6">Approve Items</h1>
-                            <AdminItemsTable page={page} />
-                        </TabsContent>
-                    )}
-                    {tab === "account" && (
-                        <TabsContent value="account">
-                            <Account />
-                        </TabsContent>
-                    )}
-                </Suspense>
-            </Tabs>
-        </>
-    );
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-gray-500 text-sm">Total Students</h3>
+          <p className="text-2xl font-bold text-primary">1,247</p>
+          <p className="text-green-600 text-sm">+12% from last month</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-gray-500 text-sm">Active Listings</h3>
+          <p className="text-2xl font-bold text-primary">205</p>
+          <p className="text-green-600 text-sm">+8% from last week</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-gray-500 text-sm">Total Sales</h3>
+          <p className="text-2xl font-bold text-primary">$12,450</p>
+          <p className="text-green-600 text-sm">+23% from last month</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-gray-500 text-sm">Growth Rate</h3>
+          <p className="text-2xl font-bold text-primary">+15.3%</p>
+          <p className="text-gray-500 text-sm">Monthly growth</p>
+        </div>
+      </div>
+    </div>
+  );
 }
