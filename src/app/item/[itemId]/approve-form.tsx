@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
-import BackButton from "./back-button";
+import WithdrawButton from "./withdraw-button";
 
 const formSchema = z.object({
   realCondition: z.string(),
@@ -65,6 +65,7 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <p className="text-center font-bold">- Admin buttons -</p>
         <fieldset disabled={form.formState.isSubmitting} className="grid grid-cols-3 gap-3 pt-2">
           {/* Condition Select */}
           <div className="flex flex-col gap-2">
@@ -73,7 +74,7 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
               name="realCondition"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Condition</FormLabel>
+                  <FormLabel>Set condition</FormLabel>
                   <FormControl>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <SelectTrigger className="w-full">
@@ -104,16 +105,8 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
           </div>
 
           {/* Cancel Button */}
-          <div className="flex flex-col gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-auto w-full"
-              disabled={form.formState.isSubmitting}
-              onClick={() => router.back()}
-            >
-              Cancel
-            </Button>
+          <div className="mt-auto flex flex-col gap-2">
+              <WithdrawButton id={id} />
           </div>
         </fieldset>
       </form>

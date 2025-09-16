@@ -18,7 +18,7 @@ export default async function AdminItemsTable({page = 1}: {page?: number}) {
         }
     });     
     
-    console.log({ data });
+    //console.log({ data });
     
     return (
         <>

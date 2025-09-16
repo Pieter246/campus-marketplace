@@ -9,7 +9,7 @@ export default function BackButton() {
 
     return (
         <Button 
-            className="flex-1" 
+            className="flex-1 w-full" 
             variant="secondary" 
             type="button" 
             onClick={() => router.back()}

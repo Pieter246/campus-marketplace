@@ -39,7 +39,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<any
     pagination: { page, pageSize: 10 },
     filters: { minPrice, maxPrice, condition, status: ["for-sale"], searchTerm },
   });
-  console.log(data[0]);
 
   return (
     <div className="max-w-screen-lg mx-auto px-2">

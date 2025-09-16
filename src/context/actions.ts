@@ -1,6 +1,6 @@
 "use server"
 
-import { auth } from "@/firebase/server";
+import { auth, firestore } from "@/firebase/server";
 import { cookies } from "next/headers";
 
 export const removeToken = async () => {
@@ -22,8 +22,11 @@ export const setToken = async ({
             return;
         }      
 
+        /* Old admin emails method
         const adminEmails = process.env.ADMIN_EMAILS?.split(",") ?? []; //Get all admins was (process.env.ADMIN_EMAIL === userRecord.email &&)
         const userRecord = await auth.getUser(verifiedToken.uid);
+
+
 
         if( // If user is admin assign admin user claim
             userRecord.email &&
@@ -31,6 +34,16 @@ export const setToken = async ({
             !userRecord.customClaims?.admin
         ) {
             auth.setCustomUserClaims(verifiedToken.uid, {
+                admin: true
+            });
+        }
+        */
+
+        const userDoc = await firestore.collection("users").doc(verifiedToken.uid).get();
+        const userData = userDoc.data();
+
+        if(userData?.isAdmin && !verifiedToken.admin) {
+            await auth.setCustomUserClaims(verifiedToken.uid, {
                 admin: true
             });
         }

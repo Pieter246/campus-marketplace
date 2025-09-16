@@ -54,7 +54,7 @@ export default function PublishButton({
 
     return (
         <Button 
-            className="flex-1"
+            className="flex-1 w-full"
             onClick={handlePublishClick} 
             disabled={isPublishing}
         >
