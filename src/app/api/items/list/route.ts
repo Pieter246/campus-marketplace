@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest, firestore } from "@/firebase/server";
 import { Item } from "@/types/item";
+import { Query, DocumentData } from "firebase-admin/firestore";
 
-// Post function
 export async function POST(req: NextRequest) {
   try {
     const user = await authenticateRequest(req);
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-    
+
     const body = await req.json();
 
     const {
@@ -22,9 +22,11 @@ export async function POST(req: NextRequest) {
       condition,
       status,
       searchTerm,
+      sort = "newest",
+      category, // ✅ added category
     } = body;
 
-    let query = firestore.collection("items").orderBy("updatedAt", "desc");
+    let query: Query<DocumentData> = firestore.collection("items");
 
     // 🔧 Apply filters
     if (sellerId) query = query.where("sellerId", "==", sellerId);
@@ -42,6 +44,20 @@ export async function POST(req: NextRequest) {
     }
     if (Array.isArray(status) && status.length > 0) {
       query = query.where("status", "in", status);
+    }
+    if (category && category !== "all") {
+      query = query.where("category", "==", category); // ✅ filter by category
+    }
+
+    // ✅ Apply sort logic
+    if (sort === "price-asc") {
+      query = query.orderBy("price", "asc");
+    } else if (sort === "price-desc") {
+      query = query.orderBy("price", "desc");
+    } else if (sort === "oldest") {
+      query = query.orderBy("updatedAt", "asc");
+    } else {
+      query = query.orderBy("updatedAt", "desc"); // default: newest
     }
 
     const fetchSize = pageSize * 3;
@@ -82,6 +98,8 @@ export async function POST(req: NextRequest) {
         condition,
         status,
         searchTerm,
+        sort,
+        category, // ✅ include in response
       },
     });
   } catch (error: any) {

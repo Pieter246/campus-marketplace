@@ -78,7 +78,7 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
       description: "Item was approved",
     });
 
-    router.push("/profile/admin/items");
+    router.push("/profile/admin");
   };
 
   return (

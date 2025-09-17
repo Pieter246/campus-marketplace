@@ -29,6 +29,8 @@ export default function Home() {
   const maxPrice = parseInt(searchParams.get("maxPrice") || "") || null;
   const condition = searchParams.get("condition") || null;
   const searchTerm = searchParams.get("search") || null;
+  const sort = searchParams.get("sort") || "newest";
+  const category = searchParams.get("category") || "all";
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -52,6 +54,8 @@ export default function Home() {
           condition,
           status: ["for-sale"],
           searchTerm,
+          sort,
+          category
         }),
       });
 
@@ -68,7 +72,7 @@ export default function Home() {
     };
 
     fetchItems();
-  }, [auth, page, minPrice, maxPrice, condition, searchTerm]);
+  }, [auth, page, minPrice, maxPrice, condition, searchTerm, sort, category]);
 
   return (
     <div className="max-w-screen-lg mx-auto px-2">

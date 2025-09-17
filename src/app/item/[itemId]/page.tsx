@@ -1,5 +1,12 @@
 "use client";
 
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/context/auth";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
+import { GetItemResponse } from "@/types/GetItemResponse";
+import type { Item } from "@/types/item";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -8,7 +15,6 @@ import {
 import Image from "next/image";
 import numeral from "numeral";
 import BackButton from "./back-button";
-import { Card, CardContent } from "@/components/ui/card";
 import imageUrlFormatter from "@/lib/imageUrlFormatter";
 import ItemConditionBadge from "@/components/item-condition-badge";
 import ReactMarkdown from "react-markdown";
@@ -18,45 +24,36 @@ import SellButton from "./sell-button";
 import WithdrawButton from "./withdraw-button";
 import PublishButton from "./publish-button";
 import Script from "next/script";
-import { use, useCallback, useEffect, useState } from "react";
-import { onAuthStateChanged } from "@firebase/auth";
-import { auth } from "@/firebase/client";
-import { GetItemResponse } from "@/types/GetItemResponse";
-import { toast } from "sonner";
-import type { Item } from "@/types/item";
 
-export const dynamic = "force-dynamic";
-
-export default function Item({
-  params,
-}: {
-  params: Promise<{ itemId: string }>;
-}) {
-  const { itemId } = use(params); // ✅ unwrap the promise
+export default function Item() {
+  const { itemId } = useParams() as { itemId: string };
+  const auth = useAuth();
   const [item, setItem] = useState<Item | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [claims, setClaims] = useState<any>(null);
 
-  // ✅ Check auth
+  // Get token and claims
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-
-      if (!currentUser) {
-        toast.error("Error!", {
-          description: "You must log in to see items.",
-        });
+    const fetchAuth = async () => {
+      const user = auth?.currentUser;
+      if (!user) {
+        toast.error("Error!", { description: "You must log in to see items." });
+        return;
       }
-    });
-    return () => unsubscribe();
-  }, []);
 
-  // ✅ Refactored fetch function
+      const tokenResult = await user.getIdTokenResult();
+      setToken(tokenResult.token);
+      setClaims(tokenResult.claims);
+    };
+
+    fetchAuth();
+  }, [auth]);
+
+  // Fetch item
   const fetchItem = useCallback(async () => {
-    if (!user || !itemId) return;
+    if (!token || !itemId) return;
 
     try {
-      const token = await user.getIdToken();
-
       const response = await fetch(`/api/items/read?itemId=${itemId}`, {
         method: "GET",
         headers: {
@@ -70,7 +67,6 @@ export default function Item({
         throw new Error(result.message || "Failed to fetch item");
       }
 
-      console.log("Fetched item:", result.item);
       setItem(result.item);
     } catch (err: any) {
       console.error("Fetch item error:", err);
@@ -78,18 +74,17 @@ export default function Item({
         description: err.message || "Failed to fetch item.",
       });
     }
-  }, [user, itemId]);
+  }, [token, itemId]);
 
-  // ✅ Trigger fetch on user change
   useEffect(() => {
     fetchItem();
   }, [fetchItem]);
 
   if (!item) {
     return (
-      <div className="text-center py-10 text-zinc-400">
-        Loading item details...
-      </div>
+      <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
+        Loading item...
+      </h1>
     );
   }
 
@@ -260,34 +255,27 @@ export default function Item({
                 {item.status !== "sold" ? (
                   <>
                     <div className="flex flex-wrap gap-2">
-                      {/* Buy button for non-admin & non-seller */}
-                      {(!user ||
-                        (!user.admin &&
-                          user.uid !== item.sellerId)) && (
+                      {!claims?.admin && claims?.user_id !== item.sellerId && (
                         <div className="w-full flex-1">
                           <BuyButton id={item.id} />
                         </div>
                       )}
 
-                      {/* Sell button for seller if draft */}
-                      {user?.uid === item.sellerId &&
+                      {claims?.user_id === item.sellerId &&
                         item.status === "draft" && (
                           <div className="w-full flex-1">
                             <SellButton id={item.id} />
                           </div>
                         )}
 
-                      {/* Withdraw button - only for the item owner, admin has own */}
-                      {user?.uid === item.sellerId &&
+                      {claims?.user_id === item.sellerId &&
                         ["draft", "for-sale"].includes(item.status) && (
                           <div className="w-full flex-1">
                             <WithdrawButton id={item.id} />
                           </div>
                         )}
 
-                      {/* Publish button for withdrawn */}
-                      {(user?.admin ||
-                        user?.uid === item.sellerId) &&
+                      {(claims?.admin || claims?.user_id === item.sellerId) &&
                         item.status === "withdrawn" && (
                           <div className="w-full flex-1">
                             <PublishButton id={item.id} />
@@ -299,15 +287,13 @@ export default function Item({
                       </div>
                     </div>
 
-                    {/* Admin-only approval form */}
-                    {user?.admin && (
+                    {claims?.admin && (
                       <div className="mt-4">
                         <ApproveForm id={item.id} condition={item.condition} />
                       </div>
                     )}
                   </>
                 ) : (
-                  // I DON'T THINK THIS POINT IS EVER REACHED
                   <BackButton />
                 )}
               </div>

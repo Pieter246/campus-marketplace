@@ -11,11 +11,11 @@ const CreateItemSchema = z.object({
   price: z.number().nonnegative(),
   status: z.enum(["draft", "pending", "for-sale", "sold", "withdrawn"]),
   condition: z.enum(["new", "used", "fair", "poor"]),
-  category: z.enum(["books", "electronics", "clothing"]),
+  category: z.enum(["books", "electronics", "clothing", "notes", "stationery", "other"]),
 });
 
 export async function POST(req: NextRequest) {
-  try {   
+  try {
     const user = await authenticateRequest(req);
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -26,10 +26,13 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       console.warn("Validation failed:", parsed.error.flatten());
-      return NextResponse.json({
-        message: "Invalid input",
-        issues: parsed.error.flatten().fieldErrors,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          message: "Invalid input",
+          issues: parsed.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
     }
 
     // Create the item
@@ -44,17 +47,22 @@ export async function POST(req: NextRequest) {
     console.log(`Item created: ${item.id}`);
 
     // Diplay message item created and return the item Id
-    return NextResponse.json({
-      success: true,
-      message: "Item created successfully",
-      item: { itemId: item.id },
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Item created successfully",
+        item: { itemId: item.id },
+      },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error("Item creation error:", error);
-    return NextResponse.json({
-      message: "Internal server error",
-      error: error?.message ?? "Unknown error",
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        message: "Internal server error",
+        error: error?.message ?? "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
