@@ -13,8 +13,6 @@ export default async function AdminDashboard({
     const tab = searchParamsValue?.tab || "dashboard"; // Default to 'dashboard'
     const page = searchParamsValue?.page ? parseInt(searchParamsValue.page) : 1;
 
-    //console.log({ searchParamsValue });
-
     return (
         <>
             <Tabs defaultValue={tab} className="w-full">

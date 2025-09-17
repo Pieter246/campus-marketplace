@@ -1,5 +1,10 @@
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { getItemById } from "@/data/items";
+"use client";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import Image from "next/image";
 import numeral from "numeral";
 import BackButton from "./back-button";
@@ -7,28 +12,86 @@ import { Card, CardContent } from "@/components/ui/card";
 import imageUrlFormatter from "@/lib/imageUrlFormatter";
 import ItemConditionBadge from "@/components/item-condition-badge";
 import ReactMarkdown from "react-markdown";
-import { cookies } from "next/headers";
-import { DecodedIdToken } from "firebase-admin/auth";
-import { auth } from "@/firebase/server";
 import BuyButton from "./buy-button";
 import ApproveForm from "./approve-form";
 import SellButton from "./sell-button";
 import WithdrawButton from "./withdraw-button";
 import PublishButton from "./publish-button";
 import Script from "next/script";
+import { use, useCallback, useEffect, useState } from "react";
+import { onAuthStateChanged } from "@firebase/auth";
+import { auth } from "@/firebase/client";
+import { GetItemResponse } from "@/types/GetItemResponse";
+import { toast } from "sonner";
+import type { Item } from "@/types/item";
 
 export const dynamic = "force-dynamic";
 
-export default async function Item({ params }: { params: Promise<any> }) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("firebaseAuthToken")?.value;
-  let verifiedToken: DecodedIdToken | null = null;
-  if (token) {
-    verifiedToken = await auth.verifyIdToken(token);
-  }
+export default function Item({
+  params,
+}: {
+  params: Promise<{ itemId: string }>;
+}) {
+  const { itemId } = use(params); // ✅ unwrap the promise
+  const [item, setItem] = useState<Item | null>(null);
+  const [user, setUser] = useState<any>(null);
 
-  const paramsValue = await params;
-  const item = await getItemById(paramsValue.itemId);
+  // ✅ Check auth
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+
+      if (!currentUser) {
+        toast.error("Error!", {
+          description: "You must log in to see items.",
+        });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // ✅ Refactored fetch function
+  const fetchItem = useCallback(async () => {
+    if (!user || !itemId) return;
+
+    try {
+      const token = await user.getIdToken();
+
+      const response = await fetch(`/api/items/read?itemId=${itemId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result: GetItemResponse = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to fetch item");
+      }
+
+      console.log("Fetched item:", result.item);
+      setItem(result.item);
+    } catch (err: any) {
+      console.error("Fetch item error:", err);
+      toast.error("Error!", {
+        description: err.message || "Failed to fetch item.",
+      });
+    }
+  }, [user, itemId]);
+
+  // ✅ Trigger fetch on user change
+  useEffect(() => {
+    fetchItem();
+  }, [fetchItem]);
+
+  if (!item) {
+    return (
+      <div className="text-center py-10 text-zinc-400">
+        Loading item details...
+      </div>
+    );
+  }
 
   const images = (item.images ?? []).slice(0, 3);
   const addressLines = [item.collectionAddress].filter(Boolean);
@@ -107,7 +170,11 @@ export default async function Item({ params }: { params: Promise<any> }) {
                       <div
                         key={img}
                         data-big-index={idx}
-                        className={idx === 0 ? "absolute inset-0 opacity-100" : "absolute inset-0 hidden opacity-0"}
+                        className={
+                          idx === 0
+                            ? "absolute inset-0 opacity-100"
+                            : "absolute inset-0 hidden opacity-0"
+                        }
                       >
                         <Image
                           fill
@@ -123,10 +190,16 @@ export default async function Item({ params }: { params: Promise<any> }) {
                 </div>
 
                 {images.length > 1 && (
-                  <Carousel opts={{ align: "start" }} className="w-full px-2 overflow-x-auto">
+                  <Carousel
+                    opts={{ align: "start" }}
+                    className="w-full px-2 overflow-x-auto"
+                  >
                     <CarouselContent className="flex gap-4">
                       {images.map((img, index) => (
-                        <CarouselItem key={img} className="flex-none sm:basis-1/3 md:basis-1/4">
+                        <CarouselItem
+                          key={img}
+                          className="flex-none sm:basis-1/3 md:basis-1/4"
+                        >
                           <button
                             type="button"
                             data-thumb-index={index}
@@ -134,7 +207,12 @@ export default async function Item({ params }: { params: Promise<any> }) {
                             aria-label={`Show image ${index + 1}`}
                           >
                             <Card className="cursor-pointer relative aspect-[4/3] overflow-hidden rounded-lg">
-                              <Image fill className="object-cover" src={imageUrlFormatter(img)} alt={`Thumbnail ${index + 1}`} />
+                              <Image
+                                fill
+                                className="object-cover"
+                                src={imageUrlFormatter(img)}
+                                alt={`Thumbnail ${index + 1}`}
+                              />
                             </Card>
                           </button>
                         </CarouselItem>
@@ -150,8 +228,13 @@ export default async function Item({ params }: { params: Promise<any> }) {
               <div className="space-y-4">
                 <h1 className="text-2xl font-bold">{item.title}</h1>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-light">R{numeral(item.price).format("0,0")}</h2>
-                  <ItemConditionBadge condition={item.condition} className="capitalize text-base" />
+                  <h2 className="text-2xl font-light">
+                    R{numeral(item.price).format("0,0")}
+                  </h2>
+                  <ItemConditionBadge
+                    condition={item.condition}
+                    className="capitalize text-base"
+                  />
                 </div>
 
                 <div className="space-y-1">
@@ -176,35 +259,40 @@ export default async function Item({ params }: { params: Promise<any> }) {
               <div className="mt-4">
                 {item.status !== "sold" ? (
                   <>
-
                     <div className="flex flex-wrap gap-2">
                       {/* Buy button for non-admin & non-seller */}
-                      {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && (
+                      {(!user ||
+                        (!user.admin &&
+                          user.uid !== item.sellerId)) && (
                         <div className="w-full flex-1">
                           <BuyButton id={item.id} />
                         </div>
                       )}
 
                       {/* Sell button for seller if draft */}
-                      {verifiedToken?.uid === item.sellerId && item.status === "draft" && (
-                        <div className="w-full flex-1">
-                          <SellButton id={item.id} />
-                        </div>
-                      )}
+                      {user?.uid === item.sellerId &&
+                        item.status === "draft" && (
+                          <div className="w-full flex-1">
+                            <SellButton id={item.id} />
+                          </div>
+                        )}
 
                       {/* Withdraw button - only for the item owner, admin has own */}
-                      {verifiedToken?.uid === item.sellerId && ["draft", "for-sale"].includes(item.status) && (
-                        <div className="w-full flex-1">
-                          <WithdrawButton id={item.id} />
-                        </div>
-                      )}
+                      {user?.uid === item.sellerId &&
+                        ["draft", "for-sale"].includes(item.status) && (
+                          <div className="w-full flex-1">
+                            <WithdrawButton id={item.id} />
+                          </div>
+                        )}
 
                       {/* Publish button for withdrawn */}
-                      {((verifiedToken?.admin || verifiedToken?.uid === item.sellerId) && item.status === "withdrawn") && (
-                        <div className="w-full flex-1">
-                          <PublishButton id={item.id} />
-                        </div>
-                      )}
+                      {(user?.admin ||
+                        user?.uid === item.sellerId) &&
+                        item.status === "withdrawn" && (
+                          <div className="w-full flex-1">
+                            <PublishButton id={item.id} />
+                          </div>
+                        )}
 
                       <div className="w-full flex-1">
                         <BackButton />
@@ -212,15 +300,15 @@ export default async function Item({ params }: { params: Promise<any> }) {
                     </div>
 
                     {/* Admin-only approval form */}
-                    {verifiedToken?.admin && (
+                    {user?.admin && (
                       <div className="mt-4">
                         <ApproveForm id={item.id} condition={item.condition} />
                       </div>
                     )}
                   </>
                 ) : (
-                    // I DON'T THINK THIS POINT IS EVER REACHED
-                    <BackButton />
+                  // I DON'T THINK THIS POINT IS EVER REACHED
+                  <BackButton />
                 )}
               </div>
             </div>

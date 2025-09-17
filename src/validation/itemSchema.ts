@@ -1,4 +1,4 @@
-import {z} from 'zod'
+import { z } from "zod";
 
 export const itemDataSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -8,18 +8,26 @@ export const itemDataSchema = z.object({
   status: z.enum(["draft", "pending", "for-sale", "sold", "withdrawn"]),
   sellerId: z.string(),
   condition: z.enum(["new", "used", "fair", "poor"]),
-  category: z.enum(["books", "electronics", "clothing"])
+  category: z.enum([
+    "books",
+    "electronics",
+    "clothing",
+    "notes",
+    "stationery",
+    "other",
+  ]),
 });
 
 export const itemImagesSchema = z.object({
-  images: z.array(
-    z.object({
-      id: z.string(),
-      url: z.string(),
-      file: z.instanceof(File).optional()
-    })
-  ).min(1, "At least one image is required")
-})
-
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        url: z.string(),
+        file: z.instanceof(File).optional(),
+      })
+    )
+    .min(1, "At least one image is required"),
+});
 
 export const itemSchema = itemDataSchema.and(itemImagesSchema);

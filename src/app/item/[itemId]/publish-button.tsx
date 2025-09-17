@@ -32,6 +32,7 @@ export default function PublishButton({
 
         // Update item data: set status to published/active
         const response = await publishItem(id, tokenResult.token);
+        
         if(!!response?.error){
             toast.error("Error!", {
                 description: response.message,
