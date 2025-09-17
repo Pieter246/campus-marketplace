@@ -1,15 +1,23 @@
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { getItemById } from "@/data/items";
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/context/auth";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
+import { GetItemResponse } from "@/types/GetItemResponse";
+import type { Item } from "@/types/item";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import Image from "next/image";
 import numeral from "numeral";
 import BackButton from "./back-button";
-import { Card, CardContent } from "@/components/ui/card";
 import imageUrlFormatter from "@/lib/imageUrlFormatter";
 import ItemConditionBadge from "@/components/item-condition-badge";
 import ReactMarkdown from "react-markdown";
-import { cookies } from "next/headers";
-import { DecodedIdToken } from "firebase-admin/auth";
-import { auth } from "@/firebase/server";
 import BuyButton from "./buy-button";
 import ApproveForm from "./approve-form";
 import SellButton from "./sell-button";
@@ -17,18 +25,66 @@ import WithdrawButton from "./withdraw-button";
 import PublishButton from "./publish-button";
 import Script from "next/script";
 
-export const dynamic = "force-dynamic";
+export default function Item() {
+  const { itemId } = useParams() as { itemId: string };
+  const auth = useAuth();
+  const [item, setItem] = useState<Item | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [claims, setClaims] = useState<any>(null);
 
-export default async function Item({ params }: { params: Promise<any> }) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("firebaseAuthToken")?.value;
-  let verifiedToken: DecodedIdToken | null = null;
-  if (token) {
-    verifiedToken = await auth.verifyIdToken(token);
+  // Get token and claims
+  useEffect(() => {
+    const fetchAuth = async () => {
+      const user = auth?.currentUser;
+      if (user) {
+        const tokenResult = await user.getIdTokenResult();
+        setToken(tokenResult.token);
+        setClaims(tokenResult.claims);
+      }   
+    };
+
+    fetchAuth();
+  }, [auth]);
+
+  // Fetch item
+  const fetchItem = useCallback(async () => {
+    if (!itemId) return;
+
+    try {
+      const response = await fetch(`/api/items/read?itemId=${itemId}`, {
+        method: "GET"
+      });
+
+      // Get item result
+      const result: GetItemResponse = await response.json();
+
+      // Display error if result has error
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to fetch item");
+      }
+
+      // Set the item to be used by the form
+      setItem(result.item);
+      
+    } catch (err: any) {
+      console.error("Fetch item error:", err);
+      toast.error("Error!", {
+        description: err.message || "Failed to fetch item.",
+      });
+    }
+  }, [token, itemId]);
+
+  useEffect(() => {
+    fetchItem();
+  }, [fetchItem]);
+
+  if (!item) {
+    return (
+      <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
+        Loading item...
+      </h1>
+    );
   }
-
-  const paramsValue = await params;
-  const item = await getItemById(paramsValue.itemId);
 
   const images = (item.images ?? []).slice(0, 3);
   const addressLines = [item.collectionAddress].filter(Boolean);
@@ -107,7 +163,11 @@ export default async function Item({ params }: { params: Promise<any> }) {
                       <div
                         key={img}
                         data-big-index={idx}
-                        className={idx === 0 ? "absolute inset-0 opacity-100" : "absolute inset-0 hidden opacity-0"}
+                        className={
+                          idx === 0
+                            ? "absolute inset-0 opacity-100"
+                            : "absolute inset-0 hidden opacity-0"
+                        }
                       >
                         <Image
                           fill
@@ -123,10 +183,16 @@ export default async function Item({ params }: { params: Promise<any> }) {
                 </div>
 
                 {images.length > 1 && (
-                  <Carousel opts={{ align: "start" }} className="w-full px-2 overflow-x-auto">
+                  <Carousel
+                    opts={{ align: "start" }}
+                    className="w-full px-2 overflow-x-auto"
+                  >
                     <CarouselContent className="flex gap-4">
                       {images.map((img, index) => (
-                        <CarouselItem key={img} className="flex-none sm:basis-1/3 md:basis-1/4">
+                        <CarouselItem
+                          key={img}
+                          className="flex-none sm:basis-1/3 md:basis-1/4"
+                        >
                           <button
                             type="button"
                             data-thumb-index={index}
@@ -134,7 +200,12 @@ export default async function Item({ params }: { params: Promise<any> }) {
                             aria-label={`Show image ${index + 1}`}
                           >
                             <Card className="cursor-pointer relative aspect-[4/3] overflow-hidden rounded-lg">
-                              <Image fill className="object-cover" src={imageUrlFormatter(img)} alt={`Thumbnail ${index + 1}`} />
+                              <Image
+                                fill
+                                className="object-cover"
+                                src={imageUrlFormatter(img)}
+                                alt={`Thumbnail ${index + 1}`}
+                              />
                             </Card>
                           </button>
                         </CarouselItem>
@@ -150,8 +221,13 @@ export default async function Item({ params }: { params: Promise<any> }) {
               <div className="space-y-4">
                 <h1 className="text-2xl font-bold">{item.title}</h1>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-light">R{numeral(item.price).format("0,0")}</h2>
-                  <ItemConditionBadge condition={item.condition} className="capitalize text-base" />
+                  <h2 className="text-2xl font-light">
+                    R{numeral(item.price).format("0,0")}
+                  </h2>
+                  <ItemConditionBadge
+                    condition={item.condition}
+                    className="capitalize text-base"
+                  />
                 </div>
 
                 <div className="space-y-1">
@@ -176,51 +252,47 @@ export default async function Item({ params }: { params: Promise<any> }) {
               <div className="mt-4">
                 {item.status !== "sold" ? (
                   <>
-
                     <div className="flex flex-wrap gap-2">
-                      {/* Buy button for non-admin & non-seller */}
-                      {(!verifiedToken || (!verifiedToken.admin && verifiedToken.uid !== item.sellerId)) && (
+                      {!claims?.admin && claims?.user_id !== item.sellerId && (
                         <div className="w-full flex-1">
                           <BuyButton id={item.id} />
                         </div>
                       )}
 
-                      {/* Sell button for seller if draft */}
-                      {verifiedToken?.uid === item.sellerId && item.status === "draft" && (
-                        <div className="w-full flex-1">
-                          <SellButton id={item.id} />
-                        </div>
-                      )}
+                      {claims?.user_id === item.sellerId &&
+                        item.status === "draft" && (
+                          <div className="w-full flex-1">
+                            <SellButton id={item.id} />
+                          </div>
+                        )}
 
-                      {/* Withdraw button - only for the item owner, admin has own */}
-                      {verifiedToken?.uid === item.sellerId && ["draft", "for-sale"].includes(item.status) && (
-                        <div className="w-full flex-1">
-                          <WithdrawButton id={item.id} />
-                        </div>
-                      )}
+                      {claims?.user_id === item.sellerId &&
+                        ["draft", "for-sale"].includes(item.status) && (
+                          <div className="w-full flex-1">
+                            <WithdrawButton id={item.id} />
+                          </div>
+                        )}
 
-                      {/* Publish button for withdrawn */}
-                      {((verifiedToken?.admin || verifiedToken?.uid === item.sellerId) && item.status === "withdrawn") && (
-                        <div className="w-full flex-1">
-                          <PublishButton id={item.id} />
-                        </div>
-                      )}
+                      {(claims?.admin || claims?.user_id === item.sellerId) &&
+                        item.status === "withdrawn" && (
+                          <div className="w-full flex-1">
+                            <PublishButton id={item.id} />
+                          </div>
+                        )}
 
                       <div className="w-full flex-1">
                         <BackButton />
                       </div>
                     </div>
 
-                    {/* Admin-only approval form */}
-                    {verifiedToken?.admin && (
+                    {claims?.admin && (
                       <div className="mt-4">
                         <ApproveForm id={item.id} condition={item.condition} />
                       </div>
                     )}
                   </>
                 ) : (
-                    // I DON'T THINK THIS POINT IS EVER REACHED
-                    <BackButton />
+                  <BackButton />
                 )}
               </div>
             </div>

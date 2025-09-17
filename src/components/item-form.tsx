@@ -162,6 +162,9 @@ export default function ItemForm({
                                         <SelectItem value="books">Books</SelectItem>
                                         <SelectItem value="electronics">Electronics</SelectItem>
                                         <SelectItem value="clothing">Clothing</SelectItem>
+                                        <SelectItem value="notes">Notes</SelectItem>
+                                        <SelectItem value="stationery">Stationery</SelectItem>
+                                        <SelectItem value="other">Other</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </FormControl>

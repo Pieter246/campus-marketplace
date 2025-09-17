@@ -1,114 +1,160 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import ItemStatusBadge from "@/components/item-status-badge";
-import  Button  from "@/components/ui/Button";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getItems } from "@/data/items";
+import Button from "@/components/ui/Button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EyeIcon, PencilIcon } from "lucide-react";
-import { cookies } from "next/headers";
 import Link from "next/link";
-import numeral from 'numeral';
-import { auth } from "@/firebase/server"
+import numeral from "numeral";
+import { useAuth } from "@/context/auth"; // ✅ assumes you have a client-side auth context
+import { GetItemsResponse } from "@/types/GetItemsResponse";
+import { Item } from "@/types/item";
+import { toast } from "sonner";
 
-export default async function UserItemsTable({page = 1}: {page?: number}) {
-    //Get user token from cookies
-    const cookieStore = await cookies();
-    const token = await cookieStore.get("firebaseAuthToken")?.value;
+type Props = {
+  page?: number;
+};
 
-    // if no token, return empty object
-    if(!token){
-        return;
-    }
+export default function UserItemsTable({ page = 1 }: Props) {
+  const auth = useAuth();
+  const [data, setItems] = useState<Item[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-    // Get user token ID
-    const verifiedToken = await auth.verifyIdToken(token);
+  useEffect(() => {
+    const fetchItems = async () => {
+      // If user is not logged in return
+      const user = auth?.currentUser;
+      if (!user) return;
 
-    // if no verified token, return empty object
-    if(!verifiedToken){
-        return;
-    }
-    
-    const { data, totalPages } = await getItems({ // Get data for user
-        pagination: {
-            page,
-            pageSize: 10,
+      const token = await user.getIdToken();
+
+      // API call get items sold by the user
+      const response = await fetch("/api/items/list", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        filters: {
-            sellerId: verifiedToken.uid
-        }
-    });
+        body: JSON.stringify({
+          sellerId: user.uid,
+          page,
+          pageSize: 10,
+        }),
+      });
 
-    //console.log({ data })
-    
+      // Get items result
+      const result: GetItemsResponse = await response.json();
+
+      // Display error if result has error
+      if (!response.ok || !result.success || !Array.isArray(result.items)) {
+        toast.error("Failed to fetch items", {
+          description:
+            result.message || result.error || "Failed to fetch items.",
+        });
+        setLoading(false);
+        return;
+      }
+
+      setItems(result.items);
+      setTotalPages(result.totalPages);
+
+      setLoading(false);
+    };
+
+    fetchItems();
+  }, [auth, page]);
+
+  if (loading) {
     return (
-        <>
-            {!data.length && (
-                <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
-                    You have no items
-                </h1>
-            )}                
-            {!!data.length && (
-            <>
-                <Table className="mt-5">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Details</TableHead>
-                            <TableHead>Listing price</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead />
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {data.map(item => {
-                            const detail = [
-                                item.title,
-                            ]
-                            .filter(addressLine => !!addressLine)
-                            .join(", ");
-
-                            return (
-                                <TableRow key={item.id}>
-                                    <TableCell>{detail}</TableCell>
-                                    <TableCell>R{numeral(item.price).format("0,0")}</TableCell>
-                                    <TableCell>
-                                        <ItemStatusBadge status={item.status} />
-                                    </TableCell>
-                                    <TableCell className="flex justify-end gap-1">
-                                        <Button asChild variant="outline" size="sm">
-                                            <Link href={`/item/${item.id}`}>
-                                                <EyeIcon />
-                                            </Link>
-                                        </Button>
-                                        {!["sold", "pending", "for-sale"].includes(item.status) && (
-                                            <Button asChild variant="outline" size="sm">
-                                                <Link href={`/profile/edit/${item.id}`}>
-                                                <PencilIcon />
-                                                </Link>
-                                            </Button>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                    <TableFooter>
-                        <TableRow>
-                            <TableCell colSpan={4} className="text-center bg-white">
-                                {Array.from({length: totalPages}).map((_, i) => (
-                                    <Button
-                                        disabled={page === i + 1}
-                                        key={i}
-                                        asChild={page !== i + 1}
-                                        variant="outline"
-                                        className="mx-1 mt-5"
-                                    >
-                                        <Link href={`/profile/user?tab=dashboard&page=${i + 1}`}>{i + 1}</Link>
-                                    </Button>
-                                ))}
-                            </TableCell>
-                        </TableRow>
-                    </TableFooter>
-                </Table>              
-            </>
-            )}
-        </>
+      <h1 className="text-center text-zinc-400 py-20 font-bold text-2xl">
+        Loading your items...
+      </h1>
     );
+  }
+
+  return (
+    <>
+      {!data.length && (
+        <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
+          You have no items
+        </h1>
+      )}
+      {!!data.length && (
+        <>
+          <Table className="mt-5">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Details</TableHead>
+                <TableHead>Listing price</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((item) => {
+                const detail = [item.title]
+                  .filter((addressLine) => !!addressLine)
+                  .join(", ");
+
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell>{detail}</TableCell>
+                    <TableCell>R{numeral(item.price).format("0,0")}</TableCell>
+                    <TableCell>
+                      <ItemStatusBadge status={item.status} />
+                    </TableCell>
+                    <TableCell className="flex justify-end gap-1">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/item/${item.id}`}>
+                          <EyeIcon />
+                        </Link>
+                      </Button>
+                      {!["sold", "pending", "for-sale"].includes(
+                        item.status
+                      ) && (
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/profile/edit/${item.id}`}>
+                            <PencilIcon />
+                          </Link>
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={4} className="text-center bg-white">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <Button
+                      disabled={page === i + 1}
+                      key={i}
+                      asChild={page !== i + 1}
+                      variant="outline"
+                      className="mx-1 mt-5"
+                    >
+                      <Link href={`/profile/user?tab=dashboard&page=${i + 1}`}>
+                        {i + 1}
+                      </Link>
+                    </Button>
+                  ))}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </>
+      )}
+    </>
+  );
 }

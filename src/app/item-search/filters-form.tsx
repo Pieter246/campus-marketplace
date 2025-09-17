@@ -1,8 +1,20 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -53,23 +65,39 @@ export default function FiltersForm() {
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    const newSearchParams = new URLSearchParams();
+    const newSearchParams = new URLSearchParams(searchParams.toString());
 
+    // Reset pagination
+    newSearchParams.set("page", "1");
+
+    // Update price range
     if (data.priceRange && data.priceRange !== "all") {
       const [min, max] = data.priceRange.split("-");
       if (min) newSearchParams.set("minPrice", min);
+      else newSearchParams.delete("minPrice");
       if (max) newSearchParams.set("maxPrice", max);
+      else newSearchParams.delete("maxPrice");
+    } else {
+      newSearchParams.delete("minPrice");
+      newSearchParams.delete("maxPrice");
     }
 
-    if (data.condition) newSearchParams.set("condition", data.condition);
-    newSearchParams.set("page", "1");
+    // Update condition
+    if (data.condition && data.condition !== "all") {
+      newSearchParams.set("condition", data.condition);
+    } else {
+      newSearchParams.delete("condition");
+    }
 
     router.push(`/?${newSearchParams.toString()}`);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-row w-full gap-4 items-end">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="flex flex-col flex-row w-full gap-4 items-end"
+      >
         {/* Price Range */}
         <FormField
           control={form.control}
@@ -78,7 +106,10 @@ export default function FiltersForm() {
             <FormItem className="flex flex-col">
               <FormLabel className="text-xs mb-1">Price Range</FormLabel>
               <FormControl>
-                <Select defaultValue={field.value} onValueChange={field.onChange}>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
                   <SelectTrigger className="w-full sm:w-40 h-10">
                     <SelectValue />
                   </SelectTrigger>
@@ -103,7 +134,10 @@ export default function FiltersForm() {
             <FormItem className="flex flex-col">
               <FormLabel className="text-xs mb-1">Condition</FormLabel>
               <FormControl>
-                <Select defaultValue={field.value} onValueChange={field.onChange}>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
                   <SelectTrigger className="w-full w-32 h-10">
                     <SelectValue />
                   </SelectTrigger>

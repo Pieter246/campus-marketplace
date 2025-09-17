@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useAuth } from "@/context/auth"
-import Link from "next/link"
+import { useAuth } from "@/context/auth";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
