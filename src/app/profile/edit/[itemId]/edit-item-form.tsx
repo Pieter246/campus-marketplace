@@ -4,7 +4,6 @@ import ItemForm from "@/components/item-form";
 import { storage } from "@/firebase/client";
 import { Item } from "@/types/item";
 import { itemSchema } from "@/validation/itemSchema";
-import { updateItem } from "./actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -13,12 +12,10 @@ import {
   uploadBytesResumable,
   UploadTask,
 } from "firebase/storage";
-import { SaveIcon } from "lucide-react";
 import z from "zod";
 import { Breadcrumbs } from "@/components/ui/breadcrumb";
 import DeleteItemButton from "./delete-item-button";
 import { useAuth } from "@/context/auth";
-import { saveItemImages } from "../../actions";
 
 type Props = Item;
 
@@ -63,9 +60,6 @@ export default function EditPropertyForm({
       return;
     }
 
-    // Update item data this does not update images
-    // const response = await updateItem({...rest, id}, token);
-
     // Handle image upload and deletion of existing images
     const storageTasks: (UploadTask | Promise<void>)[] = [];
     const imagesToDelete = images.filter(
@@ -90,14 +84,34 @@ export default function EditPropertyForm({
 
     // Upload images to firebase
     await Promise.all(storageTasks);
-    await saveItemImages({ itemId: id, images: paths }, token);
+
+    // API call save images
+    const imageResponse = await fetch("/api/items/actions/save-images", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        itemId: id,
+        images: paths,
+      }),
+    });
+
+    const imageResult = await imageResponse.json();
+
+    if (!imageResponse.ok || imageResult?.error) {
+      toast.error("Error!", {
+        description: imageResult.message || "Failed to save item images.",
+      });
+      return;
+    }
 
     // Display success message and redirect to admin dashboard
     toast.success("Success!", {
       description: "Item updated",
     });
 
-    // Redirect user to dashboard
     router.push("/profile/user");
   };
   return (
@@ -115,12 +129,10 @@ export default function EditPropertyForm({
         ]}
       />
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
-        {!auth?.customClaims?.admin && ( //Admins cannot delete the item
-          <div className="text-3xl font-bold flex justify-end mb-6">
-            {/* <h1 className="text-2xl font-bold">Sell Your Item</h1> */}
-            <DeleteItemButton itemId={id} images={images || []} />
-          </div>
-        )}
+        <div className="text-3xl font-bold flex justify-end mb-6">
+          {/* <h1 className="text-2xl font-bold">Sell Your Item</h1> */}
+          <DeleteItemButton itemId={id} images={images || []} />
+        </div>
         <ItemForm
           handleSubmit={handleSubmit}
           submitButtonLabel={<>Save Item</>}

@@ -1,64 +1,59 @@
-"use client"
+"use client";
 
-import { buyItem } from "@/app/profile/edit/[itemId]/actions";
-import  Button  from "@/components/ui/Button";
-import { useAuth } from "@/context/auth"
+import Button from "@/components/ui/Button";
+import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export default function BuyButton({
-    id
-}: {
-    id: string,
-}) {
-    const router = useRouter();
-    const auth = useAuth();
-    const [isBuying, setIsBuying] = useState(false);
+export default function BuyButton({ id }: { id: string }) {
+  const router = useRouter();
+  const auth = useAuth();
+  const [isBuying, setIsBuying] = useState(false);
 
-    const handleBuyClick = async () => {
+  const handleBuyClick = async () => {
+    const tokenResult = await auth?.currentUser?.getIdTokenResult();
 
-        // Get current user token to verify user is logged in
-        const tokenResult = await auth?.currentUser?.getIdTokenResult();
+    //Redirect if token is invalid
+    if (!tokenResult) {
+      router.push("/login");
+      return;
+    }
 
-        // If user is not logged in redirect to login
-        if(!tokenResult){
-            router.push("/login");
-            return;
-        }
+    setIsBuying(true);
 
-        // Buying animation start
-        setIsBuying(true)
+    // API call buy item
+    const response = await fetch("/api/items/actions/buy", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${tokenResult.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ itemId: id }),
+    });
 
-        // Update item data set buyer ID and status to sold
-        const response = await buyItem(id, tokenResult.token);
-        // If item update is not successful show message
-        if(!!response?.error){
-            toast.error("Error!", {
-                description: response.message,
-            });
-            return;
-        }
+    const result = await response.json();
 
-        // Buying animation finish
-        setIsBuying(false);
+    if (!response.ok || result?.error) {
+      toast.error("Error!", {
+        description: result.message || "Failed to purchase item.",
+      });
+      setIsBuying(false);
+      return;
+    }
 
-        // Display message item bought
-        toast.success("Success!", {
-            description: `you have bought an item!`
-        });
+    setIsBuying(false);
 
-        // Redirect user to dashboard to show item bought (Will not show query not implemented)
-        router.push("/profile/user?tab=purchases")
-    };
+    toast.success("Success!", {
+      description: "You have bought an item!",
+    });
 
-    return (
-        <Button 
-            className="flex-1" 
-            onClick={handleBuyClick} 
-            disabled={isBuying}
-        >
-            {isBuying ? "Buying..." : "Buy Item"}
-        </Button>             
-    );
+    router.push("/profile/user?tab=purchases");
+  };
+
+  return (
+    <Button className="flex-1" onClick={handleBuyClick} disabled={isBuying}>
+      {isBuying ? "Buying..." : "Buy Item"}
+    </Button>
+  );
 }

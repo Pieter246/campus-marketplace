@@ -1,67 +1,64 @@
-"use client"
+"use client";
 
-import { withdrawItem } from "@/app/profile/edit/[itemId]/actions";
-import  Button  from "@/components/ui/Button";
-import { useAuth } from "@/context/auth"
+import Button from "@/components/ui/Button";
+import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export default function WithdrawButton({
-    id
-}: {
-    id: string,
-}) {
-    const router = useRouter();
-    const auth = useAuth();
-    const [isWithdrawing, setIsWithdrawing] = useState(false);
+export default function WithdrawButton({ id }: { id: string }) {
+  const router = useRouter();
+  const auth = useAuth();
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
-    const handleWithdrawClick = async () => {
+  const handleWithdrawClick = async () => {
+    const tokenResult = await auth?.currentUser?.getIdTokenResult();
 
-        // Get current user token to verify user is logged in
-        const tokenResult = await auth?.currentUser?.getIdTokenResult();
+    //Redirect if token is invalid
+    if (!tokenResult) {
+      router.push("/login");
+      return;
+    }
 
-        // If user is not logged in redirect to login
-        if(!tokenResult){
-            router.push("/login");
-            return;
-        }
+    setIsWithdrawing(true);
 
-        // Withdrawing animation start
-        setIsWithdrawing(true)
+    // API call withdraw item
+    const response = await fetch("/api/items/actions/withdraw", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${tokenResult.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ itemId: id }),
+    });
 
-        // Update item data set buyer ID and status to sold
-        const response = await withdrawItem(id, tokenResult.token);
-        // If item update is not successful show message
-        if(!!response?.error){
-            toast.error("Error!", {
-                description: response.message,
-            });
-            return;
-        }
+    const result = await response.json();
 
-        // Withdrawing animation finish
-        setIsWithdrawing(false);
+    if (!response.ok || result?.error) {
+      toast.error("Error!", {
+        description: result.message || "Failed to withdraw item.",
+      });
+      setIsWithdrawing(false);
+      return;
+    }
 
-        // Display message item placed under review for sale
-        toast.success("Success!", {
-            description: `The item has been withdraw and is now placed as draft`
-        });
+    setIsWithdrawing(false);
 
-        // Redirect user to dashboard to show item bought (Will not show query not implemented)
-        if (auth?.customClaims?.admin)
-            router.push("/profile/admin/items")
-        else
-            router.push("/profile/user")
-    };
+    toast.success("Success!", {
+      description: "The item has been withdrawn and is now placed as draft",
+    });
 
-    return (
-        <Button 
-            className="flex-1"
-            onClick={handleWithdrawClick} 
-            disabled={isWithdrawing}
-        >
-            {isWithdrawing ? "Withdrawing..." : "Withdraw Item"}
-        </Button>             
-    );
+    if (auth?.customClaims?.admin) router.push("/profile/admin/items");
+    else router.push("/profile/user");
+  };
+
+  return (
+    <Button
+      className="flex-1"
+      onClick={handleWithdrawClick}
+      disabled={isWithdrawing}
+    >
+      {isWithdrawing ? "Withdrawing..." : "Withdraw Item"}
+    </Button>
+  );
 }

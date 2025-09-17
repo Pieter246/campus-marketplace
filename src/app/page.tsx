@@ -1,51 +1,79 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
 import FiltersForm from "./item-search/filters-form";
-import { Suspense } from "react";
-import { getItems } from "@/data/items";
 import Image from "next/image";
 import imageUrlFormatter from "@/lib/imageUrlFormatter";
 import { BookMarked } from "lucide-react";
 import numeral from "numeral";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { verifyTokenSafe } from "@/firebase/server";
 import ItemConditionBadge from "@/components/item-condition-badge";
 import SortDropdown from "@/components/ui/SortDropdown";
-import Logo from "@/components/ui/Logo";
+import { useAuth } from "@/context/auth";
+import { Item } from "@/types/item";
 
+export default function Home() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const auth = useAuth();
 
-export default async function Home({ searchParams }: { searchParams: Promise<any> }) {
-  const searchParamsValues = await searchParams;
+  const [items, setItems] = useState<Item[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  const parsedPage = parseInt(searchParamsValues?.page);
-  const parsedMinPrice = parseInt(searchParamsValues?.minPrice);
-  const parsedMaxPrice = parseInt(searchParamsValues?.maxPrice);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const minPrice = parseInt(searchParams.get("minPrice") || "") || null;
+  const maxPrice = parseInt(searchParams.get("maxPrice") || "") || null;
+  const condition = searchParams.get("condition") || null;
+  const searchTerm = searchParams.get("search") || null;
 
-  const page = isNaN(parsedPage) ? 1 : parsedPage;
-  const minPrice = isNaN(parsedMinPrice) ? null : parsedMinPrice;
-  const maxPrice = isNaN(parsedMaxPrice) ? null : parsedMaxPrice;
+  useEffect(() => {
+    const fetchItems = async () => {
+      const user = auth?.currentUser;
+      if (!user) return;
 
-  const condition: string | null = searchParamsValues.condition ?? null;
-  const searchTerm: string | null = searchParamsValues.search ?? null;
+      const token = await user.getIdToken();
 
-  // Get user token from cookies
-  const cookieStore = await cookies();
-  const token = cookieStore.get("firebaseAuthToken")?.value;
-  const verifiedToken = await verifyTokenSafe(token); // safe verification
+      // Call API
+      const response = await fetch("/api/items/list", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          page,
+          pageSize: 10,
+          minPrice,
+          maxPrice,
+          condition,
+          status: ["for-sale"],
+          searchTerm,
+        }),
+      });
 
-  // Fetch items with filters + search
-  const { data, totalPages } = await getItems({
-    pagination: { page, pageSize: 10 },
-    filters: { minPrice, maxPrice, condition, status: ["for-sale"], searchTerm },
-  });
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !Array.isArray(result.items)) {
+        console.error("Failed to fetch items:", result.message || result.error);
+        return;
+      }
+
+      setItems(result.items);
+      setTotalPages(result.totalPages);
+      setLoading(false);
+    };
+
+    fetchItems();
+  }, [auth, page, minPrice, maxPrice, condition, searchTerm]);
 
   return (
     <div className="max-w-screen-lg mx-auto px-2">
-
       <h1 className="text-2xl font-bold pb-2 text-center">Welcome to Campus Marketplace!</h1>
       <p className="text-center pb-10">Buy and sell textbooks, technology, and more.</p>
-
 
       {/* Search */}
       <div className="space-y-4 bg-white rounded-xl">
@@ -60,82 +88,79 @@ export default async function Home({ searchParams }: { searchParams: Promise<any
           <Button type="submit">Search</Button>
         </form>
       </div>
+
       <div className="flex flex-col md:flex-row gap-5 mt-5 bg-white items-center rounded-xl px-6 py-4">
-        {/* Sort card */}
         <div className="flex-1 w-full md:w-auto">
           <SortDropdown />
         </div>
-        {/* Filters card */}
         <div className="flex-shrink-0 w-full md:w-auto">
           <FiltersForm />
         </div>
       </div>
 
       {/* Items grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-5 gap-5">
-        {data.map((item) => {
-          const addressLines = [item.collectionAddress].filter(Boolean).join(", ");
-          return (
-            <Card key={item.id} className="overflow-hidden pt-0 pb-0">
-              <CardContent className="px-0 flex flex-col h-full">
-                {/* Image */}
-                <div className="h-40 relative bg-sky-50 text-zinc-400 flex flex-col justify-center items-center">
-                  {!!item.images?.[0] && (
-                    <Image
-                      fill
-                      className="object-cover"
-                      src={imageUrlFormatter(item.images[0])}
-                      alt=""
-                    />
-                  )}
-                  {!item.images?.[0] && (
-                    <>
-                      <BookMarked />
-                      <small>No Image</small>
-                    </>
-                  )}
-                </div>
-
-                {/* Top content: title, condition, address */}
-                <div className="flex flex-col gap-2 p-5 flex-1">
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <p className="font-semibold truncate">{item.title}</p>
-                    <ItemConditionBadge
-                      condition={item.condition}
-                      className="capitalize text-base flex-shrink-0 text-xs"
-                    />
+      {loading ? (
+        <p className="text-center py-10 text-zinc-400">Loading items...</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-5 gap-5">
+          {items.map((item) => {
+            const addressLines = [item.collectionAddress].filter(Boolean).join(", ");
+            return (
+              <Card key={item.id} className="overflow-hidden pt-0 pb-0">
+                <CardContent className="px-0 flex flex-col h-full">
+                  <div className="h-40 relative bg-sky-50 text-zinc-400 flex flex-col justify-center items-center">
+                    {!!item.images?.[0] ? (
+                      <Image
+                        fill
+                        className="object-cover"
+                        src={imageUrlFormatter(item.images[0])}
+                        alt=""
+                      />
+                    ) : (
+                      <>
+                        <BookMarked />
+                        <small>No Image</small>
+                      </>
+                    )}
                   </div>
-                  <p className="text-sm text-zinc-500">{addressLines}</p>
-                </div>
 
-                {/* Bottom content: price + button */}
-                <div className="flex flex-col gap-2 p-5 pt-0">
-                  <p className="text-2xl font-bold">R{numeral(item.price).format("0,0")}</p>
-                  <Button asChild>
-                    <Link href={`/item/${item.id}`}>View item</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  <div className="flex flex-col gap-2 p-5 flex-1">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <p className="font-semibold truncate">{item.title}</p>
+                      <ItemConditionBadge
+                        condition={item.condition}
+                        className="capitalize text-base flex-shrink-0 text-xs"
+                      />
+                    </div>
+                    <p className="text-sm text-zinc-500">{addressLines}</p>
+                  </div>
 
+                  <div className="flex flex-col gap-2 p-5 pt-0">
+                    <p className="text-2xl font-bold">R{numeral(item.price).format("0,0")}</p>
+                    <Button asChild>
+                      <Link href={`/item/${item.id}`}>View item</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex gap-2 items-center justify-center py-10">
         {Array.from({ length: totalPages }).map((_, i) => {
-          const newSearchParams = new URLSearchParams();
-
-          if (searchParamsValues?.minPrice) newSearchParams.set("minPrice", searchParamsValues.minPrice);
-          if (searchParamsValues?.maxPrice) newSearchParams.set("maxPrice", searchParamsValues.maxPrice);
-          if (searchParamsValues?.condition) newSearchParams.set("condition", searchParamsValues.condition);
-          if (searchTerm) newSearchParams.set("search", searchTerm);
-
+          const newSearchParams = new URLSearchParams(searchParams.toString());
           newSearchParams.set("page", `${i + 1}`);
 
           return (
-            <Button asChild={page !== i + 1} disabled={page === i + 1} variant="outline" key={i}>
+            <Button
+              asChild={page !== i + 1}
+              disabled={page === i + 1}
+              variant="outline"
+              key={i}
+            >
               <Link href={`/?${newSearchParams.toString()}`}>{i + 1}</Link>
             </Button>
           );

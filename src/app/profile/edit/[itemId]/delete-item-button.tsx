@@ -16,7 +16,6 @@ import { useState } from "react";
 import { TrashIcon } from "lucide-react";
 import { deleteObject, ref } from "firebase/storage";
 import { storage } from "@/firebase/client";
-import { deleteItem } from "./actions";
 import { useRouter } from "next/navigation";
 
 export default function DeleteItemButton({

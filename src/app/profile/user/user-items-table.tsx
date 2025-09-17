@@ -38,7 +38,7 @@ export default function UserItemsTable({ page = 1 }: Props) {
       const token = await user.getIdToken();
 
       // Get items with API
-      const response = await fetch("/api/items", {
+      const response = await fetch("/api/items/list", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

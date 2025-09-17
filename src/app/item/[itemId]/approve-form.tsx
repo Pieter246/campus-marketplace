@@ -1,8 +1,13 @@
 "use client";
 
-import { approveItem } from "@/app/profile/edit/[itemId]/actions";
 import Button from "@/components/ui/Button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -16,7 +21,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
-import BackButton from "./back-button";
 
 const formSchema = z.object({
   realCondition: z.string(),
@@ -41,32 +45,48 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     const tokenResult = await auth?.currentUser?.getIdTokenResult();
 
+    //Redirect if token is invalid
     if (!tokenResult) {
       router.push("/login");
       return;
     }
 
-    const response = await approveItem(id, data.realCondition, tokenResult.token);
+    // API call approve item
+    const response = await fetch("/api/items/actions/approve", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${tokenResult.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        itemId: id,
+        condition: data.realCondition,
+      }),
+    });
 
-    if (!!response?.error) {
+    const result = await response.json();
+
+    if (!response.ok || result?.error) {
       toast.error("Error!", {
-        description: response.message,
+        description: result.message || "Failed to approve item.",
       });
       return;
     }
 
     toast.success("Success!", {
-      description: `Item was approved`,
+      description: "Item was approved",
     });
 
-    // Redirect user to dashboard to show item bought (Will not show query not implemented)
     router.push("/profile/admin/items");
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
-        <fieldset disabled={form.formState.isSubmitting} className="grid grid-cols-3 gap-3 pt-2">
+        <fieldset
+          disabled={form.formState.isSubmitting}
+          className="grid grid-cols-3 gap-3 pt-2"
+        >
           {/* Condition Select */}
           <div className="flex flex-col gap-2">
             <FormField
@@ -76,7 +96,10 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
                 <FormItem>
                   <FormLabel>Condition</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
