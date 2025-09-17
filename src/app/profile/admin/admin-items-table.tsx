@@ -73,7 +73,7 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
     <>
       {!data.length && (
         <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
-          You have no items
+          There are no items to approve
         </h1>
       )}
       {!!data.length && (
