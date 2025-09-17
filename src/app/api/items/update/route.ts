@@ -11,7 +11,14 @@ const UpdateItemSchema = z.object({
   price: z.number().nonnegative(),
   status: z.enum(["draft", "pending", "for-sale", "sold", "withdrawn"]),
   condition: z.enum(["new", "used", "fair", "poor"]),
-  category: z.enum(["books", "electronics", "clothing"]),
+  category: z.enum([
+    "books",
+    "electronics",
+    "clothing",
+    "notes",
+    "stationery",
+    "other",
+  ]),
 });
 
 export async function PUT(req: NextRequest) {
