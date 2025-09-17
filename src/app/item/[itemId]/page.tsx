@@ -61,13 +61,17 @@ export default function Item() {
         },
       });
 
+      // Get item result
       const result: GetItemResponse = await response.json();
 
+      // Display error if result has error
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Failed to fetch item");
       }
 
+      // Set the item to be used by the form
       setItem(result.item);
+      
     } catch (err: any) {
       console.error("Fetch item error:", err);
       toast.error("Error!", {

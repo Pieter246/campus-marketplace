@@ -18,6 +18,7 @@ import numeral from "numeral";
 import { useAuth } from "@/context/auth";
 import { GetItemsResponse } from "@/types/GetItemsResponse";
 import { Item } from "@/types/item";
+import { toast } from "sonner";
 
 type Props = {
   page?: number;
@@ -36,7 +37,7 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
 
       const token = await user.getIdToken();
 
-      // Get items with API
+      // API call get items bought by the user
       const response = await fetch("/api/items/list", {
         method: "POST",
         headers: {
@@ -50,13 +51,16 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
         }),
       });
 
+      // Get items result
       const result: GetItemsResponse = await response.json();
 
+      // Display error if result has error
       if (!response.ok || !result.success || !Array.isArray(result.items)) {
-        console.error(
-          "Failed to fetch purchases:",
-          result.message || result.error
-        );
+        toast.error("Failed to fetch purchases", {
+          description:
+            result.message || result.error || "Failed to fetch purchases",
+        });
+        setLoading(false);
         return;
       }
 

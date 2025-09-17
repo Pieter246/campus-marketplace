@@ -32,8 +32,10 @@ export default function SellButton({ id }: { id: string }) {
       body: JSON.stringify({ itemId: id }),
     });
 
+    // Get sell item result
     const result = await response.json();
 
+    // Display error if result has error
     if (!response.ok || result?.error) {
       toast.error("Error!", {
         description: result.message || "Failed to mark item as pending.",
@@ -44,6 +46,7 @@ export default function SellButton({ id }: { id: string }) {
 
     setIsSelling(false);
 
+    // Display success message
     toast.success("Success!", {
       description: "Your item has been placed under review for sale",
     });

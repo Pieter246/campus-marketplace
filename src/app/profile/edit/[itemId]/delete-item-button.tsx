@@ -17,6 +17,7 @@ import { TrashIcon } from "lucide-react";
 import { deleteObject, ref } from "firebase/storage";
 import { storage } from "@/firebase/client";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function DeleteItemButton({
   itemId,
@@ -35,14 +36,14 @@ export default function DeleteItemButton({
 
     setIsDeleting(true);
 
-    // ✅ Delete all images
+    // Delete all images
     const storageTasks: Promise<void>[] = [];
     images.forEach((image) => {
       storageTasks.push(deleteObject(ref(storage, image)));
     });
     await Promise.all(storageTasks);
 
-    // ✅ Call flat DELETE API
+    // API call delete item
     const response = await fetch("/api/items/delete", {
       method: "DELETE",
       headers: {
@@ -51,13 +52,19 @@ export default function DeleteItemButton({
       },
       body: JSON.stringify({ itemId }),
     });
+
+    // Get delete item result
     const result = await response.json();
 
-    if (!response.ok || result?.error) {
-      console.error("Delete item error:", result?.message || "Unknown error");
-      setIsDeleting(false);
-      return;
-    }
+    // Display error if result has error
+      if (!response.ok || result?.error) {
+        toast.error("Delete item error", {
+          description:
+            result.message || result.error || "Unknown error.",
+        });
+        setIsDeleting(false);
+        return;
+      }
 
     setIsDeleting(false);
     // Direct user to profile page

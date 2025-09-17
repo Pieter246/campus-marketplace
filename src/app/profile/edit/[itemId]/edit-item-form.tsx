@@ -40,7 +40,7 @@ export default function EditPropertyForm({
 
     const { images: newImages, ...rest } = data;
 
-    // ✅ Call flat API directly
+    // API call update item
     const response = await fetch("/api/items/update", {
       method: "PUT",
       headers: {
@@ -53,6 +53,7 @@ export default function EditPropertyForm({
     // Get result of update
     const result = await response.json();
 
+    // Display error if result has error
     if (!response.ok || result?.error) {
       toast.error("Error!", {
         description: result.message || "Failed to update item.",
@@ -98,8 +99,10 @@ export default function EditPropertyForm({
       }),
     });
 
+    // Get result of image upload
     const imageResult = await imageResponse.json();
 
+    // Display error if imageResult has error
     if (!imageResponse.ok || imageResult?.error) {
       toast.error("Error!", {
         description: imageResult.message || "Failed to save item images.",

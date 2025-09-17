@@ -32,8 +32,10 @@ export default function PublishButton({ id }: { id: string }) {
       body: JSON.stringify({ itemId: id }),
     });
 
+    // Get item result
     const result = await response.json();
 
+    // Display error if result has error
     if (!response.ok || result?.error) {
       toast.error("Error!", {
         description: result.message || "Failed to publish item.",
@@ -44,6 +46,7 @@ export default function PublishButton({ id }: { id: string }) {
 
     setIsPublishing(false);
 
+    // Display success message
     toast.success("Success!", {
       description: "The item is now published and visible for sale.",
     });

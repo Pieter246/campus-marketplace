@@ -18,6 +18,7 @@ import numeral from "numeral";
 import { useAuth } from "@/context/auth";
 import { GetItemsResponse } from "@/types/GetItemsResponse";
 import { Item } from "@/types/item";
+import { toast } from "sonner";
 
 export default function AdminItemsTable({ page = 1 }: { page?: number }) {
   const auth = useAuth();
@@ -32,7 +33,7 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
 
       const token = await user.getIdToken();
 
-      // Cal get items API
+      // API call get items
       const response = await fetch("/api/items/list", {
         method: "POST",
         headers: {
@@ -46,13 +47,20 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
         }),
       });
 
+      // Get items result
       const result: GetItemsResponse = await response.json();
 
+      // Display error if result has error
       if (!response.ok || !result.success || !Array.isArray(result.items)) {
-        console.error("Failed to fetch items:", result.message || result.error);
+        toast.error("Failed to fetch items", {
+          description:
+            result.message || result.error || "Failed to fetch items.",
+        });
+        setLoading(false);
         return;
       }
 
+      // Set items and total pages to be used by form
       setItems(result.items);
       setTotalPages(result.totalPages);
       setLoading(false);

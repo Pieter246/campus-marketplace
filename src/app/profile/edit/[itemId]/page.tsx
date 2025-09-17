@@ -39,6 +39,7 @@ export default function EditProperty({
     try {
       const token = await user.getIdToken();
 
+      // API call get item
       const response = await fetch(`/api/items/read?itemId=${itemId}`, {
         method: "GET",
         headers: {
@@ -46,14 +47,18 @@ export default function EditProperty({
         },
       });
 
+      // Get item in result
       const result: GetItemResponse = await response.json();
 
+      // Throw error if result has error
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Failed to fetch item");
       }
 
+      // Set item to be used by form
       console.log("Fetched item:", result.item);
       setItem(result.item);
+      
     } catch (err: any) {
       console.error("Fetch item error:", err);
       toast.error("Error!", {

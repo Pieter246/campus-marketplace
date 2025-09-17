@@ -65,8 +65,10 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
       }),
     });
 
+    // Get item result
     const result = await response.json();
 
+    // Display error if result has error
     if (!response.ok || result?.error) {
       toast.error("Error!", {
         description: result.message || "Failed to approve item.",
@@ -74,6 +76,7 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
       return;
     }
 
+    // Display item was approved
     toast.success("Success!", {
       description: "Item was approved",
     });

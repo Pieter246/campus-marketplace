@@ -32,6 +32,7 @@ export default function WithdrawButton({ id }: { id: string }) {
       body: JSON.stringify({ itemId: id }),
     });
 
+    // Get withdraw item result
     const result = await response.json();
 
     if (!response.ok || result?.error) {
@@ -44,6 +45,7 @@ export default function WithdrawButton({ id }: { id: string }) {
 
     setIsWithdrawing(false);
 
+    // Display success message
     toast.success("Success!", {
       description: "The item has been withdrawn and is now placed as draft",
     });
