@@ -73,10 +73,10 @@ export default function AuthButtons() {
             </DropdownMenu>
             )}
             {!auth?.currentUser &&
-                <div className="flex gap-2 items-center">
-                    <Link href="/login" className="hover:underline">Login</Link>
+                <div className="flex gap-4 items-center">
+                    <Link href="/login" className="text-gray-700 hover:text-accent hover:underline underline-offset-4 transition">Login</Link>
                     <div className="h-6 w-[1px] bg-gray-500/50"/>
-                    <Link href="/register" className="hover:underline">Sign Up</Link>
+                    <Link href="/register" className="text-gray-700 hover:text-accent hover:underline underline-offset-4 transition">Sign Up</Link>
                 </div>
             }
         </div>
