@@ -56,7 +56,7 @@ export default function BuyButton({ id }: { id: string }) {
 
   return (
     <Button className="flex-1" onClick={handleBuyClick} disabled={isBuying}>
-      {isBuying ? "Buying..." : "Buy Item"}
+      {isBuying ? "Adding to cart..." : "Add to cart"}
     </Button>
   );
 }

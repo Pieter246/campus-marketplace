@@ -5,12 +5,7 @@ import { Query, DocumentData } from "firebase-admin/firestore";
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await authenticateRequest(req);
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await req.json();
+    const body = await req.json(); // ✅ Parse body first
 
     const {
       page = 1,
@@ -23,8 +18,15 @@ export async function POST(req: NextRequest) {
       status,
       searchTerm,
       sort = "newest",
-      category, // ✅ added category
+      category,
     } = body;
+
+    const user = await authenticateRequest(req); // ✅ Auth after body
+
+    // ✅ Only enforce auth if private filters are used
+    if ((sellerId || buyerId) && !user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
     let query: Query<DocumentData> = firestore.collection("items");
 
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
       query = query.where("status", "in", status);
     }
     if (category && category !== "all") {
-      query = query.where("category", "==", category); // ✅ filter by category
+      query = query.where("category", "==", category);
     }
 
     // ✅ Apply sort logic
@@ -99,7 +101,7 @@ export async function POST(req: NextRequest) {
         status,
         searchTerm,
         sort,
-        category, // ✅ include in response
+        category,
       },
     });
   } catch (error: any) {

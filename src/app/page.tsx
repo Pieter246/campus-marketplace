@@ -34,18 +34,26 @@ export default function Home() {
 
   useEffect(() => {
     const fetchItems = async () => {
+      setLoading(true); // Always show loading while fetching
+
       const user = auth?.currentUser;
-      if (!user) return;
+      let token: string | null = null;
 
-      const token = await user.getIdToken();
+      if (user) {
+        token = await user.getIdToken();
+      }
 
-      // Call API get items
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/items/list", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           page,
           pageSize: 10,
@@ -55,7 +63,7 @@ export default function Home() {
           status: ["for-sale"],
           searchTerm,
           sort,
-          category
+          category,
         }),
       });
 
@@ -63,6 +71,7 @@ export default function Home() {
 
       if (!response.ok || !result.success || !Array.isArray(result.items)) {
         console.error("Failed to fetch items:", result.message || result.error);
+        setLoading(false); // ✅ unblock UI even on error
         return;
       }
 

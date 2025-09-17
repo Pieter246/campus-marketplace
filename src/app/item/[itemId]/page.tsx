@@ -36,14 +36,11 @@ export default function Item() {
   useEffect(() => {
     const fetchAuth = async () => {
       const user = auth?.currentUser;
-      if (!user) {
-        toast.error("Error!", { description: "You must log in to see items." });
-        return;
-      }
-
-      const tokenResult = await user.getIdTokenResult();
-      setToken(tokenResult.token);
-      setClaims(tokenResult.claims);
+      if (user) {
+        const tokenResult = await user.getIdTokenResult();
+        setToken(tokenResult.token);
+        setClaims(tokenResult.claims);
+      }   
     };
 
     fetchAuth();
@@ -51,14 +48,11 @@ export default function Item() {
 
   // Fetch item
   const fetchItem = useCallback(async () => {
-    if (!token || !itemId) return;
+    if (!itemId) return;
 
     try {
       const response = await fetch(`/api/items/read?itemId=${itemId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        method: "GET"
       });
 
       // Get item result

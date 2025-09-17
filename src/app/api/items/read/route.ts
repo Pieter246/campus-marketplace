@@ -3,17 +3,20 @@ import { firestore } from "@/firebase/server";
 
 export async function GET(req: NextRequest) {
   const itemId = req.nextUrl.searchParams.get("itemId");
+
   if (!itemId) {
     return NextResponse.json({ message: "Missing itemId" }, { status: 400 });
   }
 
   try {
     const itemDoc = await firestore.collection("items").doc(itemId).get();
+
     if (!itemDoc.exists) {
       return NextResponse.json({ message: "Item not found" }, { status: 404 });
     }
 
     const itemData = itemDoc.data();
+
     return NextResponse.json({
       success: true,
       item: {
@@ -24,6 +27,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error("Error fetching item:", error);
     return NextResponse.json(
       {
         message: "Failed to get item",

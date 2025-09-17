@@ -124,7 +124,7 @@ export default function EditPropertyForm({
         items={[
           {
             href: "/profile/user",
-            label: "Profile",
+            label: "Sell",
           },
           {
             label: "Edit item",

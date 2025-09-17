@@ -96,7 +96,7 @@ export default function NewItem() {
       <Breadcrumbs
         className="text-2xl pb-2"
         items={[
-          { href: "/profile/user", label: "Profile" },
+          { href: "/profile/user", label: "Sell" },
           { label: "New item" }, // current page, no href
         ]}
       />
