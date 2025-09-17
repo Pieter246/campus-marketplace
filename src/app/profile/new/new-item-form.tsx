@@ -11,17 +11,15 @@ import { ref, uploadBytesResumable, UploadTask } from 'firebase/storage'
 import { storage } from '@/firebase/client'
 import z from 'zod'
 import { Breadcrumbs } from '@/components/ui/breadcrumb'
-import { useState } from 'react'
-import { Item } from '@/types/item'
+import { CreateItemResponse } from '@/types/CreateItemResponse'
 
 export default function NewItemForm(){
-    const [items, setItems] = useState<Item>();
     const auth = useAuth();
     const router = useRouter();
 
     const handleSubmit = async (data: z.infer<typeof itemSchema>) => {
         const token = await auth?.currentUser?.getIdToken();
-
+        
         if(!token){
             return;
         }
@@ -32,39 +30,29 @@ export default function NewItemForm(){
         // Call API POST method to create item
         const response = await fetch('/api/items/create', {
             method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-        },
-            body: JSON.stringify({ rest })
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(rest), // no need to wrap in `{ rest }`
         });
 
-        // Get JSON response
-        const itemsData = await response.json();
+        // Get API response
+        const itemsData: CreateItemResponse = await response.json();
 
-        if (!response.ok) {
-          console.error("Failed to fetch items:", itemsData.message);
-          toast.error("Error!", {
-                description: itemsData.message || "Failed to fetch items." // response.error
+        // Display error if response is invalid
+        if (!response.ok || !itemsData.success || !itemsData.item?.itemId) {
+            toast.error("Error!", {
+                description: itemsData.message || itemsData.error || "Failed to create item.",
             });
             return;
-        } else {
-          console.log("Fetched items:", itemsData.items);
-          setItems(itemsData.items || []);
         }
-
-        // if(!!response. || !response.itemId){
-        //     toast.error("Error!", {
-        //         description: response.error // response.itemId
-        //     });
-        //     return;
-        // }
 
         const uploadTasks: UploadTask[] = [];
         const paths: string[] = [];
         images.forEach((image, index) => {
             if(image.file){
-                const path = `items/${itemsData.itemId}/${Date.now()}-${index}-${image.file.name}`; //Maby not response.itemId
+                const path = `items/${itemsData.item.itemId}/${Date.now()}-${index}-${image.file.name}`; //Maby not response.itemId
                 paths.push(path);
                 const storageRef = ref(storage, path);
                 uploadTasks.push(uploadBytesResumable(storageRef, image.file));
@@ -72,7 +60,7 @@ export default function NewItemForm(){
         });
 
         await Promise.all(uploadTasks);
-        await saveItemImages({itemId: itemsData.itemId, images: paths}, token) //Maby not response.itemId
+        await saveItemImages({itemId: itemsData.item.itemId, images: paths}, token) //Maby not response.itemId
 
         toast.success("Success!", {
             description: "Item created successfully"

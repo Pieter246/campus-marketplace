@@ -1,199 +1,187 @@
 // src/app/api/items/[itemId]/route.ts
-import { NextRequest, NextResponse } from "next/server"
-import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { NextRequest, NextResponse } from "next/server";
+import { firestore, authenticateRequest } from "@/firebase/server";
+import { Timestamp } from "firebase-admin/firestore";
+import { z } from "zod";
 
-interface UpdateItemRequest {
-  title?: string
-  description?: string
-  price?: number
-  category?: string
-  condition?: 'new' | 'used' | 'fair' | 'poor'
-  itemStatus?: 'available' | 'sold' | 'reserved' | 'inactive'
-  collectionAddress?: string
-  collectionInstructions?: string
-  images?: string[]
+// 🔧 Zod schema for updates
+const UpdateItemSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  price: z.number().nonnegative(),
+  category: z.enum(["books", "electronics", "clothing"]),
+  condition: z.enum(["new", "used", "fair", "poor"]),
+  itemStatus: z.enum(["available", "sold", "reserved", "inactive"]),
+  collectionAddress: z.string().min(1),
+});
+
+type ItemData = {
+  sellerId: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  condition: string;
+  itemStatus: string;
+  collectionAddress: string;
+  postedAt?: Timestamp;
+  updatedAt?: Timestamp;
+  images?: string[];
+};
+
+//Extract item
+function extractItemId(req: NextRequest): string | null {
+  const segments = req.nextUrl.pathname
+    .replace(/\/$/, "") // remove trailing slash
+    .split("/");
+
+  const itemId = segments.at(-1); // more readable than segments[segments.length - 1]
+  return itemId || null;
 }
 
-// GET single item
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { itemId: string } }
-) {
+// Get item
+export async function GET(req: NextRequest) {
   try {
-    const { itemId } = params
-
-    // Get item document
-    const itemDocRef = doc(db, "items", itemId)
-    const itemDoc = await getDoc(itemDocRef)
-
-    if (!itemDoc.exists()) {
-      return NextResponse.json({ 
-        message: "Item not found" 
-      }, { status: 404 })
+    const itemId = extractItemId(req);
+    if (!itemId) {
+      return NextResponse.json({ message: "Missing itemId" }, { status: 400 });
     }
 
-    const itemData = itemDoc.data()
+    const itemDoc = await firestore.collection("items").doc(itemId).get();
+    if (!itemDoc.exists) {
+      return NextResponse.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    const itemData = itemDoc.data() as ItemData;
 
     return NextResponse.json({
       success: true,
       item: {
-        itemId: itemDoc.id,
+        id: itemDoc.id,
         ...itemData,
         postedAt: itemData.postedAt?.toDate?.()?.toISOString(),
-        updatedAt: itemData.updatedAt?.toDate?.()?.toISOString()
-      }
-    })
-
-  } catch (error) {
-    console.error("Get item error:", error)
+        updatedAt: itemData.updatedAt?.toDate?.()?.toISOString(),
+      },
+    });
+  } catch (error: any) {
+    console.error("Get item error:", error);
     return NextResponse.json(
-      { 
+      {
         message: "Failed to get item",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error?.message ?? "Unknown error",
       },
       { status: 500 }
-    )
+    );
   }
 }
 
-// UPDATE item
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { itemId: string } }
-) {
+// ✏️ PUT update item
+export async function PUT(req: NextRequest) {
   try {
-    // Authenticate the request
-    const user = await authenticateRequest(req)
+    const user = await authenticateRequest(req);
     if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { itemId } = params
-    const body: UpdateItemRequest = await req.json()
-
-    // Check if item exists and user owns it
-    const itemDocRef = doc(db, "items", itemId)
-    const itemDoc = await getDoc(itemDocRef)
-
-    if (!itemDoc.exists()) {
-      return NextResponse.json({ 
-        message: "Item not found" 
-      }, { status: 404 })
+    const itemId = extractItemId(req);
+    if (!itemId) {
+      return NextResponse.json({ message: "Missing itemId" }, { status: 400 });
     }
 
-    const itemData = itemDoc.data()
+    const raw = await req.json();
+    const parsed = UpdateItemSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          message: "Invalid input",
+          issues: parsed.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const itemRef = firestore.collection("items").doc(itemId);
+    const itemDoc = await itemRef.get();
+    if (!itemDoc.exists) {
+      return NextResponse.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    const itemData = itemDoc.data() as ItemData;
     if (itemData.sellerId !== user.uid) {
-      return NextResponse.json({ 
-        message: "Forbidden: You can only edit your own items" 
-      }, { status: 403 })
+      return NextResponse.json(
+        { message: "Forbidden: You can only edit your own items" },
+        { status: 403 }
+      );
     }
 
-    // Prepare update data
-    const updateData: Partial<UpdateItemRequest> & { updatedAt: any } = { updatedAt: serverTimestamp() }
+    const updateData = {
+      ...parsed.data,
+      updatedAt: Timestamp.now(),
+    };
 
-    if (body.title !== undefined) {
-      updateData.title = body.title.trim()
-    }
-    if (body.description !== undefined) {
-      updateData.description = body.description.trim()
-    }
-    if (body.price !== undefined) {
-      updateData.price = Number(body.price)
-    }
-    if (body.category !== undefined) {
-      updateData.category = body.category
-    }
-    if (body.condition !== undefined) {
-      updateData.condition = body.condition
-    }
-    if (body.itemStatus !== undefined) {
-      updateData.itemStatus = body.itemStatus
-    }
-    if (body.collectionAddress !== undefined) {
-      updateData.collectionAddress = body.collectionAddress.trim()
-    }
-    if (body.collectionInstructions !== undefined) {
-      updateData.collectionInstructions = body.collectionInstructions.trim()
-    }
-    if (body.images !== undefined) {
-      updateData.images = body.images
-    }
+    await itemRef.update(updateData);
 
-    // Update item document
-    await updateDoc(itemDocRef, updateData)
-
-    console.log(`Successfully updated item: ${itemId}`)
-
+    console.log(`Item updated: ${itemId}`);
     return NextResponse.json({
       success: true,
       message: "Item updated successfully",
-      updatedFields: Object.keys(updateData).filter(key => key !== 'updatedAt')
-    })
-
-  } catch (error) {
-    console.error("Item update error:", error)
+      updatedFields: Object.keys(parsed.data),
+    });
+  } catch (error: any) {
+    console.error("Item update error:", error);
     return NextResponse.json(
-      { 
+      {
         message: "Failed to update item",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error?.message ?? "Unknown error",
       },
       { status: 500 }
-    )
+    );
   }
 }
 
-// DELETE item
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { itemId: string } }
-) {
+// 🗑️ DELETE item
+export async function DELETE(req: NextRequest) {
   try {
-    // Authenticate the request
-    const user = await authenticateRequest(req)
+    const user = await authenticateRequest(req);
     if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { itemId } = params
-
-    // Check if item exists and user owns it
-    const itemDocRef = doc(db, "items", itemId)
-    const itemDoc = await getDoc(itemDocRef)
-
-    if (!itemDoc.exists()) {
-      return NextResponse.json({ 
-        message: "Item not found" 
-      }, { status: 404 })
+    const itemId = extractItemId(req);
+    if (!itemId) {
+      return NextResponse.json({ message: "Missing itemId" }, { status: 400 });
     }
 
-    const itemData = itemDoc.data()
+    const itemRef = firestore.collection("items").doc(itemId);
+    const itemDoc = await itemRef.get();
+    if (!itemDoc.exists) {
+      return NextResponse.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    const itemData = itemDoc.data() as ItemData;
     if (itemData.sellerId !== user.uid) {
-      return NextResponse.json({ 
-        message: "Forbidden: You can only delete your own items" 
-      }, { status: 403 })
+      return NextResponse.json(
+        { message: "Forbidden: You can only delete your own items" },
+        { status: 403 }
+      );
     }
 
-    // Delete item document
-    await deleteDoc(itemDocRef)
+    await itemRef.delete();
 
-    console.log(`Successfully deleted item: ${itemId}`)
-
+    console.log(`Item deleted: ${itemId}`);
     return NextResponse.json({
       success: true,
       message: "Item deleted successfully",
-      itemId
-    })
-
-  } catch (error) {
-    console.error("Item deletion error:", error)
+      itemId,
+    });
+  } catch (error: any) {
+    console.error("Item deletion error:", error);
     return NextResponse.json(
-      { 
+      {
         message: "Failed to delete item",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error?.message ?? "Unknown error",
       },
       { status: 500 }
-    )
+    );
   }
 }

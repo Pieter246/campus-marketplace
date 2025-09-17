@@ -12,5 +12,7 @@ export type Item = {
     condition: ItemCondition;
     category: ItemCategory;
     sellerId: string;
+    updatedAt?: string;
+    postedAt?: string;
     images?: string[];
 }

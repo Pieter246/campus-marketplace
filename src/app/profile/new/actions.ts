@@ -38,6 +38,8 @@ export const createItem = async (data: {
         updated: new Date()
     })
 
+    console.log(`Item created: ${item.id}`);
+
     return {
         itemId: item.id,
     }

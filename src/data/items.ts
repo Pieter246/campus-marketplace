@@ -28,7 +28,7 @@ export const getItems = async (options?: GetItemsOptions) => {
     const pageSize = options?.pagination?.pageSize || 10;
     const { sellerId, buyerId, minPrice, maxPrice, condition, status, searchTerm } = options?.filters || {};
 
-    let itemsQuery = firestore().collection("items").orderBy("updated", "desc");
+    let itemsQuery = firestore().collection("items").orderBy("updatedAt", "desc");
 
     // Apply filters
     if (sellerId) itemsQuery = itemsQuery.where("sellerId", "==", sellerId);

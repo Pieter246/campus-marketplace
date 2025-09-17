@@ -55,6 +55,24 @@ export const verifyTokenSafe = async (token?: string): Promise<DecodedIdToken | 
 };
 /* END NEW CODE DDJ */
 
+export async function authenticateRequest(req: Request) {
+  try {
+    const authHeader = req.headers.get("authorization")
+    
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return null
+    }
+
+    const idToken = authHeader.split("Bearer ")[1]
+    const decodedToken = await auth.verifyIdToken(idToken)
+    
+    return decodedToken
+  } catch (error) {
+    console.error("Authentication error:", error)
+    return null
+  }
+}
+
 export const getTotalPages = async (
   firestoreQuery: FirebaseFirestore.Query<
   FirebaseFirestore.DocumentData,

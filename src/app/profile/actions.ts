@@ -30,6 +30,8 @@ export const saveItemImages = async ({itemId, images}: {
         }
     }
 
+    console.log("Saving images for itemId:", itemId);
+
     await firestore.collection("items").doc(itemId).update({
         images,
     })
