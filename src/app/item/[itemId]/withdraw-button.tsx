@@ -48,8 +48,10 @@ export default function WithdrawButton({ id }: { id: string }) {
       description: "The item has been withdrawn and is now placed as draft",
     });
 
-    if (auth?.customClaims?.admin) router.push("/profile/admin/items");
-    else router.push("/profile/user");
+    // if (auth?.customClaims?.admin) router.push("/profile/admin/items");
+    // else router.push("/profile/user");
+
+    router.push("/profile/user");
   };
 
   return (

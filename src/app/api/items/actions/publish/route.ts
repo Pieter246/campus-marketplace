@@ -14,13 +14,16 @@ export async function POST(req: NextRequest) {
     }
 
     await firestore.collection("items").doc(itemId).update({
-      status: "withdrawn",
+      status: "draft",
       updatedAt: new Date(),
     });
 
-    return NextResponse.json({ success: true, message: "Item withdrawn" });
+    return NextResponse.json({
+      success: true,
+      message: "Item marked as draft",
+    });
   } catch (error: any) {
-    console.error("Withdraw error:", error);
+    console.error("Sell error:", error);
     return NextResponse.json(
       { message: "Internal error", error: error.message },
       { status: 500 }
