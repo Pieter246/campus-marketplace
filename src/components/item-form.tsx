@@ -19,7 +19,7 @@ import { useAuth } from "@/context/auth";
 
 type Props = {
     submitButtonLabel: React.ReactNode;
-    handleSubmit: (data: z.infer<typeof itemSchema>) => void;
+    handleSubmit: (data: z.infer<typeof itemSchema>, status?: "draft" | "pending") => void;
     defaultValues?: z.infer<typeof itemSchema>
 };
 
@@ -57,7 +57,10 @@ export default function ItemForm({
     })
 
     return <Form {...form}>                     
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">    
+        <form
+            onSubmit={form.handleSubmit((data) => handleSubmit(data, "draft"))}
+            className="space-y-6"
+        >
             <fieldset className="flex flex-col gap-6" disabled={form.formState.isSubmitting}>
                 <FormField 
                     control={form.control}
@@ -198,23 +201,39 @@ export default function ItemForm({
                 )}/>
             </fieldset>
             <div className="flex gap-3 pt-2">
-                <Button 
-                    type="submit" 
-                    className="flex-1"
-                    disabled={form.formState.isSubmitting}
-                >
-                    {submitButtonLabel}
-                </Button>
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    disabled={form.formState.isSubmitting}
-                    onClick={() => router.back()}
-                >
-                    Cancel
-                </Button>
-            </div>                                      
+            
+            {/* Submit as Pending */}
+            <Button
+                type="button"
+                className="flex-1"
+                disabled={form.formState.isSubmitting}
+                onClick={form.handleSubmit((data) => handleSubmit(data, "pending"))}
+            >
+                List Item
+            </Button>
+            
+            {/* Save as Draft */}
+            <Button
+                type="submit"
+                variant="secondary"
+                className="flex-1"
+                disabled={form.formState.isSubmitting}
+            >
+                Save Draft
+            </Button>
+
+            {/* Cancel */}
+            <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                disabled={form.formState.isSubmitting}
+                onClick={() => router.back()}
+            >
+                Cancel
+            </Button>
+            </div>
+                                   
         </form>
     </Form>
 }

@@ -8,14 +8,14 @@ import { useRouter } from "next/navigation";
 import { ref, uploadBytesResumable, UploadTask } from "firebase/storage";
 import { storage } from "@/firebase/client";
 import z from "zod";
-import { Breadcrumbs } from "@/components/ui/breadcrumb";
+//import { Breadcrumbs } from "@/components/ui/breadcrumb";
 import { CreateItemResponse } from "@/types/CreateItemResponse";
 
 export default function NewItem() {
   const auth = useAuth();
   const router = useRouter();
 
-  const handleSubmit = async (data: z.infer<typeof itemSchema>) => {
+  const handleSubmit = async (data: z.infer<typeof itemSchema>, overrideStatus?: "draft" | "pending") => {
     const token = await auth?.currentUser?.getIdToken();
 
     if (!token) {
@@ -30,7 +30,7 @@ export default function NewItem() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(rest), // no need to wrap in `{ rest }`
+      body: JSON.stringify({ ...rest, status: overrideStatus || rest.status }),
     });
 
     // Get API response
@@ -91,6 +91,8 @@ export default function NewItem() {
 
     router.push("/profile/user");
   };
+
+  
   return (
     <div className="flex flex-col justify-center items-center pb-4">
       {/* Removed breadcrumb for now to preserve visual consistency
@@ -105,7 +107,7 @@ export default function NewItem() {
         <h1 className="text-2xl text-center font-bold pb-4">New Item</h1>
         <ItemForm
           handleSubmit={handleSubmit}
-          submitButtonLabel={<>Add Item Listing</>}
+          submitButtonLabel={<>Save As Draft</>}
         />
       </div>
     </div>
