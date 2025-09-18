@@ -79,7 +79,7 @@ export default function ItemForm({
                     <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                            <Textarea {...field} rows={5} className="resize-none"
+                            <Textarea {...field} rows={5} className="resize-none min-h-[200px]"
                                 placeholder={
                                     `## Title\n\n[Item description]\n\n## Key Features\n\n- ** Key feature 1 **\n- ** Key feature 2 **\n- ** Key feature 3 **`
                                 } 

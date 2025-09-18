@@ -43,7 +43,7 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
         body: JSON.stringify({
           page,
           pageSize: 10,
-          status: ["withdrawn", "draft", "for-sale", "pending"],
+          status: ["pending"], // Change this to determine what the admin sees
         }),
       });
 
