@@ -1,11 +1,13 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { decodeJwt } from "jose";
+import { ServerActivityTracker } from "@/lib/serverActivityTracker";
 
 /*
     This middleware runs before every request to the specified paths in the config matcher
     1. It checks if the user is authenticated and authorized to access certain pages
     2. It also refreshes the user's Firebase auth token 5 minutes before it expires if the user is still logged in and active
+    3. Enforces 2-minute activity timeout - logs out users inactive for more than 2 minutes
 */
 
 export async function middleware(request: NextRequest) {
@@ -19,13 +21,13 @@ export async function middleware(request: NextRequest) {
 
     const { pathname  } = request.nextUrl;
 
-    // If a user is not logged in they are allowed to go to the login, register, forgot password and item-search page
+    // If a user is not logged in they are allowed to go to the login, register, forgot password, item-search and item pages
     if(!token && 
         (pathname.startsWith("/login") ||
         pathname.startsWith("/register") ||
-        pathname.startsWith("/reset-password")) ||
+        pathname.startsWith("/reset-password") ||
         pathname.startsWith("/item-search") ||
-        pathname.startsWith("/item")
+        pathname.startsWith("/item"))
     ){
         return NextResponse.next();
     }
@@ -50,9 +52,21 @@ export async function middleware(request: NextRequest) {
         2. Data needs to be loaded on these pages from server side so we need to have an up to date auth token stored in cookies */
     const decodedToken = decodeJwt(token);
 
+    // Check if user has been inactive for more than 2 minutes
+    if (await ServerActivityTracker.shouldLogout()) {
+        console.log("User inactive for more than 2 minutes - logging out");
+        
+        // Clear all auth cookies
+        cookieStore.delete("firebaseAuthToken");
+        cookieStore.delete("firebaseAuthRefreshToken");
+        await ServerActivityTracker.clearActivity();
+        
+        return NextResponse.redirect(new URL("/login?reason=session-expired", request.url));
+    }
+
     // Check if token is going to expire within the next 5 minutes (If you want to test set 300 = 3300 for 55 minutes because auth token expires in 1 hour)
     if(decodedToken.exp && (decodedToken.exp - 300) * 1000 < Date.now()) { //subtract 5 minutes (300 seconds) times 1000 to convert to milliseconds
-        // Request new token for user
+        // Request new token for user (activity check will happen in refresh-token API)
         return NextResponse.redirect(
             new URL(
                 `/api/refresh-token?redirect=${encodeURIComponent(pathname)}`, // Redirect back to the original path after refreshing token
@@ -60,6 +74,9 @@ export async function middleware(request: NextRequest) {
             )
         );
     }
+
+    // User is active and authenticated - update activity time and continue
+    await ServerActivityTracker.updateActivity();
 
     // User and admin can query data from the server with up to date auth token
     return NextResponse.next();

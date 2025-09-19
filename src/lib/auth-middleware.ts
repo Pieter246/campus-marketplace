@@ -22,13 +22,13 @@ export async function verifyIdToken(idToken: string) {
   try {
     const decodedToken = await auth().verifyIdToken(idToken)
     
-    // Check if token is older than 30 minutes
+    // Check if token is older than 2 minutes
     const now = Math.floor(Date.now() / 1000) // Current time in seconds
     const tokenAge = now - decodedToken.iat // iat = issued at time
-    const THIRTY_MINUTES_IN_SECONDS = 30 * 60 // 30 minutes
+    const SESSION_TIMEOUT_SECONDS = 2 * 60 // 2 minutes
     
-    if (tokenAge > THIRTY_MINUTES_IN_SECONDS) {
-      console.log("Token expired: older than 30 minutes")
+    if (tokenAge > SESSION_TIMEOUT_SECONDS) {
+      console.log("Token expired: older than 2 minutes")
       return null
     }
     

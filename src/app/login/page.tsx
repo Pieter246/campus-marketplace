@@ -1,7 +1,7 @@
 // app/login/page.tsx - Use client-side Firebase Auth
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
@@ -17,6 +17,13 @@ export default function LoginForm() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (auth.currentUser && !auth.isLoading) {
+      router.push("/");
+    }
+  }, [auth.currentUser, auth.isLoading, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,7 +44,8 @@ export default function LoginForm() {
 
     try{
       await auth?.loginWithEmail(form.email, form.password);
-      router.refresh();
+      // Redirect to home page after successful login
+      router.push("/");
     }catch(e: any) {
       // Display error message to user incorrect login credentials
       toast.error("Error!", {
@@ -58,7 +66,8 @@ export default function LoginForm() {
     
     try {
       await auth?.loginWithGoogle(); 
-      router.refresh(); 
+      // Redirect to home page after successful login
+      router.push("/");
     } catch (error: any) {} finally {
       setLoading(false);
     }

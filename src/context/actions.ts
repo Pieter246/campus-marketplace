@@ -7,6 +7,7 @@ export const removeToken = async () => {
     const cookieStore = await cookies();
     cookieStore.delete("firebaseAuthToken");
     cookieStore.delete("firebaseAuthRefreshToken");
+    cookieStore.delete("lastActivity");
 };
 
 export const setToken = async ({
@@ -54,6 +55,12 @@ export const setToken = async ({
             secure: process.env.NODE_ENV === "production",
         });
         cookieStore.set("firebaseAuthRefreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+        });
+        
+        // Set last activity time when setting tokens (user is actively logging in)
+        cookieStore.set("lastActivity", Date.now().toString(), {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
         });
