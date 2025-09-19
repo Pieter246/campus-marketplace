@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, ChangeEvent } from 'react';
 import Image from 'next/image';
-import { validateImageFile, STORAGE_LIMITS } from '../lib/photoUpload';
+import { validateImageFile, STORAGE_LIMITS } from '../../Legacy-Archive/photoUpload';
 
 interface PhotoUploadProps {
   type: 'item' | 'profile';

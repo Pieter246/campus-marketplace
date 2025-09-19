@@ -14,7 +14,7 @@ import {
   getDocs,
   serverTimestamp 
 } from 'firebase/firestore';
-import { deleteImage } from './photoUpload';
+import { deleteImage } from '../src/lib/photoUpload';
 
 // Create a photo record in Firestore
 export async function createPhotoRecord(photoData: {

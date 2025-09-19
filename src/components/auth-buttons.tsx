@@ -63,7 +63,7 @@ export default function AuthButtons() {
             {/* Admin link */}
             {auth.customClaims?.admin && (
               <DropdownMenuItem
-                onClick={() => router.push("/profile/admin")}
+                onClick={() => router.push("/admin")}
                 className="cursor-pointer"
               >
                 Admin Dashboard
