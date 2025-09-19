@@ -3,6 +3,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Adds scroll bar permanently on right of the screen */
+html {
+  overflow-y: scroll;
+}
+
 :root {
   --color-primary: #183A37;   /* Dark slate grey/green */
   --color-secondary: #432534; /* Dark purple */
@@ -138,6 +143,17 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Fixed radix dropdowns shifting entire page left when they open */
+html body[data-scroll-locked] {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    overflow: auto !important;
+}
+body[data-scroll-locked][data-radix-select-content] {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* /////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
