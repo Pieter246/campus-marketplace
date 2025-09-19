@@ -128,7 +128,7 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
               className="mt-auto w-full"
               disabled={form.formState.isSubmitting}
             >
-              Approve item
+              Approve
             </Button>
           </div>
 

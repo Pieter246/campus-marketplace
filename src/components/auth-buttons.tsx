@@ -52,7 +52,7 @@ export default function AuthButtons() {
             </Avatar>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent className="mr-18 mt-5">
+          <DropdownMenuContent className="mr-2 mt-5">
             <DropdownMenuLabel>
               <div>{auth.currentUser.displayName}</div>
               <div className="font-normal text-xs">{auth.currentUser.email}</div>

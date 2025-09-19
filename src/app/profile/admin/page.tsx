@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AdminItemsTable from "./admin-items-table";
+import AdminItemsTable from "@/components/get-items-admin";
 import Account from "../account/page";
 import { Suspense } from "react";
 import Link from "next/link";

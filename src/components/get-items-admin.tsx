@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import ItemStatusBadge from "@/components/item-status-badge";
 import Button from "@/components/ui/Button";
 import {
@@ -20,8 +21,17 @@ import { GetItemsResponse } from "@/types/GetItemsResponse";
 import { Item } from "@/types/item";
 import { toast } from "sonner";
 
+const STATUSES = ["all", "pending", "for-sale", "draft", "sold", "withdrawn"];
+
 export default function AdminItemsTable({ page = 1 }: { page?: number }) {
   const auth = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // read status from URL, default to pending
+  const urlStatus = searchParams.get("status") || "pending";
+  const [statusFilter, setStatusFilter] = useState(urlStatus);
+
   const [data, setItems] = useState<Item[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -33,7 +43,6 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
 
       const token = await user.getIdToken();
 
-      // API call get items
       const response = await fetch("/api/items/list", {
         method: "POST",
         headers: {
@@ -43,14 +52,12 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
         body: JSON.stringify({
           page,
           pageSize: 10,
-          status: ["withdrawn", "draft", "for-sale", "pending"],
+          status: statusFilter === "all" ? undefined : [statusFilter],
         }),
       });
 
-      // Get items result
       const result: GetItemsResponse = await response.json();
 
-      // Display error if result has error
       if (!response.ok || !result.success || !Array.isArray(result.items)) {
         toast.error("Failed to fetch items", {
           description:
@@ -60,14 +67,26 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
         return;
       }
 
-      // Set items and total pages to be used by form
       setItems(result.items);
       setTotalPages(result.totalPages);
       setLoading(false);
     };
 
+    setLoading(true);
     fetchItems();
-  }, [auth, page]);
+  }, [auth, page, statusFilter]);
+
+  // keep state in sync with URL param
+  useEffect(() => {
+    setStatusFilter(urlStatus);
+  }, [urlStatus]);
+
+  const handleStatusChange = (status: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("status", status);
+    params.set("page", "1"); // reset to first page on filter change
+    router.push(`/profile/admin?${params.toString()}`);
+  };
 
   if (loading) {
     return (
@@ -79,9 +98,26 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
 
   return (
     <>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        {STATUSES.map((status) => (
+          <Button
+            key={status}
+            variant={statusFilter === status ? "primary" : "outline"}
+            onClick={() => handleStatusChange(status)}
+          >
+            {status === "all"
+              ? "All"
+              : status
+                  .replace("-", " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())}
+          </Button>
+        ))}
+      </div>
+
       {!data.length && (
         <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
-          There are no items to approve
+          No items found
         </h1>
       )}
       {!!data.length && (
@@ -122,19 +158,23 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
             <TableFooter>
               <TableRow>
                 <TableCell colSpan={4} className="text-center bg-white">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <Button
-                      disabled={page === i + 1}
-                      key={i}
-                      asChild={page !== i + 1}
-                      variant="outline"
-                      className="mx-1 mt-5"
-                    >
-                      <Link href={`/profile/admin?tab=dashboard&page=${i + 1}`}>
-                        {i + 1}
-                      </Link>
-                    </Button>
-                  ))}
+                  {Array.from({ length: totalPages }).map((_, i) => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set("page", String(i + 1));
+                    return (
+                      <Button
+                        disabled={page === i + 1}
+                        key={i}
+                        asChild={page !== i + 1}
+                        variant="outline"
+                        className="mx-1 mt-5"
+                      >
+                        <Link href={`/profile/admin?tab=dashboard&${params.toString()}`}>
+                          {i + 1}
+                        </Link>
+                      </Button>
+                    );
+                  })}
                 </TableCell>
               </TableRow>
             </TableFooter>
