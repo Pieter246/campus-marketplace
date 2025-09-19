@@ -1,77 +1,196 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import ItemStatusBadge from "@/components/item-status-badge";
+import Button from "@/components/ui/Button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EyeIcon } from "lucide-react";
+import Link from "next/link";
+import numeral from "numeral";
+import { useAuth } from "@/context/auth";
+import { GetItemsResponse } from "@/types/GetItemsResponse";
+import { Item } from "@/types/item";
+import { toast } from "sonner";
 
-type Item = {
-  id: string;
-  title: string;
-  price: number;
-  thumbnail: string;
-  seller: {
-    name: string;
-    email: string;
-  };
-};
+const STATUSES = ["all", "pending", "for-sale", "draft", "sold", "withdrawn"];
 
 export default function AdminItemsPage() {
-  const [items, setItems] = useState<Item[]>([]);
+  const auth = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get page from URL params
+  const page = parseInt(searchParams.get("page") || "1");
+  
+  // read status from URL, default to pending
+  const urlStatus = searchParams.get("status") || "pending";
+  const [statusFilter, setStatusFilter] = useState(urlStatus);
+
+  const [data, setItems] = useState<Item[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      setItems([
-        {
-          id: "1",
-          title: "MacBook Pro 13” 2022",
-          price: 1200,
-          thumbnail: "/test-photos/macbook.jpg",
-          seller: { name: "Alex Johnson", email: "alex.johnson@university.edu" },
-        },
-        {
-          id: "2",
-          title: "Calculus Textbook",
-          price: 80,
-          thumbnail: "/test-photos/textbook.jpg",
-          seller: { name: "Sarah Chen", email: "sarah.chen@university.edu" },
-        },
-      ]);
-      setLoading(false);
-    }, 800);
-  }, []);
+    const fetchItems = async () => {
+      const user = auth?.currentUser;
+      if (!user) return;
 
-  if (loading) return <><h1 className="text-2xl font-bold mb-6 text-primary">Manage Items</h1><p>Loading items...</p></>;
+      const token = await user.getIdToken();
+
+      const response = await fetch("/api/items/list", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          page,
+          pageSize: 10,
+          status: statusFilter === "all" ? undefined : [statusFilter],
+        }),
+      });
+
+      const result: GetItemsResponse = await response.json();
+
+      if (!response.ok || !result.success || !Array.isArray(result.items)) {
+        toast.error("Failed to fetch items", {
+          description:
+            result.message || result.error || "Failed to fetch items.",
+        });
+        setLoading(false);
+        return;
+      }
+
+      setItems(result.items);
+      setTotalPages(result.totalPages);
+      setLoading(false);
+    };
+
+    setLoading(true);
+    fetchItems();
+  }, [auth, page, statusFilter]);
+
+  // keep state in sync with URL param
+  useEffect(() => {
+    setStatusFilter(urlStatus);
+  }, [urlStatus]);
+
+  const handleStatusChange = (status: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("status", status);
+    params.set("page", "1"); // reset to first page on filter change
+    router.push(`/admin/items?${params.toString()}`);
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <h1 className="text-2xl font-bold mb-6 text-primary">Approve Items</h1>
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-2">Loading items...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6 text-primary">Manage Items</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white shadow rounded-lg p-4 flex gap-4 items-start"
+      <h1 className="text-2xl font-bold mb-6 text-primary">Approve Items</h1>
+      
+      {/* Status Filter Tabs */}
+      <div className="flex gap-2 mb-4">
+        {STATUSES.map((status) => (
+          <Button
+            key={status}
+            variant={statusFilter === status ? "primary" : "outline"}
+            onClick={() => handleStatusChange(status)}
           >
-            <img
-              src={item.thumbnail}
-              alt={item.title}
-              className="w-24 h-24 object-cover rounded-lg"
-            />
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold">{item.title}</h2>
-              <p className="text-gray-600 text-sm">
-                Seller: {item.seller.name} ({item.seller.email})
-              </p>
-              <p className="text-primary font-bold mt-1">${item.price}</p>
-              <Link
-                href={`/admin/items/${item.id}`}
-                className="inline-block mt-2 text-sm text-blue-600 hover:underline"
-              >
-                Review Item →
-              </Link>
-            </div>
-          </div>
+            {status === "all"
+              ? "All"
+              : status
+                  .replace("-", " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())}
+          </Button>
         ))}
       </div>
+
+      {!data.length && (
+        <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
+          No items found
+        </h1>
+      )}
+      
+      {!!data.length && (
+        <>
+          <Table className="mt-5">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Details</TableHead>
+                <TableHead>Listing price</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((item) => {
+                const detail = [item.title]
+                  .filter((addressLine) => !!addressLine)
+                  .join(", ");
+
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell>{detail}</TableCell>
+                    <TableCell>R{numeral(item.price).format("0,0")}</TableCell>
+                    <TableCell>
+                      <ItemStatusBadge status={item.status} />
+                    </TableCell>
+                    <TableCell className="flex justify-end gap-1">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/item/${item.id}`}>
+                          <EyeIcon />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={4} className="text-center bg-white">
+                  {Array.from({ length: totalPages }).map((_, i) => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set("page", String(i + 1));
+                    return (
+                      <Button
+                        disabled={page === i + 1}
+                        key={i}
+                        asChild={page !== i + 1}
+                        variant="outline"
+                        className="mx-1 mt-5"
+                      >
+                        <Link href={`/admin/items?${params.toString()}`}>
+                          {i + 1}
+                        </Link>
+                      </Button>
+                    );
+                  })}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </>
+      )}
     </div>
   );
 }

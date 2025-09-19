@@ -41,3 +41,7 @@ next-env.d.ts
 docs/
 
 #.env.local
+<<<<<<< HEAD
+=======
+.env.local
+>>>>>>> origin/development

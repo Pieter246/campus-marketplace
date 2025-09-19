@@ -1,85 +1,68 @@
-// src/app/api/items/create/route.ts
-import { NextRequest, NextResponse } from "next/server"
-import { doc, setDoc, addDoc, collection, serverTimestamp } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { authenticateRequest, firestore } from "@/firebase/server";
+import { Timestamp } from "firebase-admin/firestore";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
-interface CreateItemRequest {
-  title: string
-  description: string
-  price: number
-  categoryId: string
-  condition: 'new' | 'like_new' | 'good' | 'fair' | 'poor'
-  collectionAddress?: string
-  collectionInstructions?: string
-}
+// 📦 Zod schema for validation
+const CreateItemSchema = z.object({
+  title: z.string().min(1),
+  collectionAddress: z.string().min(1),
+  description: z.string().min(1),
+  price: z.number().nonnegative(),
+  status: z.enum(["draft", "pending", "for-sale", "sold", "withdrawn"]),
+  condition: z.enum(["new", "used", "fair", "poor"]),
+  category: z.enum(["books", "electronics", "clothing", "notes", "stationery", "other"]),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    // Authenticate the request
-    const user = await authenticateRequest(req)
+    const user = await authenticateRequest(req);
     if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const body: CreateItemRequest = await req.json()
-    const { 
-      title, 
-      description, 
-      price, 
-      categoryId, 
-      condition,
-      collectionAddress = "",
-      collectionInstructions = ""
-    } = body
+    const raw = await req.json();
+    const parsed = CreateItemSchema.safeParse(raw.rest ?? raw);
 
-    // Validation
-    if (!title || !description || !categoryId || price < 0) {
-      return NextResponse.json({ 
-        message: "Missing required fields or invalid price" 
-      }, { status: 400 })
+    if (!parsed.success) {
+      console.warn("Validation failed:", parsed.error.flatten());
+      return NextResponse.json(
+        {
+          message: "Invalid input",
+          issues: parsed.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
     }
 
-    const now = serverTimestamp()
-
-    // Create item document
-    const itemRef = await addDoc(collection(db, "items"), {
+    // Create the item
+    const item = await firestore.collection("items").add({
+      ...parsed.data,
       sellerId: user.uid,
-      categoryId,
-      title: title.trim(),
-      description: description.trim(),
-      price: Number(price),
-      condition,
-      itemStatus: 'available',
-      collectionAddress: collectionAddress.trim(),
-      collectionInstructions: collectionInstructions.trim(),
-      postedAt: now,
-      updatedAt: now,
-      viewsCount: 0
-    })
+      postedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      viewsCount: 0,
+    });
 
-    console.log(`Successfully created item: ${itemRef.id}`)
+    console.log(`Item created: ${item.id}`);
 
-    return NextResponse.json({
-      success: true,
-      message: "Item created successfully",
-      item: {
-        itemId: itemRef.id,
-        title,
-        price,
-        itemStatus: 'available',
-        postedAt: new Date().toISOString()
-      }
-    }, { status: 201 })
-
-  } catch (error) {
-    console.error("Item creation error:", error)
+    // Diplay message item created and return the item Id
     return NextResponse.json(
-      { 
-        message: "Failed to create item",
-        error: error instanceof Error ? error.message : "Unknown error"
+      {
+        success: true,
+        message: "Item created successfully",
+        item: { itemId: item.id },
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Item creation error:", error);
+    return NextResponse.json(
+      {
+        message: "Internal server error",
+        error: error?.message ?? "Unknown error",
       },
       { status: 500 }
-    )
+    );
   }
 }
