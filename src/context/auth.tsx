@@ -42,10 +42,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const refreshToken = user.refreshToken
         const claims = tokenResult.claims as CustomClaims
 
-        setCustomClaims(claims ?? null)
+        console.log("DEBUG - Auth context claims:", {
+          userEmail: user.email,
+          claims: claims,
+          isAdmin: claims?.admin
+        });
 
-        if (token && refreshToken) {
-          await setToken({ token, refreshToken })
+        // If user should be admin but claims don't show it, force token refresh
+        if (!claims?.admin) {
+          console.log("Admin claim missing, forcing token refresh...");
+          const freshTokenResult = await user.getIdTokenResult(true); // Force refresh
+          const freshClaims = freshTokenResult.claims as CustomClaims;
+          
+          console.log("DEBUG - Fresh claims after refresh:", {
+            freshClaims: freshClaims,
+            isAdminNow: freshClaims?.admin
+          });
+          
+          setCustomClaims(freshClaims ?? null);
+          
+          // Update token with fresh one
+          if (freshTokenResult.token && refreshToken) {
+            await setToken({ token: freshTokenResult.token, refreshToken });
+          }
+        } else {
+          setCustomClaims(claims ?? null);
+          
+          if (token && refreshToken) {
+            await setToken({ token, refreshToken });
+          }
         }
       } else {
         await removeToken()

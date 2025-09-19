@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { collection, doc, addDoc, getDocs, query, where, orderBy, serverTimestamp, getDoc, deleteDoc, updateDoc, writeBatch } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { authenticateRequest } from "@/firebase/server"
 
 // GET user's orders
 export async function GET(req: NextRequest) {

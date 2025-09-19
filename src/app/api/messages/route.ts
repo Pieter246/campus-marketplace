@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { initializeApp, getApps, cert } from "firebase-admin/app"
 import { getAuth } from "firebase-admin/auth"
 import { getFirestore } from "firebase-admin/firestore"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { authenticateRequest } from "@/firebase/server"
 
 // Initialize Firebase Admin SDK
 if (!getApps().length) {

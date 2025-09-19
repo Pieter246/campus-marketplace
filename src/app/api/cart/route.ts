@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, serverTimestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { authenticateRequest } from "@/firebase/server"
 
 // GET user's cart items
 export async function GET(req: NextRequest) {

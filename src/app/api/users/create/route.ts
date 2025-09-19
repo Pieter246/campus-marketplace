@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { doc, setDoc, getDoc, serverTimestamp, collection, addDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { authenticateRequest } from "@/firebase/server"
 
 interface CreateUserRequest {
   firstName: string
