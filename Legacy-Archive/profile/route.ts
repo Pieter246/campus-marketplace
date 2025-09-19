@@ -1,8 +1,7 @@
 // src/app/api/users/profile/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { doc, getDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { authenticateRequest, firestore } from "@/firebase/server"
 
 export async function GET(req: NextRequest) {
   try {

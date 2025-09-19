@@ -1,8 +1,5 @@
-// src/app/api/users/deactivate/route.ts
 import { NextRequest, NextResponse } from "next/server"
-import { doc, updateDoc, getDoc, serverTimestamp } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { authenticateRequest, firestore } from "@/firebase/server"
 
 export async function PUT(req: NextRequest) {
   try {

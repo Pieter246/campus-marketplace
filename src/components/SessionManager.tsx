@@ -3,7 +3,7 @@
 import { useSessionTimeout } from '@/hooks/useSessionTimeout'
 
 export default function SessionManager({ children }: { children: React.ReactNode }) {
-  // 30-minute session timeout - logs users out after 30 minutes
+  // 15-minute inactivity timeout - logs users out after 15 minutes of inactivity
   useSessionTimeout()
 
   return <>{children}</>

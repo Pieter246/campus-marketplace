@@ -1,4 +1,6 @@
-// src/app/api/items/my-items/route.ts
+/import { NextRequest, NextResponse } from "next/server"
+import { collection, query, where, orderBy, getDocs, limit } from "firebase/firestore"
+import { authenticateRequest, firestore } from "@/firebase/server"c/app/api/items/my-items/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore"
 import { db } from "@/lib/firebase"

@@ -1,8 +1,7 @@
 // src/app/api/items/[itemId]/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { authenticateRequest } from "@/lib/auth-middleware"
+import { authenticateRequest, firestore } from "@/firebase/server"
 
 interface UpdateItemRequest {
   title?: string

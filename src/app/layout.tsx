@@ -35,6 +35,7 @@ export default function RootLayout({
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased flex flex-col min-h-screen`}
       >
         <AuthProvider>
+          <SessionManager>
 <header className="bg-white shadow sticky top-0 z-10">
   <div className="max-w-7xl mx-auto px-4 flex items-center justify-between py-4">
     {/* Left side: Logo + Links */}
@@ -86,6 +87,7 @@ export default function RootLayout({
           {/* Footer at bottom */}
           <Footer />
           <Toaster richColors closeButton />
+          </SessionManager>
         </AuthProvider>
       </body>
     </html>
