@@ -85,7 +85,7 @@ export default function AdminItemsTable({ page = 1 }: { page?: number }) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("status", status);
     params.set("page", "1"); // reset to first page on filter change
-    router.push(`/profile/admin?${params.toString()}`);
+    router.push(`/admin/items?${params.toString()}`);
   };
 
   if (loading) {
