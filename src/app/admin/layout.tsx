@@ -2,12 +2,39 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Button from "@/components/ui/Button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/auth";
+import { useRouter } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [loading, setLoading] = useState(false);
+  const { currentUser, customClaims, isLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect if not admin
+  useEffect(() => {
+    if (!isLoading && (!currentUser || !customClaims?.admin)) {
+      router.push('/login?reason=admin-required');
+    }
+  }, [currentUser, customClaims, isLoading, router]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-gray-600">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not admin
+  if (!currentUser || !customClaims?.admin) {
+    return null;
+  }
+
   const navItems = [
     { name: "Dashboard", href: "/admin" },
     { name: "Users", href: "/admin/users" },
