@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
     let totalAmount = 0;
     const itemNames: string[] = [];
     cart.forEach((item: any) => {
-      totalAmount += item.price * item.quantity;
+      // Treat each unique item as quantity = 1
+      totalAmount += Number(item.price || 0);
       itemNames.push(item.name);
     });
 

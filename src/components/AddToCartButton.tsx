@@ -31,7 +31,6 @@ export default function AddToCartButton({ id }: { id: string }) {
       });
 
       const data = await res.json();
-
       if (!res.ok || !data.success) {
         toast.error(data.message || "Failed to add item to cart");
       } else {
@@ -39,7 +38,7 @@ export default function AddToCartButton({ id }: { id: string }) {
         router.push("/cart");
       }
     } catch (err) {
-      console.error("Add to cart error:", err);
+      console.error(err);
       toast.error("Failed to add item to cart");
     } finally {
       setIsAdding(false);
