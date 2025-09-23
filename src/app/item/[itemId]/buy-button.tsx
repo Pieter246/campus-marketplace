@@ -6,57 +6,60 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export default function BuyButton({ id }: { id: string }) {
+export default function AddToCartButton({ id }: { id: string }) {
   const router = useRouter();
   const auth = useAuth();
-  const [isBuying, setIsBuying] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleBuyClick = async () => {
-    const tokenResult = await auth?.currentUser?.getIdTokenResult();
-
-    //Redirect if token is invalid
-    if (!tokenResult) {
+  const handleAddToCart = async () => {
+    // Early return if not logged in
+    if (!auth?.currentUser) {
       router.push("/login");
       return;
     }
 
-    setIsBuying(true);
+    setIsAdding(true);
 
-    // API call buy item
-    const response = await fetch("/api/items/actions/buy", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${tokenResult.token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ itemId: id }),
-    });
-
-    // Get buy item result
-    const result = await response.json();
-
-    // Display error if result has error
-    if (!response.ok || result?.error) {
-      toast.error("Error!", {
-        description: result.message || "Failed to purchase item.",
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/items/actions/buy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ itemId: id }),
       });
-      setIsBuying(false);
-      return;
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        toast.error("Error!", { description: data.message || "Failed to add item to cart." });
+        setIsAdding(false);
+        return;
+      }
+
+      if (!data.success) {
+        toast.error("Already in Cart", { description: data.message });
+        setIsAdding(false);
+        return;
+      }
+
+      toast.success("Added to Cart", { description: "Item has been added to your cart." });
+      setIsAdding(false);
+
+      // Redirect to cart
+      router.push("/cart");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error!", { description: "Failed to add item to cart." });
+      setIsAdding(false);
     }
-
-    setIsBuying(false);
-
-    // Display success message
-    toast.success("Success!", {
-      description: "You have bought an item!",
-    });
-
-    router.push("/profile/user?tab=purchases");
   };
 
   return (
-    <Button className="flex-1 w-full" onClick={handleBuyClick} disabled={isBuying}>
-      {isBuying ? "Adding to cart..." : "Add to cart"}
+    <Button className="flex-1 w-full" onClick={handleAddToCart} disabled={isAdding}>
+      {isAdding ? "Adding..." : "Add to Cart"}
     </Button>
   );
 }

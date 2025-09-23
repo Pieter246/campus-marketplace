@@ -253,7 +253,7 @@ export default function Item() {
                 {item.status !== "sold" ? (
                   <>
                     <div className="flex flex-wrap gap-2">
-                      {!claims?.admin && claims?.user_id !== item.sellerId && (
+                      { claims?.user_id !== item.sellerId && (
                         <div className="w-full flex-1">
                           <BuyButton id={item.id} />
                         </div>
