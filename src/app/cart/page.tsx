@@ -77,10 +77,47 @@ export default function CartPage() {
     }
   };
 
-  const handlePayNow = () => {
-    // TODO: connect to your checkout API
-    toast("PayNow clicked — implement checkout logic");
-  };
+  async function handlePayNow() {
+    if (!auth?.currentUser) return;
+
+    setLoading(true);
+
+    try {
+      // Merge cartItems with their item data
+      const cartForCheckout = cartItems.map(cartItem => {
+        const item = itemsData.find(i => i.id === cartItem.itemId);
+        return item ? { id: item.id, name: item.title, price: item.price } : null;
+      }).filter(Boolean);
+
+      // Calculate totalAmount assuming quantity = 1 for each
+      const totalAmount = cartForCheckout.reduce((sum, item) => sum + (item?.price || 0), 0);
+
+      const token = await auth.currentUser.getIdToken();
+
+      const res = await fetch("/api/payfast/checkout", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ cart: cartForCheckout }),
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url; // redirect to PayFast sandbox
+      } else {
+        alert("Error initiating payment: " + (data.message || ""));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to initiate payment");
+    } finally {
+      setLoading(false);
+    }
+  }
+
 
   return (
     <div className="min-h-screen flex justify-center items-start px-4">
