@@ -24,6 +24,7 @@ import SellButton from "./sell-button";
 import WithdrawButton from "./withdraw-button";
 import PublishButton from "./publish-button";
 import Script from "next/script";
+import AddToCartButton from "./buy-button";
 
 export default function Item() {
   const { itemId } = useParams() as { itemId: string };
@@ -255,7 +256,7 @@ export default function Item() {
                     <div className="flex flex-wrap gap-2">
                       {!claims?.admin && claims?.user_id !== item.sellerId && (
                         <div className="w-full flex-1">
-                          <BuyButton id={item.id} />
+                          <BuyButton itemId={item.id} />
                         </div>
                       )}
 

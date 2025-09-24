@@ -1,5 +1,5 @@
 // src/app/api/cart/route.ts
-import { NextRequest, NextResponse } from "next/server"
+/*import { NextRequest, NextResponse } from "next/server"
 import { collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, serverTimestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { authenticateRequest } from "@/lib/auth-middleware"
@@ -140,4 +140,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+}*/

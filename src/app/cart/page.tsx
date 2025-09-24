@@ -1,151 +1,120 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import Button from "@/components/ui/Button"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { auth } from "@/firebase/client";
+import { toast } from "sonner";
+import Button from "@/components/ui/Button";
+
+interface CartItem {
+  cartItemId: string;
+  itemId: string;
+  quantity: number;
+  item: {
+    title: string;
+    price: number;
+    images?: string[];
+  };
+}
 
 export default function CartPage() {
-  const [cart, setCart] = useState([
-    {
-      id: 1,
-      name: "Textbook - Database Systems",
-      price: 450,
-      quantity: 1,
-      image: "https://via.placeholder.com/60x60.png?text=Book",
-    },
-    {
-      id: 2,
-      name: "Desk Lamp",
-      price: 250,
-      quantity: 2,
-      image: "https://via.placeholder.com/60x60.png?text=Lamp",
-    },
-    {
-      id: 3,
-      name: "USB Flash Drive 32GB",
-      price: 120,
-      quantity: 1,
-      image: "", // empty → placeholder
-    },
-  ])
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const vat = (subtotal * 15) / 115
-  const [loading, setLoading] = useState(false)
-
-  async function handlePayNow() {
-    setLoading(true)
-    try {
-      const res = await fetch("/api/payfast/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart }),
-      })
-      const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url // redirect to PayFast sandbox
-      } else {
-        alert("Error initiating payment: " + (data.message || ""))
-      }
-    } catch (err) {
-      console.error(err)
-      alert("Failed to initiate payment")
-    } finally {
-      setLoading(false)
+  // Fetch cart items
+  const fetchCart = async () => {
+    if (!auth.currentUser) {
+      router.push("/login");
+      return;
     }
+
+    try {
+      const token = await auth.currentUser.getIdToken(true);
+
+      const response = await fetch("/api/cart", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        toast.error("Failed to load cart", { description: data.message });
+        setCartItems([]);
+      } else {
+        setCartItems(data.cartItems || []);
+      }
+    } catch (err: any) {
+      console.error("Cart fetch error:", err);
+      toast.error("Failed to load cart");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2">Loading cart...</span>
+      </div>
+    );
   }
 
-  function handleDelete(id: number) {
-    setCart(cart.filter(item => item.id !== id))
+  if (!cartItems.length) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold">Your cart is empty</h2>
+        <Button onClick={() => router.push("/")} className="mt-4">
+          Browse Items
+        </Button>
+      </div>
+    );
   }
+
+  // Calculate totals
+  const subTotal = cartItems.reduce((acc, item) => acc + item.item.price * item.quantity, 0);
+  const vat = subTotal * 0.15;
+  const total = subTotal + vat;
 
   return (
-    <div className="min-h-screen flex justify-center items-start px-4">
-      <div className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-8">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Your Cart</h2>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
 
-        {cart.length === 0 ? (
-          <p className="text-gray-500 text-center py-10">Your cart is empty.</p>
-        ) : (
-          <>
-            <ul className="divide-y divide-gray-200">
-              {cart.map((item) => (
-                <li key={item.id} className="flex justify-between items-center py-4">
-                  {/* Left: thumbnail + details */}
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-16 h-16 rounded-md bg-gray-200 overflow-hidden flex-shrink-0">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
-                        />
-                      ) : null}
-                      <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs select-none">
-                        No Image
-                      </div>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{item.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {item.quantity} × R{item.price}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right: price + delete */}
-                  <div className="flex items-center gap-4">
-                    <p className="font-semibold text-gray-700">
-                      R{item.price * item.quantity}
-                    </p>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full text-red-600 hover:bg-red-200 transition cursor-pointer"
-                      aria-label="Remove item"
-                    >
-                      ×
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            {/* Summary strip */}
-            <div className="mt-8 -mx-8 px-8 py-4 bg-gray-50 text-gray-700 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span>R{subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>VAT (15% incl.)</span>
-                <span>R{vat.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-lg font-semibold text-gray-800 pt-2 border-t">
-                <span>Total</span>
-                <span>R{subtotal.toFixed(2)}</span>
+      <div className="space-y-4">
+        {cartItems.map((cart) => (
+          <div key={cart.cartItemId} className="flex items-center justify-between border p-4 rounded-lg">
+            <div className="flex items-center gap-4">
+              {cart.item.images && cart.item.images[0] && (
+                <img src={cart.item.images[0]} alt={cart.item.title} className="w-20 h-20 object-cover rounded" />
+              )}
+              <div>
+                <p className="font-semibold">{cart.item.title}</p>
+                <p>R{cart.item.price.toFixed(2)} x {cart.quantity}</p>
               </div>
             </div>
-
-            {/* PayFast button */}
-            <Button
-              type="button"
-              className="w-full mt-8"
-              loading={loading}
-              onClick={handlePayNow}
-            >
-              Pay Now
-            </Button>
-
-            {/* Continue shopping */}
-            <div className="mt-4 text-center">
-              <Link href="/shop" className="text-sm text-gray-600 hover:text-blue-600 transition">
-                ← Continue Shopping
-              </Link>
-            </div>
-          </>
-        )}
+          </div>
+        ))}
       </div>
+
+      <div className="border-t pt-4 space-y-2">
+        <p>Subtotal: R{subTotal.toFixed(2)}</p>
+        <p>VAT (15%): R{vat.toFixed(2)}</p>
+        <p className="font-bold text-lg">Total: R{total.toFixed(2)}</p>
+      </div>
+
+      <Button
+        onClick={() => toast.success("Checkout not implemented yet!")}
+        className="w-full py-3 bg-green-600 hover:bg-green-700"
+      >
+        Checkout
+      </Button>
     </div>
-  )
+  );
 }

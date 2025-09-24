@@ -20,6 +20,7 @@ export default function CheckoutSuccessPage() {
                     className="w-full mt-2"
                     loading={loading}
                     onClick={() => router.push("/")}
+                
                 >
                     Continue Shopping
                 </Button>
