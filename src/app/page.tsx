@@ -34,54 +34,70 @@ export default function Home() {
 
   useEffect(() => {
     const fetchItems = async () => {
-      setLoading(true); // Always show loading while fetching
+      if (auth === undefined) return; // wait until auth context has settled
 
-      const user = auth?.currentUser;
+      setLoading(true);
+
       let token: string | null = null;
-
-      if (user) {
-        token = await user.getIdToken();
+      if (auth?.currentUser) {
+        token = await auth.currentUser.getIdToken();
       }
 
       const headers: HeadersInit = {
         "Content-Type": "application/json",
       };
-
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("/api/items/list", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          page,
-          pageSize: 10,
-          minPrice,
-          maxPrice,
-          condition,
-          status: ["for-sale"],
-          searchTerm,
-          sort,
-          category,
-        }),
-      });
+      try {
+        const response = await fetch("/api/items/list", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            page,
+            pageSize: 10,
+            minPrice,
+            maxPrice,
+            condition,
+            status: ["for-sale"],
+            searchTerm,
+            sort,
+            category,
+          }),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (!response.ok || !result.success || !Array.isArray(result.items)) {
-        console.error("Failed to fetch items:", result.message || result.error);
-        setLoading(false); // ✅ unblock UI even on error
-        return;
+        if (!response.ok || !result.success || !Array.isArray(result.items)) {
+          console.error("Failed to fetch items:", result.message || result.error);
+          setLoading(false);
+          return;
+        }
+
+        setItems(result.items);
+        setTotalPages(result.totalPages);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
       }
-
-      setItems(result.items);
-      setTotalPages(result.totalPages);
-      setLoading(false);
     };
 
-    fetchItems();
-  }, [auth, page, minPrice, maxPrice, condition, searchTerm, sort, category]);
+    // ✅ only run once auth context is resolved
+    if (auth !== undefined) {
+      fetchItems();
+    }
+  }, [
+    auth?.currentUser, // rerun when login/logout finishes
+    page,
+    minPrice,
+    maxPrice,
+    condition,
+    searchTerm,
+    sort,
+    category,
+  ]);
 
   return (
     <div className="max-w-screen-lg mx-auto px-2">

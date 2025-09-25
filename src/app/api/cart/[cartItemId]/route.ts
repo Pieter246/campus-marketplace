@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { firestore, authenticateRequest } from "@/firebase/server";
 
-export async function DELETE(req: NextRequest, { params }: { params: { cartItemId: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ cartItemId: string }> }
+) {
   try {
     const user = await authenticateRequest(req);
-    if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-    const { cartItemId } = params;
-    if (!cartItemId) return NextResponse.json({ message: "Missing cartItemId" }, { status: 400 });
+    // ✅ await params here
+    const { cartItemId } = await context.params;
+    if (!cartItemId) {
+      return NextResponse.json({ message: "Missing cartItemId" }, { status: 400 });
+    }
 
     const cartItemRef = firestore.collection("cartItems").doc(cartItemId);
     const cartItemSnap = await cartItemRef.get();
