@@ -29,7 +29,7 @@ export default function AuthButtons() {
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-6">
       {auth.currentUser ? (
         <>
           {/* Sell Item */}
@@ -40,6 +40,12 @@ export default function AuthButtons() {
             Sell Item
           </Link>
           <div className="h-6 w-[1px] bg-gray-500/50" />
+          <Link
+            href="/cart"
+            className="text-gray-700 hover:text-accent hover:underline underline-offset-4 transition"
+          >
+            Cart
+          </Link>
 
           {/* Account Dropdown */}
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
