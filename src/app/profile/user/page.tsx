@@ -19,13 +19,13 @@ export default async function UserDashboard({
         <>
             <Tabs defaultValue={tab} className="w-full">
                 <TabsList className="w-full">
-                    <TabsTrigger value="dashboard" asChild className="text-xl font-bold rounded-md data-[state=active]:primary data-[state=active]:text-white">
-                        <Link href="/profile/user?tab=dashboard">Active orders</Link>
+                    <TabsTrigger value="dashboard" asChild className="text-xl rounded-sm data-[state=active]:primary data-[state=active]:text-white">
+                        <Link href="/profile/user?tab=dashboard">Active Items</Link>
                     </TabsTrigger>
-                    <TabsTrigger value="purchases" asChild className="text-xl font-bold rounded-md data-[state=active]:primary data-[state=active]:text-white">
-                        <Link href="/profile/user?tab=purchases">Purchase history</Link>
+                    <TabsTrigger value="purchases" asChild className="text-xl rounded-sm data-[state=active]:primary data-[state=active]:text-white">
+                        <Link href="/profile/user?tab=purchases">Purchases</Link>
                     </TabsTrigger>
-                    <TabsTrigger value="account" asChild className="text-xl font-bold rounded-md data-[state=active]:primary data-[state=active]:text-white">
+                    <TabsTrigger value="account" asChild className="text-xl rounded-sm data-[state=active]:primary data-[state=active]:text-white">
                         <Link href="/profile/user?tab=account">Password</Link>
                     </TabsTrigger>
                 </TabsList>
@@ -35,7 +35,7 @@ export default async function UserDashboard({
                     <TabsContent value="dashboard">
                         <div className="flex items-center justify-between mt-2 mb-4 mx-2">
                         <h1 className="text-2xl font-bold">My Items</h1>
-                        <Button asChild className="inline-flex gap-2">
+                        <Button asChild className="inline-flex gap-2" variant="outline">
                             <Link href="/profile/new">New Item</Link>
                         </Button>
                         </div>

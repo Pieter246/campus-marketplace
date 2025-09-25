@@ -231,8 +231,8 @@ export default function Item() {
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="text-lg font-light">Location:</h3>
-                  <p className="text-lg">
+                  <h3 className="text-lg font-bold">Location:</h3>
+                  <p className="text-md">
                     {addressLines.map((line, idx) => (
                       <span key={idx}>
                         {line}
@@ -242,8 +242,8 @@ export default function Item() {
                   </p>
                 </div>
 
-                <div className="max-w-screen-md leading-relaxed">
-                  <h3 className="text-lg font-light">Description:</h3>
+                <div className="max-w-screen-md leading-relaxed pb-2">
+                  <h3 className="text-lg font-bold">Description:</h3>
                   <ReactMarkdown>{item.description}</ReactMarkdown>
                 </div>
               </div>

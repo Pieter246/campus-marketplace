@@ -118,24 +118,19 @@ export default function EditPropertyForm({
     router.push("/profile/user");
   };
   return (
-    <div className="flex flex-col justify-center items-center p-4">
-      <Breadcrumbs
-        className="text-2xl pb-2"
-        items={[
-          {
-            href: "/profile/user",
-            label: "Sell",
-          },
-          {
-            label: "Edit item",
-          },
-        ]}
-      />
+    <div className="flex flex-col justify-center items-center">
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
-        <div className="text-3xl font-bold flex justify-end mb-6">
-          {/* <h1 className="text-2xl font-bold">Sell Your Item</h1> */}
-          <DeleteItemButton itemId={id} images={images || []} />
-        </div>
+        
+<div className="flex items-center justify-between mb-6">
+  <h1 className="flex-1 text-2xl font-bold text-center">
+    Edit Item
+  </h1>
+  <div className="text-3xl font-bold">
+    <DeleteItemButton itemId={id} images={images || []} />
+  </div>
+</div>
+
+
         <ItemForm
           handleSubmit={handleSubmit}
           submitButtonLabel={<>Save Item</>}

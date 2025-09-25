@@ -101,12 +101,17 @@ export default function Home() {
 
   return (
     <div className="max-w-screen-lg mx-auto px-2">
-      <h1 className="text-2xl font-bold pb-2 text-center">
+      <div className="flex flex-col items-center text-center space-y-4 pb-6">
+        <h1 className="text-2xl font-bold">
         Welcome to Campus Marketplace!
-      </h1>
-      <p className="text-center pb-10">
-        Buy and sell textbooks, technology, and more.
-      </p>
+        </h1>
+        <p className="">
+          Buy and sell textbooks, technology, and more.
+        </p>
+        {/*<Button asChild className="" variant="outline">
+          <Link href="/profile/new">Sell Item</Link>
+        </Button>*/}
+      </div>
 
       {/* Search */}
       <div className="space-y-4 bg-white rounded-xl">
