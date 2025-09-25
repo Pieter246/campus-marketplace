@@ -58,7 +58,7 @@ export default function AuthButtons() {
                   ${dropdownOpen ? "text-accent underline underline-offset-4" : "text-gray-700 hover:text-accent hover:underline underline-offset-4"}
                 `}
               >
-                {auth.currentUser.displayName || "Account"}
+                {/*auth.currentUser.displayName || UNCOMMENT THIS TO HAVE Account OR USER'S FULL NAME */ "Account"}
                 <ChevronDown className="h-4 w-4" />
               </div>
             </DropdownMenuTrigger>
