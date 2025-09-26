@@ -147,6 +147,7 @@ const handleGoogleRegister = async () => {
           <Input
             label="First Name"
             name="firstName"
+            id="firstName"
             value={form.firstName}
             onChange={handleChange}
             error={errors.firstName}
@@ -155,6 +156,7 @@ const handleGoogleRegister = async () => {
           <Input
             label="Last Name"
             name="lastName"
+            id="lastName"
             value={form.lastName}
             onChange={handleChange}
             error={errors.lastName}
@@ -163,6 +165,7 @@ const handleGoogleRegister = async () => {
           <Input
             label="Email"
             name="email"
+            id="email"
             type="email"
             value={form.email}
             onChange={handleChange}
@@ -172,6 +175,7 @@ const handleGoogleRegister = async () => {
           <Input
             label="Password"
             name="password"
+            id="password"
             type="password"
             value={form.password}
             onChange={handleChange}
@@ -181,6 +185,7 @@ const handleGoogleRegister = async () => {
           <Input
             label="Confirm Password"
             name="confirmPassword"
+            id="confirmPassword"
             type="password"
             value={form.confirmPassword}
             onChange={handleChange}
