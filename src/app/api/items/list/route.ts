@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest, firestore } from "@/firebase/server";
-import { Item } from "@/types/item";
+import { Item, ItemStatus, ItemCondition } from "@/types/item";
 import { Query, DocumentData } from "firebase-admin/firestore";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json(); // ✅ Parse body first
+    const body = await req.json();
 
     const {
-      page = 1,
-      pageSize = 10,
       sellerId,
       buyerId,
       minPrice,
@@ -21,16 +19,19 @@ export async function POST(req: NextRequest) {
       category,
     } = body;
 
-    const user = await authenticateRequest(req); // ✅ Auth after body
+    const user = await authenticateRequest(req);
 
-    // ✅ Only enforce auth if private filters are used
+    // Only enforce auth for private filters
     if ((sellerId || buyerId) && !user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    if (!user?.admin && !(sellerId || buyerId)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     let query: Query<DocumentData> = firestore.collection("items");
 
-    // 🔧 Apply filters
+    // Apply filters
     if (sellerId) query = query.where("sellerId", "==", sellerId);
     if (buyerId) query = query.where("buyerId", "==", buyerId);
     if (minPrice !== null && minPrice !== undefined)
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
       query = query.where("price", "<=", maxPrice);
     if (condition) {
       if (condition === "all") {
-        query = query.where("condition", "in", ["new", "used", "fair", "poor"]);
+        query = query.where("condition", "in", ["new", "excellent", "used", "fair", "poor"]);
       } else {
         query = query.where("condition", "==", condition);
       }
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
       query = query.where("category", "==", category);
     }
 
-    // ✅ Apply sort logic
+    // Apply sort logic
     if (sort === "price-asc") {
       query = query.orderBy("price", "asc");
     } else if (sort === "price-desc") {
@@ -62,8 +63,8 @@ export async function POST(req: NextRequest) {
       query = query.orderBy("updatedAt", "desc"); // default: newest
     }
 
-    const fetchSize = pageSize * 3;
-    const snapshot = await query.limit(fetchSize).get();
+    // Fetch all items (with a reasonable limit for safety)
+    const snapshot = await query.limit(1000).get();
 
     let items = snapshot.docs.map((doc) => {
       const data = doc.data();
@@ -84,14 +85,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const totalPages = Math.ceil(items.length / pageSize);
-    const paginatedItems = items.slice((page - 1) * pageSize, page * pageSize);
-
     return NextResponse.json({
       success: true,
-      items: paginatedItems,
-      count: paginatedItems.length,
-      totalPages,
+      items,
+      count: items.length,
+      totalPages: 1, // No pagination
       filters: {
         sellerId,
         buyerId,
