@@ -109,7 +109,7 @@ export default function AccountPage() {
         <div className="flex flex-col md:flex-row gap-8">
           {/* User Info */}
           <div className="flex-1">
-            <h2 className="text-lg font-bold mb-4 text-center md:text-left">User Information</h2>
+            <h2 className="text-lg font-bold mb-4 text-center">Change User Information</h2>
             <Form {...profileForm}>
               <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)}>
                 <fieldset className="flex flex-col gap-4" disabled={profileForm.formState.isSubmitting}>
@@ -145,10 +145,12 @@ export default function AccountPage() {
             </Form>
           </div>
 
+          <div className="hidden md:block w-px bg-gray-300"></div>
+
           {/* Password Update */}
           {isPasswordProvider && (
             <div className="flex-1">
-              <h2 className="text-lg font-bold mb-4 text-center md:text-left">Update Password</h2>
+              <h2 className="text-lg font-bold mb-4 text-center">Change Password</h2>
               <Form {...passwordForm}>
                 <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)}>
                   <fieldset className="flex flex-col gap-4" disabled={passwordForm.formState.isSubmitting}>

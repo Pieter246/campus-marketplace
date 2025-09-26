@@ -26,6 +26,7 @@ export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [itemsData, setItemsData] = useState<ItemData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -186,7 +187,54 @@ export default function CartPage() {
               </div>
             </div>
 
-            <Button type="button" className="w-full mt-8" onClick={handlePayNow}>
+            <div className="mx-auto mt-4 p-4 text-sm">
+              <h3 className="text-lg font-semibold mb-2 text-center">What happens after you click <span className="font-bold">"Pay Now"</span></h3>
+
+              <p className="mb-3">
+                Great — your payment will reserve the item so nobody else can buy it. Here’s what to do next:
+              </p>
+
+              <ol className="list-decimal list-inside space-y-2 mb-3">
+                <li>
+                  <strong>Reservation:</strong> Your payment reserves the item in your name immediately. Campus Marketplace will now hold on to your payment until you've collect the item as per the guidelines below.
+                </li>
+                <li>
+                  <strong>Contact the seller:</strong> After payment you'll see the seller’s contact details and collection address — message them to arrange a time to meet.
+                </li>
+                <li>
+                  <strong>Collect the item:</strong> Meet the seller at the agreed place. Take a quick photo together with the item as proof of collection.
+                </li>
+                <li>
+                  <strong>Confirm collection:</strong> In your Profile page's <em>Purchases</em> tab, mark the item as <span className="font-medium">Collected</span>. This completes the transaction and release the payment to the seller. If you do not mark an item as completed after collecting it, you may be subject to legal action and removed from the platform. For any dispute, please contact the admins.
+                </li>
+              </ol>
+
+              <p className="text-xs text-gray-500">
+                Tip: Keep the collection photo until you’re sure everything is fine — the seller must save it if there’s a dispute.
+              </p>
+            </div>
+
+            <div className="mt-4 flex items-start gap-2">
+              <input
+                id="agree"
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-1 cursor-pointer"
+                required
+              />
+              <label htmlFor="agree" className="text-sm text-gray-700">
+                I have read and agree to the above guidelines for reserving, collecting, 
+                and confirming my purchase.
+              </label>
+            </div>
+
+            <Button 
+              type="button" 
+              className="w-full mt-8" 
+              onClick={handlePayNow}
+              disabled={!agreed || loading}
+            >
               Pay Now
             </Button>
 
@@ -195,6 +243,7 @@ export default function CartPage() {
                 ← Continue Shopping
               </Link>
             </div>
+
           </>
         )}
       </div>

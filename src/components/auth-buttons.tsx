@@ -29,13 +29,13 @@ export default function AuthButtons() {
   }
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-4">
       {auth.currentUser ? (
         <>
           {/* Sell Item */}
           <Link
             href="/profile/new"
-            className="font-semibold text-secondary underline hover:text-accent hover:underline underline-offset-4 transition"
+            className="font-semibold text-secondary hover:text-accent hover:underline underline-offset-4 transition"
           >
             Sell Item
           </Link>
