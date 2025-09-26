@@ -9,6 +9,7 @@ const statusLabel = {
     pending: "Pending",
     withdrawn: "Withdrawn",
     sold: "Sold",
+    collected: "Collected",
 }
 
 // Display status with specific color

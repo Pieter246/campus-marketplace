@@ -1,1 +1,1 @@
-export type ItemCondition = "new" | "used" | "fair" | "poor";
+export type ItemCondition = "new" | "excellent" | "used" | "fair" | "poor";

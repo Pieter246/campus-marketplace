@@ -5,6 +5,7 @@ import { ItemCondition } from "@/types/itemCondition";
 // Left side references itemStatus values:"for-sale" | "pending" | "withdrawn" | "sold" Right side displays them
 const conditionLabel = {
     new: "new",
+    excellent: "excellent",
     used: "used",
     fair: "fair",
     poor: "poor",

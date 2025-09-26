@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Button from "@/components/ui/Button";
 import {
   Form,
@@ -20,19 +21,105 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import z from "zod";
-import WithdrawButton from "./withdraw-button";
+import { z } from "zod";
+import type { ItemStatus, ItemCondition } from "@/types/item";
 
 const formSchema = z.object({
-  realCondition: z.string(),
+  realCondition: z.enum(["new", "excellent", "used", "fair", "poor"]),
 });
+
+const STATUS_OPTIONS = ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"] as const;
 
 type ApproveFormProps = {
   id: string;
-  condition: string;
+  condition: ItemCondition;
+  status: ItemStatus;
 };
 
-export default function ApproveForm({ id, condition }: ApproveFormProps) {
+const StatusDropdown: React.FC<{
+  itemId: string;
+  currentStatus: ItemStatus;
+}> = ({ itemId, currentStatus }) => {
+  const auth = useAuth();
+  const router = useRouter();
+  const [selectedStatus, setSelectedStatus] = useState<ItemStatus>(currentStatus);
+
+  // Sync selectedStatus with currentStatus prop
+  useEffect(() => {
+    setSelectedStatus(currentStatus);
+  }, [currentStatus]);
+
+  const handleStatusChange = async (newStatus: ItemStatus) => {
+    try {
+      const user = auth?.currentUser;
+      if (!user) throw new Error("Not logged in");
+
+      const token = await user.getIdToken();
+
+      // Optimistic update
+      setSelectedStatus(newStatus);
+
+      const response = await fetch("/api/items/update-status", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ itemId, status: newStatus }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        // Revert on error
+        setSelectedStatus(currentStatus);
+        toast.error("Failed to update item status", {
+          description: result.message || result.error || "Unknown error",
+        });
+        return;
+      }
+
+      toast.success("Item status updated successfully");
+      router.refresh();
+    } catch (err: any) {
+      setSelectedStatus(currentStatus);
+      console.error("Update item status error:", err);
+      toast.error("Failed to update item status", {
+        description: err.message || "Unknown error",
+      });
+    }
+  };
+
+  return (
+    <FormItem>
+      <FormLabel>Set status</FormLabel>
+      <Select
+        onValueChange={handleStatusChange}
+        value={selectedStatus}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue>
+            {selectedStatus
+              ? selectedStatus
+                  .split("-")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ")
+              : "Select status"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTIONS.map((status) => (
+            <SelectItem key={status} value={status} className="capitalize">
+              {status.replace("-", " ")}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </FormItem>
+  );
+};
+
+export default function ApproveForm({ id, condition, status }: ApproveFormProps) {
   const router = useRouter();
   const auth = useAuth();
 
@@ -46,13 +133,11 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     const tokenResult = await auth?.currentUser?.getIdTokenResult();
 
-    //Redirect if token is invalid
     if (!tokenResult) {
       router.push("/login");
       return;
     }
 
-    // API call approve item
     const response = await fetch("/api/items/actions/approve", {
       method: "POST",
       headers: {
@@ -65,10 +150,8 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
       }),
     });
 
-    // Get item result
     const result = await response.json();
 
-    // Display error if result has error
     if (!response.ok || result?.error) {
       toast.error("Error!", {
         description: result.message || "Failed to approve item.",
@@ -76,7 +159,6 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
       return;
     }
 
-    // Display item was approved
     toast.success("Success!", {
       description: "Item was approved",
     });
@@ -110,6 +192,7 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="excellent">Excellent</SelectItem>
                         <SelectItem value="used">Used</SelectItem>
                         <SelectItem value="fair">Fair</SelectItem>
                         <SelectItem value="poor">Poor</SelectItem>
@@ -132,9 +215,9 @@ export default function ApproveForm({ id, condition }: ApproveFormProps) {
             </Button>
           </div>
 
-          {/* Cancel Button */}
-          <div className="mt-auto flex flex-col gap-2">
-            <WithdrawButton id={id} />
+          {/* Status Dropdown */}
+          <div className="flex flex-col gap-2">
+            <StatusDropdown itemId={id} currentStatus={status} />
           </div>
         </fieldset>
       </form>

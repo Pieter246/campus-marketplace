@@ -19,10 +19,10 @@ import imageUrlFormatter from "@/lib/imageUrlFormatter";
 import ItemConditionBadge from "@/components/item-condition-badge";
 import ReactMarkdown from "react-markdown";
 import BuyButton from "./buy-button";
-import ApproveForm from "./approve-form";
 import SellButton from "./sell-button";
 import WithdrawButton from "./withdraw-button";
 import PublishButton from "./publish-button";
+import ApproveForm from "./approve-form";
 import Script from "next/script";
 
 export default function Item() {
@@ -31,6 +31,7 @@ export default function Item() {
   const [item, setItem] = useState<Item | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [claims, setClaims] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Get token and claims
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function Item() {
         const tokenResult = await user.getIdTokenResult();
         setToken(tokenResult.token);
         setClaims(tokenResult.claims);
-      }   
+      }
     };
 
     fetchAuth();
@@ -52,31 +53,36 @@ export default function Item() {
 
     try {
       const response = await fetch(`/api/items/read?itemId=${itemId}`, {
-        method: "GET"
+        method: "GET",
       });
 
-      // Get item result
       const result: GetItemResponse = await response.json();
 
-      // Display error if result has error
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Failed to fetch item");
       }
 
-      // Set the item to be used by the form
       setItem(result.item);
-      
     } catch (err: any) {
       console.error("Fetch item error:", err);
       toast.error("Error!", {
         description: err.message || "Failed to fetch item.",
       });
     }
-  }, [token, itemId]);
+  }, [itemId]);
 
   useEffect(() => {
     fetchItem();
-  }, [fetchItem]);
+  }, [fetchItem, refreshTrigger]);
+
+  // Listen for refresh events from child components
+  useEffect(() => {
+    const handleRefresh = () => {
+      setRefreshTrigger((prev) => prev + 1);
+    };
+    window.addEventListener("itemStatusUpdated", handleRefresh);
+    return () => window.removeEventListener("itemStatusUpdated", handleRefresh);
+  }, []);
 
   if (!item) {
     return (
@@ -253,7 +259,7 @@ export default function Item() {
                 {item.status !== "sold" ? (
                   <>
                     <div className="flex flex-wrap gap-2">
-                      { claims?.user_id !== item.sellerId && (
+                      {claims?.user_id !== item.sellerId && (
                         <div className="w-full flex-1">
                           <BuyButton id={item.id} />
                         </div>
@@ -287,7 +293,11 @@ export default function Item() {
 
                     {claims?.admin && (
                       <div className="mt-4">
-                        <ApproveForm id={item.id} condition={item.condition} />
+                        <ApproveForm
+                          id={item.id}
+                          condition={item.condition}
+                          status={item.status}
+                        />
                       </div>
                     )}
                   </>
