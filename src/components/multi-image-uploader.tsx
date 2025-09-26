@@ -131,7 +131,7 @@ export default function MultiImageUploader({
                                                     </p>
                                                     {index === 0 &&
                                                     <Badge variant="success">
-                                                        featured Image
+                                                        Featured Image
                                                     </Badge>
                                                     }
                                                 </div>

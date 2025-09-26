@@ -209,7 +209,7 @@ export default function ItemForm({
                 disabled={form.formState.isSubmitting}
                 onClick={form.handleSubmit((data) => handleSubmit(data, "pending"))}
             >
-                List Item
+                Sell Item
             </Button>
             
             {/* Save as Draft */}
