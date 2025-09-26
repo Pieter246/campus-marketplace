@@ -55,14 +55,30 @@ export default function LoginForm() {
   // Google OAuth Login
   const handleGoogleLogin = async () => {
     setLoading(true);
-    
     try {
-      await auth?.loginWithGoogle(); 
-      router.refresh(); 
-    } catch (error: any) {} finally {
+      // Sign in with Google (returns Firebase User)
+      const user = await auth.loginWithGoogle(); 
+
+      // At this point, Firestore document is already created in loginWithGoogle
+      toast.success("Success!", { description: "Logged in successfully" });
+
+      // Refresh page to reflect logged-in state
+      router.refresh();
+    } catch (error: any) {
+      // Handle user closing the popup
+      if (error.code === "auth/popup-closed-by-user") {
+        toast.error("Google login cancelled", {
+          description: "You closed the popup before completing login.",
+        });
+      } else {
+        console.error("Google login error:", error);
+        toast.error("Google login failed", { description: error.message || "" });
+      }
+    } finally {
       setLoading(false);
     }
   };
+
 
   const inputs = [
     { name: "email", type: "email", label: "Email" },

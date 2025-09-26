@@ -11,6 +11,9 @@ import {
 import { createContext, useContext, useEffect, useState } from "react"
 import { removeToken, setToken } from "./actions"
 
+// NEW: Import server action for Google Firestore registration
+import { registerGoogleUser } from "@/app/register/actions"
+
 // Explicit custom claims type
 export type CustomClaims = ParsedToken & {
   admin?: boolean
@@ -19,7 +22,7 @@ export type CustomClaims = ParsedToken & {
 export type AuthContextType = {
   currentUser: User | null
   logout: () => Promise<void>
-  loginWithGoogle: () => Promise<void>
+  loginWithGoogle: () => Promise<User>
   customClaims: CustomClaims | null
   loginWithEmail: (email: string, password: string) => Promise<void>
   isLoading: boolean
@@ -61,9 +64,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await auth.signOut()
   }
 
-  const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+  // -------------------------------
+  // UPDATED: loginWithGoogle
+  // -------------------------------
+  const loginWithGoogle = async (): Promise<User> => {
+  const provider = new GoogleAuthProvider()
+  const result = await signInWithPopup(auth, provider)
+  const user = result.user
+
+  if (!user) throw new Error("No user returned from Google login")
+
+  // Call server action to create Firestore document if missing
+  await registerGoogleUser({
+    uid: user.uid,
+    email: user.email!,
+    emailVerified: user.emailVerified,
+    displayName: user.displayName || "",
+  })
+
+    return user  // <-- critical!
   }
 
   const loginWithEmail = async (email: string, password: string) => {
