@@ -152,13 +152,14 @@ export default function Item() {
         <CardContent className="space-y-6">
           <div className="flex flex-col md:flex-row md:gap-6">
             {/* IMAGES */}
-            {!!images.length && (
+            {
+            !!images.length && (
               <div id="item-gallery-root" className="w-full md:w-1/2 space-y-4">
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden">
+                <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100">
                   {images.length === 1 ? (
                     <Image
                       fill
-                      className="object-cover"
+                      className="object-contain p-2"
                       src={imageUrlFormatter(images[0])}
                       alt="Item image"
                       sizes="(max-width: 768px) 100vw, 800px"
@@ -177,7 +178,7 @@ export default function Item() {
                       >
                         <Image
                           fill
-                          className="object-cover transition-opacity duration-300"
+                          className="object-contain transition-opacity duration-300"
                           src={imageUrlFormatter(img)}
                           alt={`Item image ${idx + 1}`}
                           sizes="(max-width: 768px) 100vw, 800px"
@@ -205,10 +206,10 @@ export default function Item() {
                             className="block w-full m-1"
                             aria-label={`Show image ${index + 1}`}
                           >
-                            <Card className="cursor-pointer relative aspect-[4/3] overflow-hidden rounded-lg">
+                            <Card className="cursor-pointer relative aspect-square overflow-hidden rounded-lg bg-gray-100">
                               <Image
                                 fill
-                                className="object-cover"
+                                className="object-contain"
                                 src={imageUrlFormatter(img)}
                                 alt={`Thumbnail ${index + 1}`}
                               />
@@ -220,7 +221,8 @@ export default function Item() {
                   </Carousel>
                 )}
               </div>
-            )}
+            )
+          }
 
             {/* CONTENT */}
             <div className="w-full md:w-1/2 flex flex-col justify-between">
