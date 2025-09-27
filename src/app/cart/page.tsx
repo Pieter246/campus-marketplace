@@ -121,7 +121,7 @@ export default function CartPage() {
 
 
   return (
-    <div className="min-h-screen flex justify-center items-start px-4">
+    <div className="min-h-screen flex justify-center items-start px-4 mb-8">
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-8">
         <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Your Cart</h2>
 
