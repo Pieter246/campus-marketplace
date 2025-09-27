@@ -31,6 +31,7 @@ export default function Item() {
   const auth = useAuth();
   const [item, setItem] = useState<Item | null>(null);
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
+  const [relatedItemsLoading, setRelatedItemsLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [claims, setClaims] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -77,13 +78,25 @@ export default function Item() {
   const fetchRelatedItems = useCallback(async () => {
     if (!itemId) return;
 
+    setRelatedItemsLoading(true);
+
     try {
       const response = await fetch(`/api/items/related?itemId=${itemId}&limit=4`, {
         method: "GET",
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          // Handle case where item is not found
+          setRelatedItems([]);
+          return;
+        }
         throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Invalid response format: Expected JSON");
       }
 
       const result = await response.json();
@@ -95,7 +108,12 @@ export default function Item() {
       setRelatedItems(result.items || []);
     } catch (err: any) {
       console.error("Fetch related items error:", err);
-      setRelatedItems([]); // Clear related items on error
+      setRelatedItems([]);
+      toast.error("Error!", {
+        description: "Failed to load related items.",
+      });
+    } finally {
+      setRelatedItemsLoading(false);
     }
   }, [itemId]);
 
@@ -123,6 +141,12 @@ export default function Item() {
 
   const images = (item.images ?? []).slice(0, 3);
   const addressLines = [item.collectionAddress].filter(Boolean);
+
+  // Capitalize the first letter of the category
+  const capitalizeCategory = (category: string) => {
+    if (!category) return "";
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  };
 
   return (
     <div className="max-w-5xl mx-auto p-4">
@@ -177,6 +201,7 @@ export default function Item() {
 })();
       `}</Script>
 
+      {/* Main Item Card */}
       <Card className="shadow-sm">
         <CardContent className="space-y-6">
           <div className="flex flex-col md:flex-row md:gap-6">
@@ -206,7 +231,7 @@ export default function Item() {
                       >
                         <Image
                           fill
-                          className="object-contain p-2 transition-opacity duration-300"
+                          className="object-contain transition-opacity duration-300"
                           src={imageUrlFormatter(img)}
                           alt={`Item image ${idx + 1}`}
                           sizes="(max-width: 768px) 100vw, 800px"
@@ -237,7 +262,7 @@ export default function Item() {
                             <Card className="cursor-pointer relative aspect-square overflow-hidden rounded-lg bg-gray-100">
                               <Image
                                 fill
-                                className="object-contain p-2"
+                                className="object-contain"
                                 src={imageUrlFormatter(img)}
                                 alt={`Thumbnail ${index + 1}`}
                               />
@@ -264,6 +289,13 @@ export default function Item() {
                     className="capitalize text-base"
                   />
                 </div>
+
+                {item.category && (
+                  <div className="flex flex-row">
+                    <h3 className="text-md font-semibold pr-1">Category: </h3>
+                    <h3 className="text-md font-normal">{capitalizeCategory(item.category)}</h3>
+                  </div>
+                )}
 
                 <div className="space-y-1">
                   <h3 className="text-lg font-bold">Location:</h3>
@@ -336,40 +368,52 @@ export default function Item() {
               </div>
             </div>
           </div>
-
-          {/* RELATED ITEMS */}
-          {relatedItems.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-bold mb-4">Related Items</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {relatedItems.slice(0, 4).map((relatedItem) => (
-                  <Link
-                    key={relatedItem.id}
-                    href={`/items/${relatedItem.id}`}
-                    className="block"
-                  >
-                    <Card className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2">
-                          <Image
-                            fill
-                            className="object-contain p-2"
-                            src={imageUrlFormatter(relatedItem.images?.[0] || "/placeholder-image.jpg")}
-                            alt={relatedItem.title}
-                            sizes="(max-width: 768px) 50vw, 200px"
-                          />
-                        </div>
-                        <h4 className="text-sm font-semibold truncate">{relatedItem.title}</h4>
-                        <p className="text-sm text-gray-600">R{numeral(relatedItem.price).format("0,0")}</p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
+
+      {/* Related Items Card */}
+      {relatedItemsLoading ? (
+        <div className="text-center text-zinc-400 py-10">
+          Loading related items...
+        </div>
+      ) : relatedItems.length > 0 ? (
+        <Card className="shadow-sm mt-6">
+          <CardContent className="">
+            <h3 className="text-lg font-bold pl-4 text-center pb-2">Related Items</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedItems.slice(0, 4).map((relatedItem) => (
+                <Link
+                  key={relatedItem.id}
+                  href={`/item/${relatedItem.id}`}
+                  className="block"
+                >
+                  <Card className="p-3 hover:shadow-md transition-shadow">
+                    <CardContent className="p-0">
+                      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2">
+                        <Image
+                          fill
+                          className="object-contain"
+                          src={imageUrlFormatter(relatedItem.images?.[0] || "/placeholder-image.jpg")}
+                          alt={relatedItem.title}
+                          sizes="(max-width: 768px) 50vw, 200px"
+                        />
+                      </div>
+                      <h4 className="text-sm font-semibold truncate">{relatedItem.title}</h4>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-600">R{numeral(relatedItem.price).format("0,0")}</p>
+                        <ItemConditionBadge
+                          condition={relatedItem.condition}
+                          className="capitalize text-xs"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

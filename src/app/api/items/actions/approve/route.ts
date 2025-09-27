@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { firestore, authenticateRequest } from "@/firebase/server";
 
 const VALID_CONDITIONS = ["new", "excellent", "used", "fair", "poor"];
+const VALID_STATUSES = ["for-sale", "pending"];
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,12 +14,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    const { itemId, condition } = await req.json();
+    const { itemId, condition, status } = await req.json();
     if (!itemId) {
       return NextResponse.json({ message: "Missing itemId" }, { status: 400 });
     }
     if (!condition || !VALID_CONDITIONS.includes(condition)) {
       return NextResponse.json({ message: "Invalid or missing condition" }, { status: 400 });
+    }
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return NextResponse.json({ message: "Invalid or missing status" }, { status: 400 });
     }
 
     const itemRef = firestore.collection("items").doc(itemId);
@@ -27,18 +31,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Item not found" }, { status: 404 });
     }
 
-    await itemRef.update({ condition, status: "for-sale" });
+    await itemRef.update({ condition, status });
 
     return NextResponse.json({
       success: true,
-      message: "Item approved successfully",
+      message: `Item ${status === "for-sale" ? "approved" : "unapproved"} successfully`,
       itemId,
       condition,
+      status,
     });
   } catch (err: any) {
     console.error("Approve item error:", err);
     return NextResponse.json(
-      { message: "Failed to approve item", error: err.message || "Unknown error" },
+      { message: "Failed to update item", error: err.message || "Unknown error" },
       { status: 500 }
     );
   }

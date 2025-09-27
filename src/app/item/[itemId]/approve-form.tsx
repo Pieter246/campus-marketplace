@@ -80,7 +80,7 @@ const StatusDropdown: React.FC<{
       }
 
       toast.success("Item status updated successfully");
-      router.refresh();
+      window.dispatchEvent(new Event("itemStatusUpdated"));
     } catch (err: any) {
       setSelectedStatus(currentStatus);
       console.error("Update item status error:", err);
@@ -122,6 +122,7 @@ const StatusDropdown: React.FC<{
 export default function ApproveForm({ id, condition, status }: ApproveFormProps) {
   const router = useRouter();
   const auth = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -131,39 +132,52 @@ export default function ApproveForm({ id, condition, status }: ApproveFormProps)
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    const tokenResult = await auth?.currentUser?.getIdTokenResult();
-
-    if (!tokenResult) {
+    if (!auth?.currentUser) {
       router.push("/login");
-      return;
-    }
-
-    const response = await fetch("/api/items/actions/approve", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${tokenResult.token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        itemId: id,
-        condition: data.realCondition,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || result?.error) {
       toast.error("Error!", {
-        description: result.message || "Failed to approve item.",
+        description: "You must be logged in to perform this action.",
       });
       return;
     }
 
-    toast.success("Success!", {
-      description: "Item was approved",
-    });
+    setIsSubmitting(true);
 
-    router.push("/admin/items");
+    const newStatus = status === "for-sale" ? "pending" : "for-sale";
+
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const response = await fetch("/api/items/actions/approve", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          itemId: id,
+          condition: data.realCondition,
+          status: newStatus,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result?.error || !result.success) {
+        throw new Error(result.message || `Failed to ${newStatus === "for-sale" ? "approve" : "unapprove"} item.`);
+      }
+
+      toast.success("Success!", {
+        description: `Item ${newStatus === "for-sale" ? "approved" : "unapproved"} successfully.`,
+      });
+
+      window.dispatchEvent(new Event("itemStatusUpdated"));
+    } catch (err: any) {
+      console.error("Approve item error:", err);
+      toast.error("Error!", {
+        description: err.message || `Failed to ${newStatus === "for-sale" ? "approve" : "unapprove"} item.`,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -171,7 +185,7 @@ export default function ApproveForm({ id, condition, status }: ApproveFormProps)
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <p className="text-center font-bold">- Admin buttons -</p>
         <fieldset
-          disabled={form.formState.isSubmitting}
+          disabled={isSubmitting}
           className="grid grid-cols-3 gap-3 pt-2"
         >
           {/* Condition Select */}
@@ -204,14 +218,14 @@ export default function ApproveForm({ id, condition, status }: ApproveFormProps)
             />
           </div>
 
-          {/* Approve Button */}
+          {/* Approve/Unapprove Button */}
           <div className="flex flex-col gap-2">
             <Button
               type="submit"
               className="mt-auto w-full"
-              disabled={form.formState.isSubmitting}
+              disabled={isSubmitting}
             >
-              Approve
+              {status === "for-sale" ? "Unapprove" : "Approve"}
             </Button>
           </div>
 

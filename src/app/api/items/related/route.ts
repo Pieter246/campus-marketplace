@@ -1,24 +1,11 @@
-// app/api/items/related/route.ts
-import { NextResponse } from "next/server";
-import { getFirestore, collection, query, where, limit, getDocs, doc, getDoc } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
+import { NextRequest, NextResponse } from "next/server";
+import { firestore } from "@/firebase/server";
+import { DocumentData, Query } from "firebase-admin/firestore";
 
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
   const itemId = searchParams.get("itemId");
-  const limitParam = searchParams.get("limit") || "4";
+  const limitParam = parseInt(searchParams.get("limit") || "4", 10);
 
   if (!itemId) {
     return NextResponse.json({ success: false, message: "itemId is required" }, { status: 400 });
@@ -26,31 +13,34 @@ export async function GET(req: Request) {
 
   try {
     // Fetch the current item to get its category
-    const itemDoc = doc(db, "items", itemId);
-    const itemSnapshot = await getDoc(itemDoc);
+    const itemRef = firestore.collection("items").doc(itemId);
+    const itemSnapshot = await itemRef.get();
 
-    if (!itemSnapshot.exists()) {
+    if (!itemSnapshot.exists) {
       return NextResponse.json({ success: false, message: "Item not found" }, { status: 404 });
     }
 
-    const itemData = itemSnapshot.data();
+    const itemData = itemSnapshot.data() as any;
     const category = itemData.category; // Assuming items have a 'category' field
 
-    // Query for related items (same category, for-sale, excluding current item)
-    const itemsRef = collection(db, "items");
-    const q = query(
-      itemsRef,
-      where("category", "==", category),
-      where("status", "==", "for-sale"),
-      where("id", "!=", itemId),
-      limit(Number(limitParam))
-    );
+    // Query for related items (same category, for-sale)
+    let q: Query<DocumentData> = firestore.collection("items");
+    q = q.where("category", "==", category);
+    q = q.where("status", "==", "for-sale");
+    q = q.limit(limitParam + 1); // Fetch one extra to potentially exclude the current item if included
 
-    const querySnapshot = await getDocs(q);
-    const items = querySnapshot.docs.map((doc) => ({
+    const snapshot = await q.get();
+
+    let items = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
+    // Exclude the current item if it's in the results
+    items = items.filter((item) => item.id !== itemId);
+
+    // Slice to the requested limit in case we fetched extra
+    items = items.slice(0, limitParam);
 
     return NextResponse.json({ success: true, items }, { status: 200 });
   } catch (error) {
