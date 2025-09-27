@@ -92,7 +92,7 @@ export default function DeleteItemButton({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting} className="hover:bg-secondary hover:text-white px-4 py-5 text-base cursor-pointer">Cancel</AlertDialogCancel>
           <Button onClick={handleDeleteClick} disabled={isDeleting}>
             {isDeleting ? "Deleting..." : "Delete Item"}
           </Button>

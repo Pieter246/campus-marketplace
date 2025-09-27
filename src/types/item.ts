@@ -1,18 +1,20 @@
-import { ItemCategory } from "./itemCategory";
-import { ItemCondition } from "./itemCondition";
-import { ItemStatus } from "./itemStatus";
+export type ItemStatus = "pending" | "for-sale" | "draft" | "sold" | "withdrawn" | "collected";
 
-export type Item = {
+export type ItemCondition = "new" | "excellent" | "used" | "fair" | "poor";
+
+export type ItemCategory = string;
+
+export interface Item {
   id: string;
   title: string;
   collectionAddress: string;
   description: string;
   price: number;
-  status: ItemStatus;
   condition: ItemCondition;
   category: ItemCategory;
   sellerId: string;
+  status: ItemStatus;
   updatedAt?: string;
   postedAt?: string;
   images?: string[];
-};
+}

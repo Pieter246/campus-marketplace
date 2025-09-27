@@ -62,10 +62,10 @@ export default function RootLayout({
           Profile
         </Link>
         <Link
-          href="/cart"
+          href="/how"
           className="text-gray-700 hover:text-accent hover:underline underline-offset-4 transition"
         >
-          Cart
+          How It Works
         </Link>
       </nav>
     </div>

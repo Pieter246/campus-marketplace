@@ -21,10 +21,10 @@ export default function Home() {
   const auth = useAuth();
 
   const [items, setItems] = useState<Item[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const page = parseInt(searchParams.get("page") || "1", 10);
   const minPrice = parseInt(searchParams.get("minPrice") || "") || null;
   const maxPrice = parseInt(searchParams.get("maxPrice") || "") || null;
   const condition = searchParams.get("condition") || null;
@@ -32,30 +32,29 @@ export default function Home() {
   const sort = searchParams.get("sort") || "newest";
   const category = searchParams.get("category") || "all";
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true); // Always show loading while fetching
+  const fetchItems = async (pageNum: number, append: boolean = false) => {
+    if (auth === undefined) return; // wait until auth context has settled
 
-      const user = auth?.currentUser;
-      let token: string | null = null;
+    setLoading(true);
 
-      if (user) {
-        token = await user.getIdToken();
-      }
+    let token: string | null = null;
+    if (auth?.currentUser) {
+      token = await auth.currentUser.getIdToken();
+    }
 
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
 
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
+    try {
       const response = await fetch("/api/items/list", {
         method: "POST",
         headers,
         body: JSON.stringify({
-          page,
+          page: pageNum,
           pageSize: 10,
           minPrice,
           maxPrice,
@@ -71,26 +70,54 @@ export default function Home() {
 
       if (!response.ok || !result.success || !Array.isArray(result.items)) {
         console.error("Failed to fetch items:", result.message || result.error);
-        setLoading(false); // ✅ unblock UI even on error
+        setLoading(false);
+        setHasMore(false);
         return;
       }
 
-      setItems(result.items);
-      setTotalPages(result.totalPages);
+      setItems((prev) => (append ? [...prev, ...result.items] : result.items));
+      setHasMore(pageNum < result.totalPages);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setHasMore(false);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchItems();
-  }, [auth, page, minPrice, maxPrice, condition, searchTerm, sort, category]);
+  useEffect(() => {
+    if (auth !== undefined) {
+      setItems([]); // Reset items on filter change
+      setPage(1);
+      setHasMore(true);
+      fetchItems(1);
+    }
+  }, [
+    auth?.currentUser,
+    minPrice,
+    maxPrice,
+    condition,
+    searchTerm,
+    sort,
+    category,
+  ]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchItems(nextPage, true);
+  };
 
   return (
-    <div className="max-w-screen-lg mx-auto px-2">
-      <h1 className="text-2xl font-bold pb-2 text-center">
-        Welcome to Campus Marketplace!
-      </h1>
-      <p className="text-center pb-10">
-        Buy and sell textbooks, technology, and more.
-      </p>
+    <div className="max-w-screen-lg mx-auto px-2 pb-6">
+      <div className="flex flex-col items-center text-center space-y-4 pb-6">
+        <h1 className="text-2xl font-bold">
+          Welcome to Campus Marketplace!
+        </h1>
+        <p className="">
+          Buy and sell textbooks, technology, and more.
+        </p>
+      </div>
 
       {/* Search */}
       <div className="space-y-4 bg-white rounded-xl">
@@ -116,7 +143,7 @@ export default function Home() {
       </div>
 
       {/* Items grid */}
-      {loading ? (
+      {loading && items.length === 0 ? (
         <p className="text-center py-10 text-zinc-400">Loading items...</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-5 gap-5">
@@ -169,24 +196,14 @@ export default function Home() {
         </div>
       )}
 
-      {/* Pagination */}
-      <div className="flex gap-2 items-center justify-center py-10">
-        {Array.from({ length: totalPages }).map((_, i) => {
-          const newSearchParams = new URLSearchParams(searchParams.toString());
-          newSearchParams.set("page", `${i + 1}`);
-
-          return (
-            <Button
-              asChild={page !== i + 1}
-              disabled={page === i + 1}
-              variant="outline"
-              key={i}
-            >
-              <Link href={`/?${newSearchParams.toString()}`}>{i + 1}</Link>
-            </Button>
-          );
-        })}
-      </div>
+      {/* Load More Button */}
+      {hasMore && (
+        <div className="flex justify-center py-10">
+          <Button onClick={handleLoadMore} disabled={loading}>
+            {loading ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,24 +19,26 @@ export default async function UserDashboard({
         <>
             <Tabs defaultValue={tab} className="w-full">
                 <TabsList className="w-full">
-                    <TabsTrigger value="dashboard" asChild className="text-xl font-bold rounded-md data-[state=active]:primary data-[state=active]:text-white">
-                        <Link href="/profile/user?tab=dashboard">Active orders</Link>
+                    <TabsTrigger value="dashboard" asChild className="text-xl rounded-sm data-[state=active]:primary data-[state=active]:text-white">
+                        <Link href="/profile/user?tab=dashboard">Active Items</Link>
                     </TabsTrigger>
-                    <TabsTrigger value="purchases" asChild className="text-xl font-bold rounded-md data-[state=active]:primary data-[state=active]:text-white">
-                        <Link href="/profile/user?tab=purchases">Purchase history</Link>
+                    <TabsTrigger value="purchases" asChild className="text-xl rounded-sm data-[state=active]:primary data-[state=active]:text-white">
+                        <Link href="/profile/user?tab=purchases">Purchases</Link>
                     </TabsTrigger>
-                    <TabsTrigger value="account" asChild className="text-xl font-bold rounded-md data-[state=active]:primary data-[state=active]:text-white">
-                        <Link href="/profile/user?tab=account">Password</Link>
+                    <TabsTrigger value="account" asChild className="text-xl rounded-sm data-[state=active]:primary data-[state=active]:text-white">
+                        <Link href="/profile/user?tab=account">Profile & Password</Link>
                     </TabsTrigger>
                 </TabsList>
 
                 <Suspense fallback={<div>Loading...</div>}>
                     {tab === "dashboard" && (
                     <TabsContent value="dashboard">
-                        <div className="flex items-center justify-between mt-2 mb-4 mx-2">
-                        <h1 className="text-2xl font-bold">My Items</h1>
-                        <Button asChild className="inline-flex gap-2">
-                            <Link href="/profile/new">New Item</Link>
+                        <div className="relative flex items-center mt-2 mb-4 mx-2">
+                        <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold">
+                            My Items
+                        </h1>
+                        <Button asChild className="ml-auto" variant="secondary">
+                            <Link href="/profile/new">Sell Item</Link>
                         </Button>
                         </div>
 
@@ -45,13 +47,13 @@ export default async function UserDashboard({
                     )}
                     {tab === "purchases" && (
                         <TabsContent value="purchases">
-                            <h1 className="text-2xl font-bold ml-2 mt-2">Purchase history</h1>
+                            <h1 className="text-2xl font-bold ml-2 mt-2 text-center">Purchase History</h1>
                             <UserPurchaseTable page={page} />
                         </TabsContent>
                     )}
                     {tab === "account" && (
                         <TabsContent value="account">
-                            <h1 className="text-2xl font-bold ml-2 mt-2">Update password</h1>
+                            <h1 className="text-2xl font-bold ml-2 mt-2 text-center">Update Your Information</h1>
                             <Account />
                         </TabsContent>
                     )}
