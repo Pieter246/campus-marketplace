@@ -24,11 +24,13 @@ import WithdrawButton from "./withdraw-button";
 import PublishButton from "./publish-button";
 import ApproveForm from "./approve-form";
 import Script from "next/script";
+import Link from "next/link";
 
 export default function Item() {
   const { itemId } = useParams() as { itemId: string };
   const auth = useAuth();
   const [item, setItem] = useState<Item | null>(null);
+  const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [claims, setClaims] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -71,9 +73,36 @@ export default function Item() {
     }
   }, [itemId]);
 
+  // Fetch related items
+  const fetchRelatedItems = useCallback(async () => {
+    if (!itemId) return;
+
+    try {
+      const response = await fetch(`/api/items/related?itemId=${itemId}&limit=4`, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || "Failed to fetch related items");
+      }
+
+      setRelatedItems(result.items || []);
+    } catch (err: any) {
+      console.error("Fetch related items error:", err);
+      setRelatedItems([]); // Clear related items on error
+    }
+  }, [itemId]);
+
   useEffect(() => {
     fetchItem();
-  }, [fetchItem, refreshTrigger]);
+    fetchRelatedItems();
+  }, [fetchItem, fetchRelatedItems, refreshTrigger]);
 
   // Listen for refresh events from child components
   useEffect(() => {
@@ -152,8 +181,7 @@ export default function Item() {
         <CardContent className="space-y-6">
           <div className="flex flex-col md:flex-row md:gap-6">
             {/* IMAGES */}
-            {
-            !!images.length && (
+            {!!images.length && (
               <div id="item-gallery-root" className="w-full md:w-1/2 space-y-4">
                 <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100">
                   {images.length === 1 ? (
@@ -178,7 +206,7 @@ export default function Item() {
                       >
                         <Image
                           fill
-                          className="object-contain transition-opacity duration-300"
+                          className="object-contain p-2 transition-opacity duration-300"
                           src={imageUrlFormatter(img)}
                           alt={`Item image ${idx + 1}`}
                           sizes="(max-width: 768px) 100vw, 800px"
@@ -209,7 +237,7 @@ export default function Item() {
                             <Card className="cursor-pointer relative aspect-square overflow-hidden rounded-lg bg-gray-100">
                               <Image
                                 fill
-                                className="object-contain"
+                                className="object-contain p-2"
                                 src={imageUrlFormatter(img)}
                                 alt={`Thumbnail ${index + 1}`}
                               />
@@ -221,8 +249,7 @@ export default function Item() {
                   </Carousel>
                 )}
               </div>
-            )
-          }
+            )}
 
             {/* CONTENT */}
             <div className="w-full md:w-1/2 flex flex-col justify-between">
@@ -309,6 +336,38 @@ export default function Item() {
               </div>
             </div>
           </div>
+
+          {/* RELATED ITEMS */}
+          {relatedItems.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-bold mb-4">Related Items</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {relatedItems.slice(0, 4).map((relatedItem) => (
+                  <Link
+                    key={relatedItem.id}
+                    href={`/items/${relatedItem.id}`}
+                    className="block"
+                  >
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2">
+                          <Image
+                            fill
+                            className="object-contain p-2"
+                            src={imageUrlFormatter(relatedItem.images?.[0] || "/placeholder-image.jpg")}
+                            alt={relatedItem.title}
+                            sizes="(max-width: 768px) 50vw, 200px"
+                          />
+                        </div>
+                        <h4 className="text-sm font-semibold truncate">{relatedItem.title}</h4>
+                        <p className="text-sm text-gray-600">R{numeral(relatedItem.price).format("0,0")}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

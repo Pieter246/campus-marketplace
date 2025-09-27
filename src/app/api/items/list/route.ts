@@ -17,16 +17,15 @@ export async function POST(req: NextRequest) {
       searchTerm,
       sort = "newest",
       category,
+      page = 1,
+      pageSize = 10,
     } = body;
 
     const user = await authenticateRequest(req);
 
-    // Only enforce auth for private filters
+    // Only enforce auth for private filters (sellerId or buyerId)
     if ((sellerId || buyerId) && !user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    if (!user?.admin && !(sellerId || buyerId)) {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     let query: Query<DocumentData> = firestore.collection("items");
@@ -63,8 +62,15 @@ export async function POST(req: NextRequest) {
       query = query.orderBy("updatedAt", "desc"); // default: newest
     }
 
-    // Fetch all items (with a reasonable limit for safety)
-    const snapshot = await query.limit(1000).get();
+    // Get total count for pagination
+    const totalItems = (await query.count().get()).data().count;
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    // Apply pagination
+    query = query.offset((page - 1) * pageSize).limit(pageSize);
+
+    // Fetch items
+    const snapshot = await query.get();
 
     let items = snapshot.docs.map((doc) => {
       const data = doc.data();
@@ -89,7 +95,7 @@ export async function POST(req: NextRequest) {
       success: true,
       items,
       count: items.length,
-      totalPages: 1, // No pagination
+      totalPages,
       filters: {
         sellerId,
         buyerId,
