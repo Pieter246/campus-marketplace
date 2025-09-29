@@ -22,7 +22,7 @@ interface Item {
   id: string;
   price: number;
   status: "pending" | "for-sale" | "draft" | "sold" | "withdrawn";
-  sellerId?: string; // important for sold items chart
+  sellerId?: string;
 }
 
 interface User {
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
 
           if (!usersRes.ok) {
             const errData = await usersRes.json().catch(() => ({}));
-            throw new Error((errData as any).message || "Failed to fetch users");
+            throw new Error(errData.message || "Failed to fetch users");
           }
 
           const usersData: User[] = await usersRes.json();
@@ -172,8 +172,9 @@ export default function AdminDashboard() {
         setActiveUsers(allUsers.filter((u) => u.isActive).length);
         setInactiveUsers(allUsers.filter((u) => !u.isActive).length);
 
-      } catch (err: any) {
-        toast.error(err.message || "Failed to fetch admin metrics");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to fetch admin metrics";
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -281,8 +282,8 @@ export default function AdminDashboard() {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={soldItemsByUsersChartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="itemsSold" label={{ value: 'Items Sold', position: 'insideBottom', offset: -5 }} />
-              <YAxis label={{ value: 'Number of Users', angle: -90, position: 'insideLeft' }} />
+              <XAxis dataKey="itemsSold" label={{ value: "Items Sold", position: "insideBottom", offset: -5 }} />
+              <YAxis label={{ value: "Number of Users", angle: -90, position: "insideLeft" }} />
               <Tooltip />
               <Bar dataKey="users" fill="#3b82f6" />
             </BarChart>

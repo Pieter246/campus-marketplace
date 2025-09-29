@@ -52,11 +52,12 @@ export default function AdminItemsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Read and validate status from URL, default to "all"
+  // Type-safe status validation
+  const isValidStatus = (status: string | null): status is ItemStatus | "all" =>
+    status !== null && STATUSES.includes(status as ItemStatus | "all");
+
   const urlStatus = searchParams.get("status") || "all";
-  const validatedStatus: ItemStatus | "all" = STATUSES.includes(urlStatus as any)
-    ? (urlStatus as ItemStatus | "all")
-    : "all";
+  const validatedStatus: ItemStatus | "all" = isValidStatus(urlStatus) ? urlStatus : "all";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState<Item[]>([]);
@@ -64,9 +65,9 @@ export default function AdminItemsPage() {
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>("title");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [page, setPage] = useState(1); // Track current page
-  const [totalPages, setTotalPages] = useState(1); // Track total pages
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // Track "Load More" loading state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Initialize form for status dropdown
   const form = useForm<z.infer<typeof formSchema>>({
@@ -80,8 +81,8 @@ export default function AdminItemsPage() {
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set("status", data.status);
-    setItems([]); // Reset items when status changes
-    setPage(1); // Reset page to 1
+    setItems([]);
+    setPage(1);
     router.push(`/admin/items?${newSearchParams.toString()}`);
   };
 
@@ -92,16 +93,16 @@ export default function AdminItemsPage() {
 
       const token = await user.getIdToken();
       const requestBody = {
-        status: validatedStatus === "all" 
-          ? ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"] 
+        status: validatedStatus === "all"
+          ? ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"]
           : [validatedStatus],
         page,
-        pageSize: 10, // Consistent with backend default
+        pageSize: 10,
       };
-      console.log("Sending request body:", requestBody); // Debug request
+      console.log("Sending request body:", requestBody);
 
-      setIsLoadingMore(page > 1); // Set loading state for "Load More"
-      setLoading(page === 1); // Full loading only for first page
+      setIsLoadingMore(page > 1);
+      setLoading(page === 1);
 
       const response = await fetch("/api/items/list", {
         method: "POST",
@@ -123,8 +124,8 @@ export default function AdminItemsPage() {
         return;
       }
 
-      console.log("Fetched item statuses:", result.items.map(item => item.status)); // Debug response
-      setItems(prev => page === 1 ? result.items : [...prev, ...result.items]); // Append for "Load More"
+      console.log("Fetched item statuses:", result.items.map(item => item.status));
+      setItems(prev => page === 1 ? result.items : [...prev, ...result.items]);
       setTotalPages(result.totalPages || 1);
       setLoading(false);
       setIsLoadingMore(false);
