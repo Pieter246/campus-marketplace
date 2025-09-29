@@ -384,44 +384,50 @@ export default function ManageUsersPage() {
           </thead>
           <tbody>
             {filteredUsers.length ? (
-              filteredUsers.map((user) => (
-                <tr key={user.id} className="border-b last:border-none">
-                  <td className="py-2">{user.firstName || '-'}</td>
-                  <td className="py-2">{user.lastName || '-'}</td>
-                  <td className="py-2">{user.email}</td>
-                  <td className="py-2">{user.phoneNumber || '-'}</td>
-                  <td className="py-2">
-                    {user.isActive ? (
-                      <span className="px-2 py-1 rounded bg-green-100 text-green-700">Active</span>
-                    ) : (
-                      <span className="px-2 py-1 rounded bg-red-100 text-red-700">Suspended</span>
-                    )}
-                  </td>
-                  <td className="py-2">
-                    {(() => {
-                      // Check multiple possible admin field formats
-                      const userAny = user as any;
-                      const isAdmin = user.isAdmin || 
-                                    userAny.admin || 
-                                    userAny.customClaims?.admin ||
-                                    userAny.role === 'admin' ||
-                                    userAny.roles?.includes('admin');
-                      return isAdmin ? "Yes" : "No";
-                    })()}
-                  </td>
-                  <td className="py-2">
-                    <DropdownMenu
-                      user={user}
-                      onSuspend={handleSuspend}
-                      onReinstate={handleReinstate}
-                      onRemove={handleRemove}
-                      onViewMore={setViewUser}
-                      onPromoteAdmin={handlePromoteAdmin}
-                      onDemoteAdmin={handleDemoteAdmin}
-                    />
-                  </td>
-                </tr>
-              ))
+              filteredUsers.map((user) => {
+                // Check if user is admin
+                const userAny = user as any;
+                const isAdmin = user.isAdmin || 
+                              userAny.admin || 
+                              userAny.customClaims?.admin ||
+                              userAny.role === 'admin' ||
+                              userAny.roles?.includes('admin');
+                
+                return (
+                  <tr 
+                    key={user.id} 
+                    className={`border-b last:border-none ${isAdmin ? 'text-blue-600 font-semibold' : 'text-black'}`}
+                  >
+                    <td className="py-2">{user.firstName || '-'}</td>
+                    <td className="py-2">{user.lastName || '-'}</td>
+                    <td className="py-2">{user.email}</td>
+                    <td className="py-2">{user.phoneNumber || '-'}</td>
+                    <td className="py-2">
+                      {user.isActive ? (
+                        <span className="px-2 py-1 rounded bg-green-100 text-green-700">Active</span>
+                      ) : (
+                        <span className="px-2 py-1 rounded bg-red-100 text-red-700">Suspended</span>
+                      )}
+                    </td>
+                    <td className="py-2">
+                      <span className={isAdmin ? "text-blue-600 font-semibold" : "text-black"}>
+                        {isAdmin ? "Yes" : "No"}
+                      </span>
+                    </td>
+                    <td className="py-2">
+                      <DropdownMenu
+                        user={user}
+                        onSuspend={handleSuspend}
+                        onReinstate={handleReinstate}
+                        onRemove={handleRemove}
+                        onViewMore={setViewUser}
+                        onPromoteAdmin={handlePromoteAdmin}
+                        onDemoteAdmin={handleDemoteAdmin}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan={7} className="py-4 text-center text-gray-500">
@@ -444,7 +450,12 @@ export default function ManageUsersPage() {
             <p><strong>Last Name:</strong> {viewUser.lastName || "-"}</p>
             <p><strong>Phone Number:</strong> {viewUser.phoneNumber || "-"}</p>
             <p><strong>Active:</strong> {viewUser.isActive ? "Yes" : "No"}</p>
-            <p><strong>Admin:</strong> {viewUser.isAdmin ? "Yes" : "No"}</p>
+            <p>
+              <strong>Admin:</strong>{" "}
+              <span className={viewUser.isAdmin ? "text-blue-600 font-semibold" : "text-black"}>
+                {viewUser.isAdmin ? "Yes" : "No"}
+              </span>
+            </p>
             <p><strong>Email Verified:</strong> {viewUser.emailVerified ? "Yes" : "No"}</p>
             <p>
               <strong>Created At:</strong>{" "}
