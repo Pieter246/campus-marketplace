@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
 
     const users = snapshot.docs.map((doc) => {
     const data = doc.data();
-    console.log("Route.ts: " + doc.id); // WHY IS THIS ALWAYS UNDEFINED???
+
     return {
       id: doc.id,          // <- use 'id' not 'userId'
       email: data.email,

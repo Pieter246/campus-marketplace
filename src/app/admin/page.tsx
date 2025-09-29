@@ -43,8 +43,8 @@ export default function AdminDashboard() {
   const auth = useAuth();
   const [loading, setLoading] = useState(true);
 
-  const [items, setItems] = useState<Item[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [, setItems] = useState<Item[]>([]);
+  const [, setUsers] = useState<User[]>([]);
 
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [priceBuckets, setPriceBuckets] = useState<{ range: string; count: number }[]>([]);
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
   const [totalItems, setTotalItems] = useState(0);
   const [itemsForSale, setItemsForSale] = useState(0);
   const [itemsSold, setItemsSold] = useState(0);
-  const [itemDrafts, setItemDrafts] = useState(0);
+  const [, setItemDrafts] = useState(0);
 
   const [totalTurnover, setTotalTurnover] = useState(0);
   const [avgSoldPrice, setAvgSoldPrice] = useState(0);
