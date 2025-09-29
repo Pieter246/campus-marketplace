@@ -1,3 +1,4 @@
+// In edit-item-form.tsx
 "use client";
 
 import ItemForm from "@/components/item-form";
@@ -12,12 +13,9 @@ import {
   uploadBytesResumable,
   UploadTask,
 } from "firebase/storage";
-import z from "zod";
-import { Breadcrumbs } from "@/components/ui/breadcrumb";
+import { z } from "zod";
 import DeleteItemButton from "./delete-item-button";
 import { useAuth } from "@/context/auth";
-
-type Props = Item;
 
 export default function EditPropertyForm({
   id,
@@ -30,30 +28,37 @@ export default function EditPropertyForm({
   category,
   sellerId,
   images = [],
-}: Props) {
+}: Item) {
   const router = useRouter();
   const auth = useAuth();
 
-  const handleSubmit = async (data: z.infer<typeof itemSchema>) => {
+  // Optional: Validate category at runtime
+  const validCategories = ["books", "electronics", "clothing", "notes", "stationery", "other"] as const;
+  if (!validCategories.includes(category)) {
+    toast.error("Error!", {
+      description: "Invalid category value.",
+    });
+    return null;
+  }
+
+  const handleSubmit = async (data: z.infer<typeof itemSchema>, status: "draft" | "pending" = "draft") => {
     const token = await auth?.currentUser?.getIdToken();
     if (!token) return;
 
     const { images: newImages, ...rest } = data;
 
-    // API call update item
+    // Include status in the API payload
     const response = await fetch("/api/items/update", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ itemId: id, ...rest }),
+      body: JSON.stringify({ itemId: id, ...rest, status }), // Include status
     });
 
-    // Get result of update
     const result = await response.json();
 
-    // Display error if result has error
     if (!response.ok || result?.error) {
       toast.error("Error!", {
         description: result.message || "Failed to update item.",
@@ -61,7 +66,7 @@ export default function EditPropertyForm({
       return;
     }
 
-    // Handle image upload and deletion of existing images
+    // Handle image upload and deletion
     const storageTasks: (UploadTask | Promise<void>)[] = [];
     const imagesToDelete = images.filter(
       (image) => !newImages.find((newImage) => image === newImage.url)
@@ -83,7 +88,6 @@ export default function EditPropertyForm({
       }
     });
 
-    // Upload images to firebase
     await Promise.all(storageTasks);
 
     // API call save images
@@ -99,10 +103,8 @@ export default function EditPropertyForm({
       }),
     });
 
-    // Get result of image upload
     const imageResult = await imageResponse.json();
 
-    // Display error if imageResult has error
     if (!imageResponse.ok || imageResult?.error) {
       toast.error("Error!", {
         description: imageResult.message || "Failed to save item images.",
@@ -110,27 +112,22 @@ export default function EditPropertyForm({
       return;
     }
 
-    // Display success message and redirect to admin dashboard
     toast.success("Success!", {
       description: "Item updated",
     });
 
     router.push("/profile/user");
   };
+
   return (
     <div className="flex flex-col justify-center items-center">
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
-        
-<div className="flex items-center justify-between mb-6">
-  <h1 className="flex-1 text-2xl font-bold text-center">
-    Edit Item
-  </h1>
-  <div className="text-3xl font-bold">
-    <DeleteItemButton itemId={id} images={images || []} />
-  </div>
-</div>
-
-
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="flex-1 text-2xl font-bold text-center">Edit Item</h1>
+          <div className="text-3xl font-bold">
+            <DeleteItemButton itemId={id} images={images || []} />
+          </div>
+        </div>
         <ItemForm
           handleSubmit={handleSubmit}
           submitButtonLabel={<>Save Item</>}

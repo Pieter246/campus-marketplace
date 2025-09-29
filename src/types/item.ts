@@ -2,7 +2,7 @@ export type ItemStatus = "pending" | "for-sale" | "draft" | "sold" | "withdrawn"
 
 export type ItemCondition = "new" | "excellent" | "used" | "fair" | "poor";
 
-export type ItemCategory = string;
+export type ItemCategory =     "books" | "electronics" | "clothing" | "notes" | "stationery" | "other";
 
 export interface Item {
   id: string;

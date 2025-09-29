@@ -1,3 +1,4 @@
+// In @/components/item-form.tsx
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -17,10 +18,11 @@ import { type Resolver } from "react-hook-form";
 
 type Props = {
   handleSubmit: (data: z.infer<typeof itemSchema>, status?: "draft" | "pending") => void;
+  submitButtonLabel?: React.ReactNode; // Add this to support JSX.Element or string
   defaultValues?: z.infer<typeof itemSchema>;
 };
 
-export default function ItemForm({ handleSubmit, defaultValues }: Props) {
+export default function ItemForm({ handleSubmit, submitButtonLabel = "Save Draft", defaultValues }: Props) {
   const router = useRouter();
 
   const combinedDefaultValues: z.infer<typeof itemSchema> = {
@@ -62,7 +64,7 @@ export default function ItemForm({ handleSubmit, defaultValues }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} label="Title" error="hello" />
+                  <Input {...field} label="Title" />
                 </FormControl>
               </FormItem>
             )}
@@ -222,7 +224,7 @@ export default function ItemForm({ handleSubmit, defaultValues }: Props) {
             className="flex-1"
             disabled={form.formState.isSubmitting}
           >
-            Save Draft
+            {submitButtonLabel} {/* Use the prop here */}
           </Button>
 
           {/* Cancel */}
