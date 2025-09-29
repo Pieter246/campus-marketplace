@@ -140,7 +140,7 @@ export default function Item() {
     );
   }
 
-  const images = (item.images ?? []).slice(0, 3);
+  const images = (item.images ?? []);
   const addressLines = [item.collectionAddress].filter(Boolean);
 
   // Capitalize the first letter of the category
@@ -193,6 +193,12 @@ export default function Item() {
     var root = document.getElementById("item-gallery-root");
     if (root && root.dataset.initialized !== "true") setupGallery(root);
   }, 1000);
+
+  // Initialize immediately if element exists
+  setTimeout(() => {
+    var root = document.getElementById("item-gallery-root");
+    if (root) setupGallery(root);
+  }, 100);
 
   window.addEventListener("beforeunload", () => {
     if (window.__GalleryPoll) clearInterval(window.__GalleryPoll);
