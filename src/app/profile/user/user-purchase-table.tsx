@@ -83,7 +83,7 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
   return (
     <>
       {!data.length && (
-        <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
+        <h1 className="text-center text-zinc-400 py-20 font-bold text-2xl">
           You have no purchases
         </h1>
       )}

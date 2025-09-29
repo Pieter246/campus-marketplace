@@ -1,22 +1,39 @@
-// /app/api/users/reinstate/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { firestore, authenticateRequest } from "@/firebase/server";
+import { firestore, auth, authenticateRequest } from "@/firebase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await authenticateRequest(req);
-    if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    if (!user.admin) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    const adminUser = await authenticateRequest(req);
+    if (!adminUser) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!adminUser.admin) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
-    const body = await req.json();
-    const userId = body.id;
-    if (!userId) return NextResponse.json({ message: "Missing user id" }, { status: 400 });
+    const { id } = await req.json();
+    if (!id) return NextResponse.json({ message: "Missing user id" }, { status: 400 });
 
-    await firestore.collection("users").doc(userId).update({ isActive: true });
+    // Check if user exists in Firestore
+    const userRef = firestore.collection("users").doc(id);
+    const doc = await userRef.get();
+    if (!doc.exists) return NextResponse.json({ message: "User not found in Firestore" }, { status: 404 });
 
-    return NextResponse.json({ success: true });
+    // Update Firebase Authentication to enable the user
+    try {
+      await auth.updateUser(id, { disabled: false });
+    } catch (authErr: any) {
+      if (authErr.code !== 'auth/user-not-found') {
+        throw authErr; // Rethrow if error is not user-not-found
+      }
+      console.warn(`User ${id} not found in Firebase Authentication, but reinstating in Firestore`);
+    }
+
+    // Update isActive in Firestore
+    await userRef.update({ isActive: true });
+
+    return NextResponse.json({ success: true, message: "User reinstated in Firestore and Authentication (if existed)" });
   } catch (err: any) {
     console.error("Reinstate user error:", err);
-    return NextResponse.json({ message: err.message || "Failed to reinstate user" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Failed to reinstate user", error: err.message || "Unknown error" },
+      { status: 500 }
+    );
   }
 }
