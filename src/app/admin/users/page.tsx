@@ -48,10 +48,22 @@ const DropdownMenu: React.FC<{
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + window.scrollY + 4, // 4px margin below button
-        left: rect.right + window.scrollX - 192, // Align right edge of menu (w-48 = 192px)
-      });
+      const viewportWidth = window.innerWidth;
+      const menuWidth = 192; // w-48 = 192px
+      
+      // Calculate left position, ensuring menu stays in viewport
+      let left = rect.right - menuWidth;
+      if (left < 8) left = 8; // 8px margin from left edge
+      if (left + menuWidth > viewportWidth - 8) left = viewportWidth - menuWidth - 8;
+      
+      // Calculate top position, ensuring menu stays in viewport
+      let top = rect.bottom + 4; // 4px margin below button
+      const menuHeight = 120; // Approximate height
+      if (top + menuHeight > window.innerHeight - 8) {
+        top = rect.top - menuHeight - 4; // Show above button
+      }
+      
+      setMenuPosition({ top, left });
     }
   }, [isOpen]);
 
@@ -310,7 +322,18 @@ export default function ManageUsersPage() {
                       <span className="px-2 py-1 rounded bg-red-100 text-red-700">Suspended</span>
                     )}
                   </td>
-                  <td className="py-2">{user.isAdmin ? "Yes" : "No"}</td>
+                  <td className="py-2">
+                    {(() => {
+                      // Check multiple possible admin field formats
+                      const userAny = user as any;
+                      const isAdmin = user.isAdmin || 
+                                    userAny.admin || 
+                                    userAny.customClaims?.admin ||
+                                    userAny.role === 'admin' ||
+                                    userAny.roles?.includes('admin');
+                      return isAdmin ? "Yes" : "No";
+                    })()}
+                  </td>
                   <td className="py-2">
                     <DropdownMenu
                       user={user}
