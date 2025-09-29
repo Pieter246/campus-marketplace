@@ -68,7 +68,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 })
     }
 
-    let updateData: any = {
+    const updateData: any = {
       updatedAt: new Date()
     }
 

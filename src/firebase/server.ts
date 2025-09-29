@@ -46,8 +46,8 @@ export const verifyTokenSafe = async (
 
   try {
     return await auth.verifyIdToken(token);
-  } catch (err: any) {
-    if (err.code === "auth/id-token-expired") {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("auth/id-token-expired")) {
       console.warn("Firebase ID token expired");
       return null; // token expired, treat user as unauthenticated
     }

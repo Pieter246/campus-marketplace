@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { firestore, authenticateRequest } from "@/firebase/server";
+import { FieldPath } from "firebase-admin/firestore";
+
+interface CartItem {
+  cartItemId: string;
+  itemId: string;
+  cartId: string;
+}
+
+interface Item {
+  id: string;
+  title: string;
+  price: number;
+  images: string[];
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,22 +25,21 @@ export async function GET(req: NextRequest) {
       .where("cartId", "==", cartId)
       .get();
 
-    const cartItems: any[] = [];
+    const cartItems: CartItem[] = [];
     const itemIds: string[] = [];
     cartItemsSnap.forEach(doc => {
       const data = doc.data();
-      cartItems.push({ cartItemId: doc.id, ...data });
+      cartItems.push({ cartItemId: doc.id, ...data } as CartItem);
       if (data.itemId) itemIds.push(data.itemId);
     });
 
-    if (!itemIds.length) return NextResponse.json({ success: true, cartItems: [], itemsData: [] });
+    if (!itemIds.length) return NextResponse.json({ success: true, cartItems, itemsData: [] });
 
-    const admin = require("firebase-admin");
     const itemsSnap = await firestore.collection("items")
-      .where(admin.firestore.FieldPath.documentId(), "in", itemIds)
+      .where(FieldPath.documentId(), "in", itemIds)
       .get();
 
-    const itemsData: any[] = [];
+    const itemsData: Item[] = [];
     itemsSnap.forEach(doc => {
       const data = doc.data();
       itemsData.push({
@@ -38,8 +51,9 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, cartItems, itemsData });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching cart:", err);
-    return NextResponse.json({ success: false, message: err.message });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ success: false, message });
   }
 }
