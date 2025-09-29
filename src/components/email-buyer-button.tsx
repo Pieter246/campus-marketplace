@@ -22,12 +22,42 @@ export default function EmailBuyerButton({
 
   const handleEmailBuyer = () => {
     const subject = encodeURIComponent(`Regarding your purchase: ${itemTitle}`);
-    const body = encodeURIComponent(
-      `Hi there!\n\nI hope you're satisfied with your purchase of "${itemTitle}" for R${price.toLocaleString()}.\n\nItem link: ${window.location.origin}/item/${itemId}\n\nIf you have any questions or need assistance, please let me know!\n\nThank you for your purchase!`
+    const recipient = encodeURIComponent(buyerEmail);
+    
+    // Create options for different email providers
+    const emailOptions = [
+      {
+        name: 'Gmail',
+        url: `https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${subject}`
+      },
+      {
+        name: 'Outlook',
+        url: `https://outlook.live.com/mail/0/deeplink/compose?to=${recipient}&subject=${subject}`
+      },
+      {
+        name: 'Yahoo Mail',
+        url: `https://compose.mail.yahoo.com/?to=${recipient}&subject=${subject}`
+      },
+      {
+        name: 'Default Email App',
+        url: `mailto:${buyerEmail}?subject=${subject}`
+      }
+    ];
+    
+    // Show options to user
+    const choice = window.confirm(
+      'Choose email option:\n\n' +
+      'OK = Open in Gmail\n' +
+      'Cancel = Use default email app'
     );
     
-    const mailtoLink = `mailto:${buyerEmail}?subject=${subject}&body=${body}`;
-    window.location.href = mailtoLink;
+    if (choice) {
+      // Open Gmail
+      window.open(emailOptions[0].url, '_blank');
+    } else {
+      // Use default email app
+      window.location.href = emailOptions[3].url;
+    }
   };
 
   return (
