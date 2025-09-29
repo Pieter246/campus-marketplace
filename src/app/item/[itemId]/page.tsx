@@ -23,6 +23,7 @@ import SellButton from "./sell-button";
 import WithdrawButton from "./withdraw-button";
 import PublishButton from "./publish-button";
 import ApproveForm from "./approve-form";
+import EmailSellerButton from "./email-seller-button";
 import Script from "next/script";
 import Link from "next/link";
 
@@ -321,9 +322,19 @@ export default function Item() {
                   <>
                     <div className="flex flex-wrap gap-2">
                       {claims?.user_id !== item.sellerId && (
-                        <div className="w-full flex-1">
-                          <BuyButton id={item.id} />
-                        </div>
+                        <>
+                          <div className="w-full flex-1">
+                            <BuyButton id={item.id} />
+                          </div>
+                          <div className="w-full flex-1">
+                            <EmailSellerButton 
+                              sellerEmail={item.sellerEmail}
+                              itemTitle={item.title}
+                              itemId={item.id}
+                              price={item.price}
+                            />
+                          </div>
+                        </>
                       )}
 
                       {claims?.user_id === item.sellerId &&

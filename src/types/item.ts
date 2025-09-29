@@ -13,6 +13,7 @@ export interface Item {
   condition: ItemCondition;
   category: ItemCategory;
   sellerId: string;
+  sellerEmail?: string;
   status: ItemStatus;
   updatedAt?: string;
   postedAt?: string;
