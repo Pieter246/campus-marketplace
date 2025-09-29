@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { auth } from "@/firebase/client"; // your client.ts
+import { auth } from "@/firebase/client";
 import { updateProfile, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { toast } from "sonner";
@@ -68,7 +68,7 @@ export default function AccountPage() {
       setLoading(false);
     };
     fetchData();
-  }, [user]);
+  }, [user, profileForm]);
 
   const handleProfileSubmit = async (data: z.infer<typeof profileSchema>) => {
     if (!user) return;
@@ -93,9 +93,10 @@ export default function AccountPage() {
       await updatePassword(user, data.newPassword);
       toast.success("Password updated successfully!");
       passwordForm.reset();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      toast.error(e.code === "auth/invalid-credential" ? "Current password incorrect" : "Error updating password");
+      const error = e as { code?: string };
+      toast.error(error.code === "auth/invalid-credential" ? "Current password incorrect" : "Error updating password");
     }
   };
 
@@ -105,7 +106,6 @@ export default function AccountPage() {
   return (
     <div className="flex justify-center p-4">
       <div className="w-full max-w-6xl bg-white pt-6 px-6">
-
         <div className="flex flex-col md:flex-row gap-8">
           {/* User Info */}
           <div className="flex-1">

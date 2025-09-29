@@ -1,5 +1,5 @@
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
+import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 import React from "react";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -41,10 +41,10 @@ export default function Button({
   const combinedClassName = cn(baseStyles, variants[variant], sizes[size], className);
 
   if (asChild && React.isValidElement(children)) {
-    const child = children as React.ReactElement<any>;
+    const child = children as React.ReactElement<{ className?: string }>;
     return React.cloneElement(child, {
-      className: cn(child.props.className, combinedClassName),
       ...props,
+      className: cn(child.props.className, combinedClassName),
     });
   }
 
@@ -111,6 +111,6 @@ const buttonVariants = cva(
       size: "default",
     },
   }
-)
+);
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

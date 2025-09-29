@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutSuccessPage() {
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const router = useRouter();
 
   // Placeholder item data (to be replaced with fetched purchased items)
@@ -42,11 +41,11 @@ export default function CheckoutSuccessPage() {
               <strong>Collect the item:</strong> Meet the seller at the agreed place. Take a quick photo together with the item as proof of collection.
             </li>
             <li>
-              <strong>Confirm collection:</strong> In your Profile page's <em>Purchases</em> tab, mark the item as <span className="font-medium">Collected</span>. This completes the transaction and releases the payment to the seller. If you do not mark an item as completed after collecting it, you may be subject to legal action and removed from the platform. For any dispute, please contact the admins.
+              <strong>Confirm collection:</strong> In your Profile page&apos;s <em>Purchases</em> tab, mark the item as <span className="font-medium">Collected</span>. This completes the transaction and releases the payment to the seller. If you do not mark an item as completed after collecting it, you may be subject to legal action and removed from the platform. For any dispute, please contact the admins.
             </li>
           </ol>
           <p className="text-xs text-gray-500">
-            Tip: Keep the collection photo until you’re sure everything is fine — the seller must save it if there’s a dispute.
+            Tip: Keep the collection photo until you&apos;re sure everything is fine — the seller must save it if there&apos;s a dispute.
           </p>
         </div>
 
