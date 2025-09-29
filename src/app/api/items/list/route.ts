@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest, firestore } from "@/firebase/server";
-import { Item, ItemStatus, ItemCondition } from "@/types/item";
+import { Item } from "@/types/item";
 import { Query, DocumentData } from "firebase-admin/firestore";
 
 export async function POST(req: NextRequest) {
