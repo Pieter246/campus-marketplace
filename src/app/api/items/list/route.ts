@@ -82,6 +82,41 @@ export async function POST(req: NextRequest) {
       } as Item;
     });
 
+    // Fetch seller and buyer emails for all items
+    const userIds = new Set<string>();
+    items.forEach(item => {
+      if (item.sellerId) userIds.add(item.sellerId);
+      if (item.buyerId) userIds.add(item.buyerId);
+    });
+
+    const userEmails: Record<string, string> = {};
+    if (userIds.size > 0) {
+      try {
+        const userPromises = Array.from(userIds).map(async (userId) => {
+          const userDoc = await firestore.collection("users").doc(userId).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            return { userId, email: userData?.email };
+          }
+          return { userId, email: null };
+        });
+        
+        const userResults = await Promise.all(userPromises);
+        userResults.forEach(({ userId, email }) => {
+          if (email) userEmails[userId] = email;
+        });
+      } catch (emailError) {
+        console.warn("Could not fetch user emails:", emailError);
+      }
+    }
+
+    // Add emails to items
+    items = items.map(item => ({
+      ...item,
+      sellerEmail: item.sellerId ? userEmails[item.sellerId] : undefined,
+      buyerEmail: item.buyerId ? userEmails[item.buyerId] : undefined,
+    }));
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       items = items.filter(
