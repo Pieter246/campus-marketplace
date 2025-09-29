@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 
@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex justify-center items-start min-h-screen pr-6 pl-6">
+    <div className="flex justify-center items-start min-h-screen pr-6 pl-6 mb-10">
       {/* Floating card wrapper like login page */}
       <div className="flex w-full max-w-7xl bg-transparent gap-6">
         {/* Sidebar */}
