@@ -27,7 +27,9 @@ const DropdownMenu: React.FC<{
   onReinstate: (id: string) => void;
   onRemove: (id: string) => void;
   onViewMore: (user: User) => void;
-}> = ({ user, onSuspend, onReinstate, onRemove, onViewMore }) => {
+  onPromoteAdmin: (id: string) => void;
+  onDemoteAdmin: (id: string) => void;
+}> = ({ user, onSuspend, onReinstate, onRemove, onViewMore, onPromoteAdmin, onDemoteAdmin }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
@@ -115,6 +117,27 @@ const DropdownMenu: React.FC<{
             >
               Remove
             </button>
+            {!user.isAdmin ? (
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 cursor-pointer"
+                onClick={() => {
+                  onPromoteAdmin(user.id);
+                  setIsOpen(false);
+                }}
+              >
+                Make Admin
+              </button>
+            ) : (
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 cursor-pointer"
+                onClick={() => {
+                  onDemoteAdmin(user.id);
+                  setIsOpen(false);
+                }}
+              >
+                Remove Admin
+              </button>
+            )}
             <button
               className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
               onClick={() => {
@@ -268,6 +291,58 @@ export default function ManageUsersPage() {
     }
   };
 
+  const handlePromoteAdmin = async (id: string) => {
+    if (!confirm("Are you sure you want to make this user an admin?")) return;
+
+    try {
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) throw new Error("Not logged in");
+
+      const res = await fetch(`/api/admin/users`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: id, action: "promote-admin" }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to promote user");
+      }
+
+      setUsers((prev) => prev.map(u => u.id === id ? { ...u, isAdmin: true } : u));
+    } catch (err: any) {
+      console.error("Promote admin error:", err);
+      alert(err.message);
+    }
+  };
+
+  const handleDemoteAdmin = async (id: string) => {
+    if (!confirm("Are you sure you want to remove admin privileges from this user?")) return;
+
+    try {
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) throw new Error("Not logged in");
+
+      const res = await fetch(`/api/admin/users`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: id, action: "demote-admin" }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to demote user");
+      }
+
+      setUsers((prev) => prev.map(u => u.id === id ? { ...u, isAdmin: false } : u));
+    } catch (err: any) {
+      console.error("Demote admin error:", err);
+      alert(err.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Manage Users</h1>
@@ -341,6 +416,8 @@ export default function ManageUsersPage() {
                       onReinstate={handleReinstate}
                       onRemove={handleRemove}
                       onViewMore={setViewUser}
+                      onPromoteAdmin={handlePromoteAdmin}
+                      onDemoteAdmin={handleDemoteAdmin}
                     />
                   </td>
                 </tr>
