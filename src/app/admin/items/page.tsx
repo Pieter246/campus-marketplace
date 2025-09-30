@@ -64,6 +64,9 @@ export default function AdminItemsPage() {
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>("title");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 20;
 
   // Initialize form for status dropdown
   const form = useForm<z.infer<typeof formSchema>>({
@@ -77,6 +80,7 @@ export default function AdminItemsPage() {
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set("status", data.status); // Always set status, including "all"
+    setCurrentPage(1); // Reset to first page when changing filters
     router.push(`/admin/items?${newSearchParams.toString()}`);
   };
 
@@ -95,6 +99,8 @@ export default function AdminItemsPage() {
         },
         body: JSON.stringify({
           status: validatedStatus === "all" ? undefined : [validatedStatus],
+          page: currentPage,
+          pageSize: itemsPerPage,
         }),
       });
 
@@ -109,24 +115,24 @@ export default function AdminItemsPage() {
       }
 
       setItems(result.items);
+      setTotalPages(result.totalPages || 1);
       setLoading(false);
     };
 
     setLoading(true);
     fetchItems();
-  }, [auth, validatedStatus]);
+  }, [auth, validatedStatus, currentPage]);
 
   // Sync form status with URL
   useEffect(() => {
     form.setValue("status", validatedStatus);
   }, [form, validatedStatus]);
 
-  // Filter and sort items
+  // Filter and sort items locally (after fetching paginated results)
   useEffect(() => {
     const filtered = items
       .filter((item) =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (validatedStatus === "all" || item.status === validatedStatus)
+        item.title.toLowerCase().includes(searchTerm.toLowerCase())
       )
       .sort((a, b) => {
         const multiplier = sortDirection === "asc" ? 1 : -1;
@@ -142,10 +148,28 @@ export default function AdminItemsPage() {
         }
       });
     setFilteredItems(filtered);
-  }, [items, searchTerm, validatedStatus, sortColumn, sortDirection]);
+  }, [items, searchTerm, sortColumn, sortDirection]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   const handleSort = (column: SortColumn) => {
@@ -278,6 +302,55 @@ export default function AdminItemsPage() {
             })}
           </TableBody>
         </Table>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <div className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages} - Showing {filteredItems.length} items
+          </div>
+          <div className="flex gap-2 items-center">
+            <Button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1 || loading}
+              variant="outline"
+              className="px-3 py-1"
+            >
+              Previous
+            </Button>
+            
+            {/* Page numbers */}
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                if (pageNum <= totalPages) {
+                  return (
+                    <Button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      variant={currentPage === pageNum ? "primary" : "outline"}
+                      className="px-3 py-1 min-w-[40px]"
+                      disabled={loading}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                }
+                return null;
+              })}
+            </div>
+            
+            <Button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || loading}
+              variant="outline"
+              className="px-3 py-1"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

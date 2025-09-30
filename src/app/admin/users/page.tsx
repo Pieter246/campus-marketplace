@@ -162,8 +162,12 @@ export default function ManageUsersPage() {
   const [viewUser, setViewUser] = useState<User | null>(null);
   const [sortColumn, setSortColumn] = useState<SortColumn>('email');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [lastUserId, setLastUserId] = useState<string | null>(null);
+  const usersPerPage = 50;
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page: number = 1, startAfter: string | null = null) => {
     try {
       setLoading(true);
       const auth = getAuth();
@@ -171,7 +175,12 @@ export default function ManageUsersPage() {
       if (!currentUser) throw new Error("Not logged in");
 
       const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/users/list`, {
+      const params = new URLSearchParams({
+        limit: (usersPerPage + 1).toString(), // +1 to check if there's a next page
+        ...(startAfter && { startAfter }),
+      });
+      
+      const res = await fetch(`/api/users/list?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -181,7 +190,17 @@ export default function ManageUsersPage() {
       }
 
       const data: User[] = await res.json();
+      
+      // Check if there's a next page
+      const hasNext = data.length > usersPerPage;
+      if (hasNext) {
+        data.pop(); // Remove the extra item
+      }
+      
       setUsers(data);
+      setHasNextPage(hasNext);
+      setLastUserId(data.length > 0 ? data[data.length - 1].id : null);
+      setCurrentPage(page);
     } catch (err: any) {
       console.error("Error loading users:", err);
       setError(err.message);
@@ -193,6 +212,22 @@ export default function ManageUsersPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleNextPage = () => {
+    if (hasNextPage && lastUserId) {
+      fetchUsers(currentPage + 1, lastUserId);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      // For previous page, we need to fetch from the beginning and paginate
+      // This is a limitation of Firestore pagination
+      setCurrentPage(1);
+      setLastUserId(null);
+      fetchUsers(1, null);
+    }
+  };
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -437,6 +472,29 @@ export default function ManageUsersPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-sm text-gray-600">
+          Page {currentPage} - Showing {users.length} users
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1 || loading}
+            variant="outline"
+          >
+            Previous
+          </Button>
+          <Button
+            onClick={handleNextPage}
+            disabled={!hasNextPage || loading}
+            variant="outline"
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* View User Modal */}
