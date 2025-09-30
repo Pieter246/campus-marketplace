@@ -37,13 +37,14 @@ export default function ResetPasswordPage() {
       // 2. Show success message
       setSuccess(true);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Password reset error:", error);
       
       // Handle specific Firebase errors
-      if (error.code === 'auth/user-not-found') {
+      const firebaseError = error as { code?: string };
+      if (firebaseError.code === 'auth/user-not-found') {
         setErrors({ email: "No account found with this email address" });
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (firebaseError.code === 'auth/invalid-email') {
         setErrors({ email: "Invalid email address" });
       } else {
         setErrors({ email: "Failed to send reset email. Please try again." });

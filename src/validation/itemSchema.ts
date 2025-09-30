@@ -5,9 +5,9 @@ export const itemDataSchema = z.object({
   collectionAddress: z.string().min(1, "Collection address must have a value"),
   description: z.string().min(1, "Description is required"),
   price: z.coerce.number().min(1, "Price is required"),
-  status: z.enum(["draft", "pending", "for-sale", "sold", "withdrawn"]),
+  status: z.enum(["draft", "pending", "for-sale", "sold", "withdrawn", "collected"]),
   sellerId: z.string(),
-  condition: z.enum(["new", "used", "fair", "poor"]),
+  condition: z.enum(["new", "excellent", "used", "fair", "poor"]),
   category: z.enum([
     "books",
     "electronics",

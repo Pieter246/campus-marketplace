@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest, firestore } from "@/firebase/server";
-import { Item, ItemStatus, ItemCondition } from "@/types/item";
+import { Item } from "@/types/item";
 import { Query, DocumentData } from "firebase-admin/firestore";
 
 export async function POST(req: NextRequest) {
@@ -108,12 +108,13 @@ export async function POST(req: NextRequest) {
         category,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Get items error:", error);
+    const errorMessage: string = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       {
         message: "Failed to get items",
-        error: error?.message ?? "Unknown error",
+        error: errorMessage,
       },
       { status: 500 }
     );
