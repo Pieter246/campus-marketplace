@@ -144,7 +144,7 @@ export default function AdminItemsPage() {
 
     fetchItems();
 
-  }, [auth, validatedStatus, currentPage]);
+  }, [auth, validatedStatus, currentPage, page]);
 
 
   // Sync form status with URL

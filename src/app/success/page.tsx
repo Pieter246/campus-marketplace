@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth";
-import Link from "next/link";
 import Image from "next/image";
-import { CheckCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 

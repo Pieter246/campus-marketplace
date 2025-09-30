@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     // Calculate total
     let totalAmount = 0;
     const itemNames: string[] = [];
-    cart.forEach((item: any) => {
+    cart.forEach((item: { id: string; name: string; price: number; quantity?: number }) => {
       const quantity = item.quantity || 1;
       totalAmount += Number(item.price || 0) * quantity;
       itemNames.push(`${item.name} (x${quantity})`);

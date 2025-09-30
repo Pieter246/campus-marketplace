@@ -202,9 +202,9 @@ export default function ManageUsersPage() {
       setHasNextPage(hasNext);
       setLastUserId(data.length > 0 ? data[data.length - 1].id : null);
       setCurrentPage(page);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error loading users:", err);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
 
     } finally {
       setLoading(false);
@@ -351,9 +351,9 @@ export default function ManageUsersPage() {
       }
 
       setUsers((prev) => prev.map(u => u.id === id ? { ...u, isAdmin: true } : u));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Promote admin error:", err);
-      alert(err.message);
+      alert(err instanceof Error ? err.message : 'Failed to promote user');
     }
   };
 
@@ -377,9 +377,9 @@ export default function ManageUsersPage() {
       }
 
       setUsers((prev) => prev.map(u => u.id === id ? { ...u, isAdmin: false } : u));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Demote admin error:", err);
-      alert(err.message);
+      alert(err instanceof Error ? err.message : 'Failed to demote user');
     }
   };
 
