@@ -18,8 +18,10 @@ export async function POST(req: NextRequest) {
     // Update Firebase Authentication to disable the user
     try {
       await auth.updateUser(id, { disabled: true });
-    } catch (authErr: any) {
-      if (authErr.code !== 'auth/user-not-found') {
+    } catch (authErr: unknown) {
+      if (authErr instanceof Error && authErr.message.includes('auth/user-not-found')) {
+        console.warn(`User ${id} not found in Firebase Authentication, but suspending in Firestore`);
+      } else {
         throw authErr; // Rethrow if error is not user-not-found
       }
       console.warn(`User ${id} not found in Firebase Authentication, but suspending in Firestore`);
@@ -29,10 +31,11 @@ export async function POST(req: NextRequest) {
     await userRef.update({ isActive: false });
 
     return NextResponse.json({ success: true, message: "User suspended in Firestore and Authentication (if existed)" });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Suspend user error:", err);
+    const errorMessage: string = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
-      { message: "Failed to suspend user", error: err.message || "Unknown error" },
+      { message: "Failed to suspend user", error: errorMessage },
       { status: 500 }
     );
   }

@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
 
     const users = snapshot.docs.map((doc) => {
     const data = doc.data();
-    console.log("Route.ts: " + doc.id); // WHY IS THIS ALWAYS UNDEFINED???
+
     return {
       id: doc.id,          // <- use 'id' not 'userId'
       email: data.email,
@@ -50,10 +50,11 @@ export async function GET(req: NextRequest) {
   });
 
     return NextResponse.json(users, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Get users error:", error);
+    const errorMessage: string = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "Failed to get users", error: error?.message ?? "Unknown error" },
+      { message: "Failed to get users", error: errorMessage },
       { status: 500 }
     );
   }

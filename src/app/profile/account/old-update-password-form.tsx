@@ -1,13 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/context/auth";
 import { passwordValidation } from "@/validation/registerUser";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { useRouter } from "next/navigation";
+//import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -28,7 +28,7 @@ const formSchema = z.object({
 });
 
 export default function UpdatePasswordForm(){
-    const router = useRouter();
+    //const router = useRouter();
     const auth = useAuth();
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -55,14 +55,15 @@ export default function UpdatePasswordForm(){
                 description: "Password updated successfully"
             });
             form.reset();
-        } catch(e: any){
-            console.log({ e });     
-            toast.error("Error!", {
-                description:
-                e.code === "auth/invalid-credential"
-                    ? "Your current password is incorrect"
-                    : "An error occurred"
-            });
+        } catch (e: unknown) {
+      const errorMessage =
+        typeof e === "object" && e !== null && "code" in e && e.code === "auth/invalid-credential"
+          ? "Your current password is incorrect"
+          : "An error occurred";
+      console.error({ e });
+      toast.error("Error!", {
+        description: errorMessage,
+      });
         }
     };
 

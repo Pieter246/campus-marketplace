@@ -9,7 +9,7 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export default function Input({ label, className, ...props }: InputProps) {
-  const { error, formMessageId } = useFormField()
+  const { error } = useFormField()
   const body = error ? String(error?.message ?? "") : props.children
 
   return (

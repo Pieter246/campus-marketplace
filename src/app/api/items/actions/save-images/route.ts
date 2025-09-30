@@ -40,10 +40,11 @@ export async function POST(req: NextRequest) {
       success: true,
       message: "Images saved successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Save images error:", error);
+    const errorMessage: string = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "Internal error", error: error.message },
+      { message: "Internal error", error: errorMessage },
       { status: 500 }
     );
   }

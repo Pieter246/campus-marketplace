@@ -41,7 +41,7 @@ const StatusDropdown: React.FC<{
   currentStatus: ItemStatus;
 }> = ({ itemId, currentStatus }) => {
   const auth = useAuth();
-  const router = useRouter();
+  //const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState<ItemStatus>(currentStatus);
 
   // Sync selectedStatus with currentStatus prop
@@ -81,11 +81,12 @@ const StatusDropdown: React.FC<{
 
       toast.success("Item status updated successfully");
       window.dispatchEvent(new Event("itemStatusUpdated"));
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSelectedStatus(currentStatus);
       console.error("Update item status error:", err);
+      const errorMessage: string = err instanceof Error ? err.message : "Unknown error";
       toast.error("Failed to update item status", {
-        description: err.message || "Unknown error",
+        description: errorMessage,
       });
     }
   };
@@ -170,10 +171,11 @@ export default function ApproveForm({ id, condition, status }: ApproveFormProps)
       });
 
       window.dispatchEvent(new Event("itemStatusUpdated"));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Approve item error:", err);
+      const errorMessage: string = err instanceof Error ? err.message : `Failed to ${newStatus === "for-sale" ? "approve" : "unapprove"} item.`;
       toast.error("Error!", {
-        description: err.message || `Failed to ${newStatus === "for-sale" ? "approve" : "unapprove"} item.`,
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);

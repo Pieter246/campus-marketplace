@@ -52,11 +52,12 @@ export default function AdminItemsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Read and validate status from URL, default to "all"
+  // Type-safe status validation
+  const isValidStatus = (status: string | null): status is ItemStatus | "all" =>
+    status !== null && STATUSES.includes(status as ItemStatus | "all");
+
   const urlStatus = searchParams.get("status") || "all";
-  const validatedStatus: ItemStatus | "all" = STATUSES.includes(urlStatus as any)
-    ? (urlStatus as ItemStatus | "all")
-    : "all";
+  const validatedStatus: ItemStatus | "all" = isValidStatus(urlStatus) ? urlStatus : "all";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState<Item[]>([]);
@@ -64,6 +65,9 @@ export default function AdminItemsPage() {
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>("title");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Initialize form for status dropdown
   const form = useForm<z.infer<typeof formSchema>>({
@@ -76,7 +80,9 @@ export default function AdminItemsPage() {
   // Handle form submission for status
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
-    newSearchParams.set("status", data.status); // Always set status, including "all"
+    newSearchParams.set("status", data.status);
+    setItems([]);
+    setPage(1);
     router.push(`/admin/items?${newSearchParams.toString()}`);
   };
 
@@ -86,6 +92,17 @@ export default function AdminItemsPage() {
       if (!user) return;
 
       const token = await user.getIdToken();
+      const requestBody = {
+        status: validatedStatus === "all"
+          ? ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"]
+          : [validatedStatus],
+        page,
+        pageSize: 10,
+      };
+      console.log("Sending request body:", requestBody);
+
+      setIsLoadingMore(page > 1);
+      setLoading(page === 1);
 
       const response = await fetch("/api/items/list", {
         method: "POST",
@@ -93,9 +110,7 @@ export default function AdminItemsPage() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          status: validatedStatus === "all" ? undefined : [validatedStatus],
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result: GetItemsResponse = await response.json();
@@ -105,16 +120,19 @@ export default function AdminItemsPage() {
           description: result.message || result.error || "Failed to fetch items.",
         });
         setLoading(false);
+        setIsLoadingMore(false);
         return;
       }
 
-      setItems(result.items);
+      console.log("Fetched item statuses:", result.items.map(item => item.status));
+      setItems(prev => page === 1 ? result.items : [...prev, ...result.items]);
+      setTotalPages(result.totalPages || 1);
       setLoading(false);
+      setIsLoadingMore(false);
     };
 
-    setLoading(true);
     fetchItems();
-  }, [auth, validatedStatus]);
+  }, [auth, validatedStatus, page]);
 
   // Sync form status with URL
   useEffect(() => {
@@ -157,6 +175,12 @@ export default function AdminItemsPage() {
     }
   };
 
+  const handleLoadMore = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
+
   if (loading) {
     return (
       <div>
@@ -178,12 +202,12 @@ export default function AdminItemsPage() {
         <div>
           <p className="text-xs font-semibold text-gray-700 mb-1">Search</p>
           <input
-          id="search-items"
-          type="text"
-          placeholder="Search items by title..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="w-full max-w-sm px-4 py-2 border rounded-lg shadow-sm text-base"
+            id="search-items"
+            type="text"
+            placeholder="Search items by title..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full max-w-sm px-4 py-2 border rounded-lg shadow-sm text-base"
           />
         </div>
         <Form {...form}>
@@ -235,49 +259,69 @@ export default function AdminItemsPage() {
       )}
 
       {!!filteredItems.length && (
-        <Table className="mt-5">
-          <TableHeader>
-            <TableRow className="border-b text-gray-600">
-              <TableHead className="cursor-pointer" onClick={() => handleSort("title")}>
-                Title {sortColumn === "title" && (sortDirection === "asc" ? "↑" : "↓")}
-              </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("price")}>
-                Listing price {sortColumn === "price" && (sortDirection === "asc" ? "↑" : "↓")}
-              </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("status")}>
-                Status {sortColumn === "status" && (sortDirection === "asc" ? "↑" : "↓")}
-              </TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredItems.map((item) => {
-              const detail = [item.title]
-                .filter((addressLine) => !!addressLine)
-                .join(", ");
+        <>
+          <Table className="mt-5">
+            <TableHeader>
+              <TableRow className="border-b text-gray-600">
+                <TableHead className="cursor-pointer" onClick={() => handleSort("title")}>
+                  Title {sortColumn === "title" && (sortDirection === "asc" ? "↑" : "↓")}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("price")}>
+                  Listing price {sortColumn === "price" && (sortDirection === "asc" ? "↑" : "↓")}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("status")}>
+                  Status {sortColumn === "status" && (sortDirection === "asc" ? "↑" : "↓")}
+                </TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredItems.map((item) => {
+                const detail = [item.title]
+                  .filter((addressLine) => !!addressLine)
+                  .join(", ");
 
-              return (
-                <TableRow key={item.id}>
-                  <TableCell>{detail}</TableCell>
-                  <TableCell>R{numeral(item.price).format("0,0")}</TableCell>
-                  <TableCell>
-                    <ItemStatusBadge status={item.status} />
-                  </TableCell>
-                  <TableCell className="flex justify-end gap-1">
-                    <Button
-                      asChild
-                      className="inline-flex items-center justify-center rounded-lg font-medium transition-colors border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background focus:ring-2 focus:ring-offset-2 focus:ring-foreground px-3 py-1.5 text-sm h-auto min-h-0"
-                    >
-                      <Link href={`/item/${item.id}`}>
-                        <EyeIcon />
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell>{detail}</TableCell>
+                    <TableCell>R{numeral(item.price).format("0,0")}</TableCell>
+                    <TableCell>
+                      <ItemStatusBadge status={item.status} />
+                    </TableCell>
+                    <TableCell className="flex justify-end gap-1">
+                      <Button
+                        asChild
+                        className="inline-flex items-center justify-center rounded-lg font-medium transition-colors border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background focus:ring-2 focus:ring-offset-2 focus:ring-foreground px-3 py-1.5 text-sm h-auto min-h-0"
+                      >
+                        <Link href={`/item/${item.id}`}>
+                          <EyeIcon />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          {page < totalPages && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                onClick={handleLoadMore}
+                disabled={isLoadingMore || page >= totalPages}
+                className="px-4 py-2"
+              >
+                {isLoadingMore ? (
+                  <span className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Loading...
+                  </span>
+                ) : (
+                  "Load More"
+                )}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
