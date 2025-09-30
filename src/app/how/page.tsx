@@ -1,19 +1,11 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
+//import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function HowItWorksPage() {
-  const router = useRouter();
-
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push("/");
-    }
-  };
+  //const router = useRouter();
 
   return (
     <div className="flex justify-center items-center p-4">
@@ -31,12 +23,12 @@ export default function HowItWorksPage() {
 
         <h2 className="text-xl font-semibold mt-6 mb-2">2. List Your Item</h2>
         <p className="mb-4 text-gray-700">
-          You can create a listing for free. If you're not ready, save it as a draft and complete it later.
+          You can create a listing for free. If you&apos;re not ready, save it as a draft and complete it later.
         </p>
 
         <h2 className="text-xl font-semibold mt-6 mb-2">3. Connect with Buyers</h2>
         <p className="mb-4 text-gray-700">
-          When someone decides to buy your item, they put it in their cart and checkout. Once they've successfully completed payment, we'll hold the money for the safety of both buyer and seller until the deal is concluded (more about that later). The buyer will be put in touch with the seller to arrange the sale offline. Communicate with your buyer to coordinate pick-up or delivery.
+          When someone decides to buy your item, they put it in their cart and checkout. Once they&apos;ve successfully completed payment, we&apos;ll hold the money for the safety of both buyer and seller until the deal is concluded (more about that later). The buyer will be put in touch with the seller to arrange the sale offline. Communicate with your buyer to coordinate pick-up or delivery.
         </p>
 
         <h2 className="text-xl font-semibold mt-6 mb-2">4. Complete the Sale</h2>
@@ -54,14 +46,13 @@ export default function HowItWorksPage() {
         </p>
 
         <div className="mt-8 flex gap-4">
-        <Button asChild variant="primary" size="md" className="flex-1">
+          <Button asChild variant="primary" size="md" className="flex-1">
             <Link href="/">Marketplace</Link>
-        </Button>
-        <Button asChild variant="secondary" size="md" className="flex-1">
+          </Button>
+          <Button asChild variant="secondary" size="md" className="flex-1">
             <Link href="/profile">My Profile</Link>
-        </Button>
+          </Button>
         </div>
-
       </div>
     </div>
   );

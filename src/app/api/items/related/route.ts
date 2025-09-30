@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Item not found" }, { status: 404 });
     }
 
-    const itemData = itemSnapshot.data() as any;
+    const itemData = itemSnapshot.data() as DocumentData;
     const category = itemData.category; // Assuming items have a 'category' field
 
     // Query for related items (same category, for-sale)

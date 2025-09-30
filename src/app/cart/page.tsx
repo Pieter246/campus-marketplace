@@ -88,18 +88,15 @@ export default function CartPage() {
       const cartForCheckout = cartItems.map(cartItem => {
         const item = itemsData.find(i => i.id === cartItem.itemId);
         return item ? { id: item.id, name: item.title, price: item.price } : null;
-      }).filter(Boolean);
-
-      // Calculate totalAmount assuming quantity = 1 for each
-      const totalAmount = cartForCheckout.reduce((sum, item) => sum + (item?.price || 0), 0);
+      }).filter((item): item is { id: string; name: string; price: number } => item !== null);
 
       const token = await auth.currentUser.getIdToken();
 
       const res = await fetch("/api/payfast/checkout", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ cart: cartForCheckout }),
       });
@@ -118,7 +115,6 @@ export default function CartPage() {
       setLoading(false);
     }
   }
-
 
   return (
     <div className="min-h-screen flex justify-center items-start px-4 mb-8">
@@ -188,7 +184,9 @@ export default function CartPage() {
             </div>
 
             <div className="mx-auto mt-4 p-4 text-sm">
-              <h3 className="text-lg font-semibold mb-2 text-center">What happens after you click <span className="font-bold">"Pay Now"</span></h3>
+              <h3 className="text-lg font-semibold mb-2 text-center">
+                What happens after you click <span className="font-bold">&quot;Pay Now&quot;</span>
+              </h3>
 
               <p className="mb-3">
                 Great — your payment will reserve the item so nobody else can buy it. Here’s what to do next:
@@ -196,21 +194,21 @@ export default function CartPage() {
 
               <ol className="list-decimal list-inside space-y-2 mb-3">
                 <li>
-                  <strong>Reservation:</strong> Your payment reserves the item in your name immediately. Campus Marketplace will now hold on to your payment until you've collect the item as per the guidelines below.
+                  <strong>Reservation:</strong> Your payment reserves the item in your name immediately. Campus Marketplace will now hold on to your payment until you&apos;ve collected the item as per the guidelines below.
                 </li>
                 <li>
-                  <strong>Contact the seller:</strong> After payment you'll see the seller’s contact details and collection address — message them to arrange a time to meet.
+                  <strong>Contact the seller:</strong> After payment you&apos;ll see the seller&apos;s contact details and collection address — message them to arrange a time to meet.
                 </li>
                 <li>
                   <strong>Collect the item:</strong> Meet the seller at the agreed place. Take a quick photo together with the item as proof of collection.
                 </li>
                 <li>
-                  <strong>Confirm collection:</strong> In your Profile page's <em>Purchases</em> tab, mark the item as <span className="font-medium">Collected</span>. This completes the transaction and release the payment to the seller. If you do not mark an item as completed after collecting it, you may be subject to legal action and removed from the platform. For any dispute, please contact the admins.
+                  <strong>Confirm collection:</strong> In your Profile page&apos;s <em>Purchases</em> tab, mark the item as <span className="font-medium">Collected</span>. This completes the transaction and release the payment to the seller. If you do not mark an item as completed after collecting it, you may be subject to legal action and removed from the platform. For any dispute, please contact the admins.
                 </li>
               </ol>
 
               <p className="text-xs text-gray-500">
-                Tip: Keep the collection photo until you’re sure everything is fine — the seller must save it if there’s a dispute.
+                Tip: Keep the collection photo until you&apos;re sure everything is fine — the seller must save it if there’s a dispute.
               </p>
             </div>
 
@@ -224,14 +222,13 @@ export default function CartPage() {
                 required
               />
               <label htmlFor="agree" className="text-sm text-gray-700">
-                I have read and agree to the above guidelines for reserving, collecting, 
-                and confirming my purchase.
+                I have read and agree to the above guidelines for reserving, collecting, and confirming my purchase.
               </label>
             </div>
 
-            <Button 
-              type="button" 
-              className="w-full mt-8" 
+            <Button
+              type="button"
+              className="w-full mt-8"
               onClick={handlePayNow}
               disabled={!agreed || loading}
             >
@@ -243,7 +240,6 @@ export default function CartPage() {
                 ← Continue Shopping
               </Link>
             </div>
-
           </>
         )}
       </div>

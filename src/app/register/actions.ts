@@ -37,8 +37,9 @@ export const registerUser = async (
     await firestore.collection("users").doc(userRecord.uid).set(userDoc);
 
     return { error: false, uid: userRecord.uid };
-  } catch (e: any) {
-    return { error: true, message: e.message ?? "Could not register user" };
+  } catch (e: unknown) {
+    const error = e as { message?: string };
+    return { error: true, message: error.message ?? "Could not register user" };
   }
 };
 
@@ -76,7 +77,8 @@ export const registerGoogleUser = async (user: GoogleUserInput) => {
     }
 
     return { error: false };
-  } catch (e: any) {
-    return { error: true, message: e.message ?? "Could not create Google user" };
+  } catch (e: unknown) {
+    const error = e as { message?: string };
+    return { error: true, message: error.message ?? "Could not create Google user" };
   }
 };

@@ -19,10 +19,11 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, message: "Item withdrawn" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Withdraw error:", error);
+    const errorMessage: string = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "Internal error", error: error.message },
+      { message: "Internal error", error: errorMessage },
       { status: 500 }
     );
   }

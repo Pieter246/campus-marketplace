@@ -26,8 +26,9 @@ export async function DELETE(
 
     await cartItemRef.delete();
     return NextResponse.json({ success: true, message: "Cart item removed" });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Delete cart item error:", err);
-    return NextResponse.json({ success: false, message: err.message });
+    const errorMessage: string = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ success: false, message: errorMessage });
   }
 }

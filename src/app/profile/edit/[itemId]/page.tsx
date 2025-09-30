@@ -4,7 +4,7 @@ import { use } from "react";
 import EditItemForm from "./edit-item-form";
 import { toast } from "sonner";
 import { useEffect, useState, useCallback } from "react";
-import { onAuthStateChanged } from "@firebase/auth";
+import { onAuthStateChanged, User } from "@firebase/auth";
 import { auth } from "@/firebase/client";
 import { Item } from "@/types/item";
 import { GetItemResponse } from "@/types/GetItemResponse";
@@ -16,7 +16,7 @@ export default function EditProperty({
 }) {
   const { itemId } = use(params); // ✅ unwrap the promise
   const [item, setItem] = useState<Item | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null); // Fixed: Use User | null
 
   // ✅ Check auth
   useEffect(() => {
@@ -58,11 +58,11 @@ export default function EditProperty({
       // Set item to be used by form
       console.log("Fetched item:", result.item);
       setItem(result.item);
-      
-    } catch (err: any) {
+    } catch (err: unknown) { // Fixed: Use unknown with type check
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch item.";
       console.error("Fetch item error:", err);
       toast.error("Error!", {
-        description: err.message || "Failed to fetch item.",
+        description: errorMessage,
       });
     }
   }, [user, itemId]);

@@ -33,8 +33,8 @@ export default function Item() {
   const [item, setItem] = useState<Item | null>(null);
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [relatedItemsLoading, setRelatedItemsLoading] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const [claims, setClaims] = useState<any>(null);
+  const [, setToken] = useState<string | null>(null);
+  const [claims, setClaims] = useState<Record<string, unknown> | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Get token and claims
@@ -67,10 +67,12 @@ export default function Item() {
       }
 
       setItem(result.item);
-    } catch (err: any) {
+        } catch (err: unknown) {
+      const errorMessage: string =
+        err instanceof Error ? err.message : "Failed to fetch item";
       console.error("Fetch item error:", err);
       toast.error("Error!", {
-        description: err.message || "Failed to fetch item.",
+        description: errorMessage,
       });
     }
   }, [itemId]);
@@ -107,7 +109,7 @@ export default function Item() {
       }
 
       setRelatedItems(result.items || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Fetch related items error:", err);
       setRelatedItems([]);
       toast.error("Error!", {

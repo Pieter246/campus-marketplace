@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import { getAuth } from "firebase/auth";
-import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 
 type User = {
@@ -198,12 +197,14 @@ export default function ManageUsersPage() {
       }
       
       setUsers(data);
+
       setHasNextPage(hasNext);
       setLastUserId(data.length > 0 ? data[data.length - 1].id : null);
       setCurrentPage(page);
     } catch (err: any) {
       console.error("Error loading users:", err);
       setError(err.message);
+
     } finally {
       setLoading(false);
     }
@@ -280,8 +281,9 @@ export default function ManageUsersPage() {
       if (!res.ok) throw new Error("Failed to suspend user");
 
       setUsers((prev) => prev.map(u => u.id === id ? { ...u, isActive: false } : u));
-    } catch (err: any) {
-      console.error("Suspend user error:", err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to suspend user";
+      console.error("Suspend user error:", message);
     }
   };
 
@@ -300,8 +302,9 @@ export default function ManageUsersPage() {
       if (!res.ok) throw new Error("Failed to reinstate user");
 
       setUsers((prev) => prev.map(u => u.id === id ? { ...u, isActive: true } : u));
-    } catch (err: any) {
-      console.error("Reinstate user error:", err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to reinstate user";
+      console.error("Reinstate user error:", message);
     }
   };
 
@@ -321,8 +324,9 @@ export default function ManageUsersPage() {
 
       if (!res.ok) throw new Error("Failed to remove user");
       setUsers((prev) => prev.filter(u => u.id !== id));
-    } catch (err: any) {
-      console.error("Remove user error:", err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to remove user";
+      console.error("Remove user error:", message);
     }
   };
 
