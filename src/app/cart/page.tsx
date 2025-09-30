@@ -194,7 +194,7 @@ export default function CartPage() {
 
               <ol className="list-decimal list-inside space-y-2 mb-3">
                 <li>
-                  <strong>Reservation:</strong> Your payment reserves the item in your name immediately. Campus Marketplace will now hold on to your payment until you&apos;ve collect the item as per the guidelines below.
+                  <strong>Reservation:</strong> Your payment reserves the item in your name immediately. Campus Marketplace will now hold on to your payment until you&apos;ve collected the item as per the guidelines below.
                 </li>
                 <li>
                   <strong>Contact the seller:</strong> After payment you&apos;ll see the seller&apos;s contact details and collection address — message them to arrange a time to meet.
