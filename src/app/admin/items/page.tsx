@@ -98,13 +98,12 @@ export default function AdminItemsPage() {
         status: validatedStatus === "all"
           ? ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"]
           : [validatedStatus],
-        page,
-        pageSize: 10,
+        page: currentPage,
+        pageSize: itemsPerPage,
       };
       console.log("Sending request body:", requestBody);
 
-      setIsLoadingMore(page > 1);
-      setLoading(page === 1);
+      setLoading(true);
 
       const response = await fetch("/api/items/list", {
         method: "POST",
@@ -112,7 +111,6 @@ export default function AdminItemsPage() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           status: validatedStatus === "all" ? undefined : [validatedStatus],
           page: currentPage,
@@ -128,16 +126,12 @@ export default function AdminItemsPage() {
           description: result.message || result.error || "Failed to fetch items.",
         });
         setLoading(false);
-        setIsLoadingMore(false);
         return;
       }
 
-
       setItems(result.items);
-
       setTotalPages(result.totalPages || 1);
       setLoading(false);
-      setIsLoadingMore(false);
     };
 
     fetchItems();
@@ -204,8 +198,8 @@ export default function AdminItemsPage() {
   };
 
   const handleLoadMore = () => {
-    if (page < totalPages) {
-      setPage(page + 1);
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -331,14 +325,14 @@ export default function AdminItemsPage() {
               })}
             </TableBody>
           </Table>
-          {page < totalPages && (
+          {currentPage < totalPages && (
             <div className="mt-4 flex justify-center">
               <Button
                 onClick={handleLoadMore}
-                disabled={isLoadingMore || page >= totalPages}
+                disabled={loading || currentPage >= totalPages}
                 className="px-4 py-2"
               >
-                {isLoadingMore ? (
+                {loading ? (
                   <span className="flex items-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                     Loading...

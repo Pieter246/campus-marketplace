@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { getAuth } from "firebase/auth";
+import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 
 type User = {
