@@ -19,6 +19,11 @@ export async function middleware(request: NextRequest) {
 
     const { pathname  } = request.nextUrl;
 
+    // Allow access to home page without authentication
+    if (pathname === "/") {
+        return NextResponse.next();
+    }
+
     // If a user is not logged in they are allowed to go to the login, register, forgot password and item-search page
     if(!token && 
         (pathname.startsWith("/login") ||
@@ -67,6 +72,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
+        "/",
         "/profile",
         "/profile/:path*",
         "/item",
