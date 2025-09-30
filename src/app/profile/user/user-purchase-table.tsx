@@ -32,26 +32,31 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPurchases = async () => {
+    const fetchItems = async () => {
       const user = auth?.currentUser;
       if (!user) return;
 
       const token = await user.getIdToken();
 
-      // API call get purchases by the user
-      const response = await fetch("/api/purchases", {
-        method: "GET",
+      // API call get items bought by the user (like development branch)
+      const response = await fetch("/api/items/list", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          buyerId: user.uid,
+          page,
+          pageSize: 10,
+        }),
       });
 
-      // Get purchases result
-      const result = await response.json();
+      // Get items result
+      const result: GetItemsResponse = await response.json();
 
       // Display error if result has error
-      if (!response.ok || !result.success || !Array.isArray(result.purchases)) {
+      if (!response.ok || !result.success || !Array.isArray(result.items)) {
         toast.error("Failed to fetch purchases", {
           description:
             result.message || result.error || "Failed to fetch purchases",
@@ -60,26 +65,12 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
         return;
       }
 
-      // Convert purchases to item-like format for the table
-      const purchaseItems = result.purchases.map((purchase: any) => ({
-        id: purchase.itemId,
-        title: purchase.itemTitle,
-        price: purchase.itemPrice,
-        status: 'sold',
-        buyerId: purchase.buyerId,
-        sellerId: purchase.sellerId,
-        sellerEmail: purchase.sellerEmail,
-        updatedAt: purchase.createdAt,
-        collectionStatus: purchase.collectionStatus || 'pending',
-        purchaseId: purchase.id,
-      }));
-
-      setItems(purchaseItems);
-      setTotalPages(1); // Simple pagination for now
+      setItems(result.items);
+      setTotalPages(result.totalPages);
       setLoading(false);
     };
 
-    fetchPurchases();
+    fetchItems();
   }, [auth, page]);
 
   if (loading) {
