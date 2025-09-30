@@ -1,11 +1,11 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
+//import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function HowItWorksPage() {
-  const router = useRouter();
+  //const router = useRouter();
 
   return (
     <div className="flex justify-center items-center p-4">

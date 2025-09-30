@@ -29,18 +29,21 @@ export async function POST(req: NextRequest) {
     // Delete user from Firebase Authentication (ignore if user not found)
     try {
       await auth.deleteUser(id);
-    } catch (authErr: any) {
-      if (authErr.code !== 'auth/user-not-found') {
+    } catch (authErr: unknown) {
+      if (authErr instanceof Error && authErr.message.includes('auth/user-not-found')) {
+        console.warn(`User ${id} not found in Firebase Authentication, but removed from Firestore`);
+      } else {
         throw authErr; // Rethrow if error is not user-not-found
       }
       console.warn(`User ${id} not found in Firebase Authentication, but removed from Firestore`);
     }
 
     return NextResponse.json({ success: true, message: "User and their items removed from Firestore and Authentication (if existed)" });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Remove user error:", err);
+    const errorMessage: string = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
-      { message: "Failed to remove user", error: err.message || "Unknown error" },
+      { message: "Failed to remove user", error: errorMessage },
       { status: 500 }
     );
   }

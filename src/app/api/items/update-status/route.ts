@@ -35,10 +35,11 @@ export async function POST(req: NextRequest) {
       itemId,
       status,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Update item status error:", err);
+    const errorMessage: string = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
-      { message: "Failed to update item status", error: err.message || "Unknown error" },
+      { message: "Failed to update item status", error: errorMessage },
       { status: 500 }
     );
   }

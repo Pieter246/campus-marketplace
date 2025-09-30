@@ -35,8 +35,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, message: "Item added to cart" });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Add to cart error:", err);
-    return NextResponse.json({ message: "Internal error", error: err.message }, { status: 500 });
+    const errorMessage: string = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ message: "Internal error", error: errorMessage }, { status: 500 });
   }
 }
