@@ -74,6 +74,19 @@ export function useSessionTimeout() {
       document.addEventListener(event, handleActivity, true)
     })
 
+    // Add browser close signout functionality
+    const handleBeforeUnload = () => {
+      if (auth.currentUser) {
+        console.log('Auto sign out due to browser close')
+        localStorage.removeItem(ACTIVITY_KEY)
+        localStorage.removeItem(STORAGE_EVENT_KEY)
+        auth.signOut()
+      }
+    }
+
+    // Add event listener for browser/tab close
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
     // Listen for storage changes (cross-tab communication)
     window.addEventListener('storage', handleStorageChange)
 
@@ -98,6 +111,9 @@ export function useSessionTimeout() {
       activityEvents.forEach(event => {
         document.removeEventListener(event, handleActivity, true)
       })
+      
+      // Remove browser close listener
+      window.removeEventListener('beforeunload', handleBeforeUnload)
       
       window.removeEventListener('storage', handleStorageChange)
     }
