@@ -17,11 +17,26 @@ export async function GET(req: NextRequest) {
 
     const itemData = itemDoc.data();
 
+    // Fetch seller information
+    let sellerEmail = null;
+    if (itemData?.sellerId) {
+      try {
+        const sellerDoc = await firestore.collection("users").doc(itemData.sellerId).get();
+        if (sellerDoc.exists) {
+          const sellerData = sellerDoc.data();
+          sellerEmail = sellerData?.email || null;
+        }
+      } catch (sellerError) {
+        console.warn("Could not fetch seller information:", sellerError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       item: {
         id: itemDoc.id,
         ...itemData,
+        sellerEmail,
         postedAt: itemData?.postedAt?.toDate?.()?.toISOString(),
         updatedAt: itemData?.updatedAt?.toDate?.()?.toISOString(),
       },

@@ -23,6 +23,7 @@ import SellButton from "./sell-button";
 import WithdrawButton from "./withdraw-button";
 import PublishButton from "./publish-button";
 import ApproveForm from "./approve-form";
+import EmailSellerButton from "./email-seller-button";
 import Script from "next/script";
 import Link from "next/link";
 
@@ -141,7 +142,7 @@ export default function Item() {
     );
   }
 
-  const images = (item.images ?? []).slice(0, 3);
+  const images = (item.images ?? []);
   const addressLines = [item.collectionAddress].filter(Boolean);
 
   // Capitalize the first letter of the category
@@ -194,6 +195,12 @@ export default function Item() {
     var root = document.getElementById("item-gallery-root");
     if (root && root.dataset.initialized !== "true") setupGallery(root);
   }, 1000);
+
+  // Initialize immediately if element exists
+  setTimeout(() => {
+    var root = document.getElementById("item-gallery-root");
+    if (root) setupGallery(root);
+  }, 100);
 
   window.addEventListener("beforeunload", () => {
     if (window.__GalleryPoll) clearInterval(window.__GalleryPoll);
@@ -323,9 +330,19 @@ export default function Item() {
                   <>
                     <div className="flex flex-wrap gap-2">
                       {claims?.user_id !== item.sellerId && (
-                        <div className="w-full flex-1">
-                          <BuyButton id={item.id} />
-                        </div>
+                        <>
+                          <div className="w-full flex-1">
+                            <BuyButton id={item.id} />
+                          </div>
+                          <div className="w-full flex-1">
+                            <EmailSellerButton 
+                              sellerEmail={item.sellerEmail}
+                              itemTitle={item.title}
+                              itemId={item.id}
+                              price={item.price}
+                            />
+                          </div>
+                        </>
                       )}
 
                       {claims?.user_id === item.sellerId &&

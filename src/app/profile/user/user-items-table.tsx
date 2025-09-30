@@ -19,6 +19,7 @@ import { useAuth } from "@/context/auth"; // ✅ assumes you have a client-side 
 import { GetItemsResponse } from "@/types/GetItemsResponse";
 import { Item } from "@/types/item";
 import { toast } from "sonner";
+import EmailBuyerButton from "@/components/email-buyer-button";
 
 type Props = {
   page?: number;
@@ -127,6 +128,14 @@ export default function UserItemsTable({ page = 1 }: Props) {
                             <PencilIcon />
                           </Link>
                         </Button>
+                      )}
+                      {item.status === "sold" && (
+                        <EmailBuyerButton
+                          buyerEmail={item.buyerEmail}
+                          itemTitle={item.title}
+                          itemId={item.id}
+                          price={item.price}
+                        />
                       )}
                     </TableCell>
                   </TableRow>
