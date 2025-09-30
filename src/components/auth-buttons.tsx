@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/context/auth";
 import Link from "next/link";
 import {
@@ -9,87 +10,100 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "./ui/avatar"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
+} from "./ui/dropdown-menu";
+import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 
 export default function AuthButtons() {
-  const router = useRouter()
-  const auth = useAuth()
+  const router = useRouter();
+  const auth = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Show skeleton while auth state is loading
   if (auth.isLoading) {
     return (
-      <div className="flex items-center">
-        <div className="animate-pulse flex items-center gap-4">
-          <div className="h-4 w-20 rounded bg-gray-300" />
-          <div className="h-4 w-20 rounded bg-gray-300" />
-        </div>
+      <div className="flex items-center gap-4">
+        <div className="h-4 w-20 rounded bg-gray-300 animate-pulse" />
+        <div className="h-4 w-20 rounded bg-gray-300 animate-pulse" />
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center gap-4">
       {auth.currentUser ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="cursor-pointer">
-            <Avatar>
-              {auth.currentUser.photoURL ? (
-                <Image
-                  src={auth.currentUser.photoURL}
-                  alt={`${auth.currentUser.displayName} avatar`}
-                  width={70}
-                  height={70}
-                  className="cursor-pointer rounded-full"
-                />
-              ) : (
-                <AvatarFallback className="cursor-pointer">
-                  {(auth.currentUser.displayName || auth.currentUser.email)?.[0]}
-                </AvatarFallback>
-              )}
-            </Avatar>
-          </DropdownMenuTrigger>
+        <>
+          {/* Sell Item */}
+          <Link
+            href="/profile/new"
+            className="font-semibold text-secondary hover:text-accent hover:underline underline-offset-4 transition"
+          >
+            Sell Item
+          </Link>
+          <div className="h-6 w-[1px] bg-gray-500/50" />
+          <Link
+            href="/cart"
+            className="text-gray-700 hover:text-accent hover:underline underline-offset-4 transition"
+          >
+            Cart
+          </Link>
 
-          <DropdownMenuContent className="mr-2 mt-5">
-            <DropdownMenuLabel>
-              <div>{auth.currentUser.displayName}</div>
-              <div className="font-normal text-xs">{auth.currentUser.email}</div>
-            </DropdownMenuLabel>
-
-            <DropdownMenuSeparator />
-
-            {/* Admin link */}
-            {auth.customClaims?.admin && (
-              <DropdownMenuItem
-                onClick={() => router.push("/admin")}
-                className="cursor-pointer"
+          {/* Account Dropdown */}
+          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <div
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className={`
+                  flex items-center gap-1
+                  cursor-pointer transition
+                  ${dropdownOpen ? "text-accent underline underline-offset-4" : "text-gray-700 hover:text-accent hover:underline underline-offset-4"}
+                `}
               >
-                Admin Dashboard
-              </DropdownMenuItem>
-            )}
+                {/*auth.currentUser.displayName || UNCOMMENT THIS TO HAVE Account OR USER'S FULL NAME */ "Account"}
+                <ChevronDown className="h-4 w-4" />
+              </div>
+            </DropdownMenuTrigger>
 
-            {/* User link */}
-            <DropdownMenuItem asChild>
-              <Link href="/profile/user" className="cursor-pointer">
-                My Profile
-              </Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              onClick={async () => {
-                await auth.logout()
-                router.refresh()
-              }}
-              className="cursor-pointer"
+            <DropdownMenuContent
+              align="start"
+              className="rounded-sm mt-1 min-w-[180px] bg-white border border-gray-200 p-1"
             >
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuLabel className="px-3 py-2">
+                <div className="font-medium">{auth.currentUser.displayName}</div>
+                <div className="text-xs text-gray-700">{auth.currentUser.email}</div>
+              </DropdownMenuLabel>
+
+              <DropdownMenuSeparator />
+
+              {auth.customClaims?.admin && (
+                <DropdownMenuItem
+                  onClick={() => router.push("/admin")}
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer rounded-sm"
+                >
+                  Admin Dashboard
+                </DropdownMenuItem>
+              )}
+
+              <DropdownMenuItem
+                onClick={() => router.push("/profile/user")}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer rounded-sm"
+              >
+                My Profile
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={async () => {
+                  await auth.logout();
+                  router.refresh();
+                }}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer rounded-sm"
+              >
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       ) : (
-        <div className="flex gap-4 items-center">
+        <>
           <Link
             href="/login"
             className="text-gray-700 hover:text-accent hover:underline underline-offset-4 transition"
@@ -103,8 +117,8 @@ export default function AuthButtons() {
           >
             Sign Up
           </Link>
-        </div>
+        </>
       )}
     </div>
-  )
+  );
 }

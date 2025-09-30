@@ -8,7 +8,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -18,26 +17,74 @@ import Link from "next/link";
 import numeral from "numeral";
 import { useAuth } from "@/context/auth";
 import { GetItemsResponse } from "@/types/GetItemsResponse";
-import { Item } from "@/types/item";
+import { Item, ItemStatus } from "@/types/item";
 import { toast } from "sonner";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import z from "zod";
 
-const STATUSES = ["all", "pending", "for-sale", "draft", "sold", "withdrawn"];
+const STATUSES: (ItemStatus | "all")[] = ["all", "pending", "for-sale", "draft", "sold", "withdrawn", "collected"];
+
+// Form schema
+const formSchema = z.object({
+  status: z.enum(["all", "pending", "for-sale", "draft", "sold", "withdrawn", "collected"]),
+});
+
+type SortColumn = "title" | "price" | "status";
+type SortDirection = "asc" | "desc";
 
 export default function AdminItemsPage() {
   const auth = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Get page from URL params
-  const page = parseInt(searchParams.get("page") || "1");
-  
-  // read status from URL, default to pending
-  const urlStatus = searchParams.get("status") || "pending";
-  const [statusFilter, setStatusFilter] = useState(urlStatus);
+  // Type-safe status validation
+  const isValidStatus = (status: string | null): status is ItemStatus | "all" =>
+    status !== null && STATUSES.includes(status as ItemStatus | "all");
 
-  const [data, setItems] = useState<Item[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
+  const urlStatus = searchParams.get("status") || "all";
+  const validatedStatus: ItemStatus | "all" = isValidStatus(urlStatus) ? urlStatus : "all";
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [items, setItems] = useState<Item[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortColumn, setSortColumn] = useState<SortColumn>("title");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Initialize form for status dropdown
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      status: validatedStatus,
+    },
+  });
+
+  // Handle form submission for status
+  const handleSubmit = (data: z.infer<typeof formSchema>) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set("status", data.status);
+    setItems([]);
+    setPage(1);
+    router.push(`/admin/items?${newSearchParams.toString()}`);
+  };
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -45,6 +92,17 @@ export default function AdminItemsPage() {
       if (!user) return;
 
       const token = await user.getIdToken();
+      const requestBody = {
+        status: validatedStatus === "all"
+          ? ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"]
+          : [validatedStatus],
+        page,
+        pageSize: 10,
+      };
+      console.log("Sending request body:", requestBody);
+
+      setIsLoadingMore(page > 1);
+      setLoading(page === 1);
 
       const response = await fetch("/api/items/list", {
         method: "POST",
@@ -52,43 +110,75 @@ export default function AdminItemsPage() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          page,
-          pageSize: 10,
-          status: statusFilter === "all" ? undefined : [statusFilter],
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result: GetItemsResponse = await response.json();
 
       if (!response.ok || !result.success || !Array.isArray(result.items)) {
         toast.error("Failed to fetch items", {
-          description:
-            result.message || result.error || "Failed to fetch items.",
+          description: result.message || result.error || "Failed to fetch items.",
         });
         setLoading(false);
+        setIsLoadingMore(false);
         return;
       }
 
-      setItems(result.items);
-      setTotalPages(result.totalPages);
+      console.log("Fetched item statuses:", result.items.map(item => item.status));
+      setItems(prev => page === 1 ? result.items : [...prev, ...result.items]);
+      setTotalPages(result.totalPages || 1);
       setLoading(false);
+      setIsLoadingMore(false);
     };
 
-    setLoading(true);
     fetchItems();
-  }, [auth, page, statusFilter]);
+  }, [auth, validatedStatus, page]);
 
-  // keep state in sync with URL param
+  // Sync form status with URL
   useEffect(() => {
-    setStatusFilter(urlStatus);
-  }, [urlStatus]);
+    form.setValue("status", validatedStatus);
+  }, [form, validatedStatus]);
 
-  const handleStatusChange = (status: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("status", status);
-    params.set("page", "1"); // reset to first page on filter change
-    router.push(`/admin/items?${params.toString()}`);
+  // Filter and sort items
+  useEffect(() => {
+    const filtered = items
+      .filter((item) =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (validatedStatus === "all" || item.status === validatedStatus)
+      )
+      .sort((a, b) => {
+        const multiplier = sortDirection === "asc" ? 1 : -1;
+        switch (sortColumn) {
+          case "title":
+            return multiplier * a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+          case "price":
+            return multiplier * (a.price - b.price);
+          case "status":
+            return multiplier * a.status.localeCompare(b.status, undefined, { sensitivity: "base" });
+          default:
+            return 0;
+        }
+      });
+    setFilteredItems(filtered);
+  }, [items, searchTerm, validatedStatus, sortColumn, sortDirection]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
   };
 
   if (loading) {
@@ -106,43 +196,87 @@ export default function AdminItemsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6 text-primary">Approve Items</h1>
-      
-      {/* Status Filter Tabs */}
-      <div className="flex gap-2 mb-4">
-        {STATUSES.map((status) => (
-          <Button
-            key={status}
-            variant={statusFilter === status ? "primary" : "outline"}
-            onClick={() => handleStatusChange(status)}
+
+      {/* Search and Status Filter */}
+      <div className="flex gap-4 mb-4 items-center">
+        <div>
+          <p className="text-xs font-semibold text-gray-700 mb-1">Search</p>
+          <input
+            id="search-items"
+            type="text"
+            placeholder="Search items by title..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full max-w-sm px-4 py-2 border rounded-lg shadow-sm text-base"
+          />
+        </div>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col h-17"
           >
-            {status === "all"
-              ? "All"
-              : status
-                  .replace("-", " ")
-                  .replace(/\b\w/g, (c) => c.toUpperCase())}
-          </Button>
-        ))}
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Status</FormLabel>
+                  <FormControl>
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.handleSubmit(handleSubmit)();
+                      }}
+                    >
+                      <SelectTrigger className="w-32 px-4 py-5 rounded-lg text-base">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUSES.map((status) => (
+                          <SelectItem key={status} value={status} className="text-base">
+                            {status === "all"
+                              ? "All"
+                              : status
+                                  .replace("-", " ")
+                                  .replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
       </div>
 
-      {!data.length && (
+      {!filteredItems.length && (
         <h1 className="text-center text-zinc-400 py-20 font-bold text-3xl">
           No items found
         </h1>
       )}
-      
-      {!!data.length && (
+
+      {!!filteredItems.length && (
         <>
           <Table className="mt-5">
             <TableHeader>
-              <TableRow>
-                <TableHead>Details</TableHead>
-                <TableHead>Listing price</TableHead>
-                <TableHead>Status</TableHead>
+              <TableRow className="border-b text-gray-600">
+                <TableHead className="cursor-pointer" onClick={() => handleSort("title")}>
+                  Title {sortColumn === "title" && (sortDirection === "asc" ? "↑" : "↓")}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("price")}>
+                  Listing price {sortColumn === "price" && (sortDirection === "asc" ? "↑" : "↓")}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("status")}>
+                  Status {sortColumn === "status" && (sortDirection === "asc" ? "↑" : "↓")}
+                </TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((item) => {
+              {filteredItems.map((item) => {
                 const detail = [item.title]
                   .filter((addressLine) => !!addressLine)
                   .join(", ");
@@ -155,7 +289,10 @@ export default function AdminItemsPage() {
                       <ItemStatusBadge status={item.status} />
                     </TableCell>
                     <TableCell className="flex justify-end gap-1">
-                      <Button asChild variant="outline" size="sm">
+                      <Button
+                        asChild
+                        className="inline-flex items-center justify-center rounded-lg font-medium transition-colors border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background focus:ring-2 focus:ring-offset-2 focus:ring-foreground px-3 py-1.5 text-sm h-auto min-h-0"
+                      >
                         <Link href={`/item/${item.id}`}>
                           <EyeIcon />
                         </Link>
@@ -165,30 +302,25 @@ export default function AdminItemsPage() {
                 );
               })}
             </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={4} className="text-center bg-white">
-                  {Array.from({ length: totalPages }).map((_, i) => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set("page", String(i + 1));
-                    return (
-                      <Button
-                        disabled={page === i + 1}
-                        key={i}
-                        asChild={page !== i + 1}
-                        variant="outline"
-                        className="mx-1 mt-5"
-                      >
-                        <Link href={`/admin/items?${params.toString()}`}>
-                          {i + 1}
-                        </Link>
-                      </Button>
-                    );
-                  })}
-                </TableCell>
-              </TableRow>
-            </TableFooter>
           </Table>
+          {page < totalPages && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                onClick={handleLoadMore}
+                disabled={isLoadingMore || page >= totalPages}
+                className="px-4 py-2"
+              >
+                {isLoadingMore ? (
+                  <span className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Loading...
+                  </span>
+                ) : (
+                  "Load More"
+                )}
+              </Button>
+            </div>
+          )}
         </>
       )}
     </div>

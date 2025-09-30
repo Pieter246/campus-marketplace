@@ -26,12 +26,13 @@ export async function GET(req: NextRequest) {
         updatedAt: itemData?.updatedAt?.toDate?.()?.toISOString(),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching item:", error);
+    const errorMessage: string = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       {
         message: "Failed to get item",
-        error: error?.message ?? "Unknown error",
+        error: errorMessage,
       },
       { status: 500 }
     );

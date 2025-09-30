@@ -1,62 +1,54 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/context/auth";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
 
-export default function BuyButton({ id }: { id: string }) {
+export default function AddToCartButton({ id }: { id: string }) {
   const router = useRouter();
   const auth = useAuth();
-  const [isBuying, setIsBuying] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleBuyClick = async () => {
-    const tokenResult = await auth?.currentUser?.getIdTokenResult();
-
-    //Redirect if token is invalid
-    if (!tokenResult) {
+  const handleAddToCart = async () => {
+    if (!auth?.currentUser) {
       router.push("/login");
       return;
     }
 
-    setIsBuying(true);
+    setIsAdding(true);
 
-    // API call buy item
-    const response = await fetch("/api/items/actions/buy", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${tokenResult.token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ itemId: id }),
-    });
-
-    // Get buy item result
-    const result = await response.json();
-
-    // Display error if result has error
-    if (!response.ok || result?.error) {
-      toast.error("Error!", {
-        description: result.message || "Failed to purchase item.",
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/items/actions/add-to-cart", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ itemId: id }),
       });
-      setIsBuying(false);
-      return;
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        toast.error(data.message || "Failed to add item to cart");
+      } else {
+        toast.success("Item added to cart");
+        router.push("/cart");
+      }
+    } catch (err) {
+      console.error("Add to cart error:", err);
+      toast.error("Failed to add item to cart");
+    } finally {
+      setIsAdding(false);
     }
-
-    setIsBuying(false);
-
-    // Display success message
-    toast.success("Success!", {
-      description: "You have bought an item!",
-    });
-
-    router.push("/profile/user?tab=purchases");
   };
 
   return (
-    <Button className="flex-1 w-full" onClick={handleBuyClick} disabled={isBuying}>
-      {isBuying ? "Adding to cart..." : "Add to cart"}
+    <Button className="flex-1 w-full" onClick={handleAddToCart} disabled={isAdding}>
+      {isAdding ? "Adding..." : "Add to cart"}
     </Button>
   );
 }

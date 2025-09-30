@@ -1,4 +1,3 @@
-// app/login/page.tsx - Use client-side Firebase Auth
 "use client";
 
 import { useState } from "react";
@@ -35,31 +34,44 @@ export default function LoginForm() {
 
     setLoading(true);
 
-    try{
+    try {
       await auth?.loginWithEmail(form.email, form.password);
       router.refresh();
-    }catch(e: any) {
-      // Display error message to user incorrect login credentials
+    } catch (e: unknown) {
+      const errorMessage: string =
+        typeof e === "object" && e !== null && "code" in e && e.code === "auth/invalid-credential"
+          ? "Incorrect credentials"
+          : "An error occurred";
       toast.error("Error!", {
-          description:
-          e.code === "auth/invalid-credential"
-              ? "Incorrect credentials"
-              : "An error occurred"
+        description: errorMessage,
       });
-    }finally{
+    } finally {
       setLoading(false);
     }
-
   };
 
   // Google OAuth Login
   const handleGoogleLogin = async () => {
     setLoading(true);
-    
     try {
-      await auth?.loginWithGoogle(); 
-      router.refresh(); 
-    } catch (error: any) {} finally {
+      // Sign in with Google (returns Firebase User, not needed here)
+      await auth.loginWithGoogle();
+
+      // At this point, Firestore document is already created in loginWithGoogle
+      toast.success("Success!", { description: "Logged in successfully" });
+
+      // Refresh page to reflect logged-in state
+      router.refresh();
+      } catch (error: unknown) {
+      // Handle user closing the popup
+      const errorMessage: string =
+        typeof error === "object" && error !== null && "code" in error && error.code === "auth/popup-closed-by-user"
+          ? "You closed the popup before completing login."
+          : typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
+          ? error.message
+          : "Google login failed";
+      toast.error("Google login failed", { description: errorMessage });
+    } finally {
       setLoading(false);
     }
   };
@@ -85,7 +97,7 @@ export default function LoginForm() {
         )}
 
         {/* Google Login Button */}
-        <Button 
+        <Button
           onClick={handleGoogleLogin}
           className="w-full mb-4 bg-red-600 hover:bg-red-700 flex items-center justify-center gap-2"
           loading={loading}
@@ -129,7 +141,7 @@ export default function LoginForm() {
         </form>
 
         <p className="mt-4 text-center text-gray-600">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/register" className="text-blue-600 hover:underline">
             Create an account
           </Link>
