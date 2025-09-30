@@ -1,39 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { removeUserCartItems } from "@/lib/cartCleanup";
+import { firestore, authenticateRequest } from "@/firebase/server";
 import { removeItemFromAllCarts, markItemAsSold } from "@/lib/itemManagement";
-import { firestore } from "@/firebase/server";
+import { removeUserCartItems } from "@/lib/cartCleanup";
 import { Timestamp } from "firebase-admin/firestore";
 
 export async function POST(req: NextRequest) {
-  console.log("=== PAYFAST WEBHOOK CALLED ===");
-  
-  const formData = await req.formData();
+  try {
+    const user = await authenticateRequest(req);
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  // PayFast fields
-  const merchant_id = formData.get("merchant_id");
-  const pf_payment_id = formData.get("pf_payment_id");
-  const amount_gross = formData.get("amount_gross");
-  const payment_status = formData.get("payment_status");
-  const custom_str1 = formData.get("custom_str1"); // This should contain the user ID
+    const { action, userId } = await req.json();
 
-  console.log("PayFast notification received:", {
-    merchant_id,
-    pf_payment_id,
-    amount_gross,
-    payment_status,
-    custom_str1,
-  });
-
-  // If payment is successful, handle all the necessary updates
-  if (payment_status === "COMPLETE" && custom_str1) {
-    try {
-      const buyerId = custom_str1 as string;
+    if (action === "fix-payment") {
+      console.log(`Manually processing payment completion for user: ${userId || user.uid}`);
+      
+      const buyerId = userId || user.uid;
       
       // Get the user's cart to see what items were purchased
       const cartItemsSnap = await firestore
         .collection("cartItems")
         .where("cartId", "==", buyerId)
         .get();
+
+      if (cartItemsSnap.empty) {
+        return NextResponse.json({ 
+          success: false, 
+          message: "No cart items found for user" 
+        });
+      }
 
       const purchasedItemIds: string[] = [];
       const purchaseRecords = [];
@@ -54,6 +50,8 @@ export async function POST(req: NextRequest) {
             const itemData = itemSnap.data();
             const quantity = cartData.quantity || 1;
 
+            console.log(`Processing item ${itemId} with price: ${itemData?.price}, title: ${itemData?.title}`);
+
             // Create purchase record
             const purchaseRef = firestore.collection("purchases").doc();
             const purchaseRecord = {
@@ -65,8 +63,8 @@ export async function POST(req: NextRequest) {
               sellerId: itemData?.sellerId || '',
               sellerEmail: itemData?.sellerEmail || '',
               buyerId: buyerId,
-              paymentId: pf_payment_id as string || '',
-              totalAmount: parseFloat(amount_gross as string || '0'),
+              paymentId: 'manual-fix-' + Date.now(),
+              totalAmount: (itemData?.price || 0) * quantity,
               status: 'paid',
               collectionStatus: 'pending',
               createdAt: Timestamp.now(),
@@ -88,16 +86,24 @@ export async function POST(req: NextRequest) {
       // Clear the buyer's cart completely
       await removeUserCartItems(buyerId);
 
-      console.log(`Payment successful: processed ${purchasedItemIds.length} items for user ${buyerId}`);
-      console.log(`Created ${purchaseRecords.length} purchase records`);
-      
-    } catch (error) {
-      console.error("Failed to process successful payment:", error);
-      // Don't fail the webhook because of processing failure
+      return NextResponse.json({
+        success: true,
+        message: `Manually processed payment for ${purchasedItemIds.length} items`,
+        processedItems: purchasedItemIds,
+        purchaseRecords: purchaseRecords
+      });
     }
-  }
 
-  // TODO: verify signature using MERCHANT_KEY & PASSPHRASE
-  
-  return new NextResponse("OK"); // Must return 200
+    return NextResponse.json({ 
+      success: false, 
+      message: "Invalid action" 
+    });
+
+  } catch (error: any) {
+    console.error("Error in manual fix:", error);
+    return NextResponse.json(
+      { success: false, message: "Manual fix failed", error: error.message },
+      { status: 500 }
+    );
+  }
 }

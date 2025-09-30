@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import qs from "qs";
+import { authenticateRequest } from "@/firebase/server";
 
 const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID!;
 const MERCHANT_KEY = process.env.PAYFAST_MERCHANT_KEY!;
@@ -8,24 +9,23 @@ const SANDBOX = true;
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await authenticateRequest(req);
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const { cart } = await req.json(); // get static cart from frontend
     if (!cart || cart.length === 0) {
       return NextResponse.json({ message: "Cart is empty" }, { status: 400 });
     }
 
-    // Dummy user for sandbox
-    const user = {
-      displayName: "Test User",
-      email: "student@example.com",
-    };
-
     // Calculate total
     let totalAmount = 0;
     const itemNames: string[] = [];
-    cart.forEach((item: { price: number; name: string }) => {
-      // Treat each unique item as quantity = 1
-      totalAmount += Number(item.price || 0);
-      itemNames.push(item.name);
+    cart.forEach((item: any) => {
+      const quantity = item.quantity || 1;
+      totalAmount += Number(item.price || 0) * quantity;
+      itemNames.push(`${item.name} (x${quantity})`);
     });
 
     const paymentData: Record<string, string> = {
@@ -34,11 +34,12 @@ export async function POST(req: NextRequest) {
       return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
       notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payfast/notify`,
-      name_first: user.displayName,
+      name_first: user.displayName || "Student",
       name_last: "",
-      email_address: user.email,
+      email_address: user.email || "student@example.com",
       amount: totalAmount.toFixed(2),
       item_name: itemNames.join(", "),
+      custom_str1: user.uid, // Pass user ID for cart cleanup
       passphrase: PASSPHRASE,
     };
 

@@ -47,7 +47,14 @@ export async function GET(req: NextRequest) {
         title: data.title,
         price: data.price,
         images: data.images || [],
-      });
+        condition: data.condition || 'used',
+        sellerId: data.sellerId || '',
+        // Add other required Item properties
+        collectionAddress: data.collectionAddress || '',
+        description: data.description || '',
+        category: data.category || 'other',
+        status: data.status || 'draft',
+      } as Item);
     });
 
     return NextResponse.json({ success: true, cartItems, itemsData });

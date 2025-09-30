@@ -32,31 +32,26 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchPurchases = async () => {
       const user = auth?.currentUser;
       if (!user) return;
 
       const token = await user.getIdToken();
 
-      // API call get items bought by the user
-      const response = await fetch("/api/items/list", {
-        method: "POST",
+      // API call get purchases by the user
+      const response = await fetch("/api/purchases", {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          buyerId: user.uid,
-          page,
-          pageSize: 10,
-        }),
       });
 
-      // Get items result
-      const result: GetItemsResponse = await response.json();
+      // Get purchases result
+      const result = await response.json();
 
       // Display error if result has error
-      if (!response.ok || !result.success || !Array.isArray(result.items)) {
+      if (!response.ok || !result.success || !Array.isArray(result.purchases)) {
         toast.error("Failed to fetch purchases", {
           description:
             result.message || result.error || "Failed to fetch purchases",
@@ -65,12 +60,26 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
         return;
       }
 
-      setItems(result.items);
-      setTotalPages(result.totalPages);
+      // Convert purchases to item-like format for the table
+      const purchaseItems = result.purchases.map((purchase: any) => ({
+        id: purchase.itemId,
+        title: purchase.itemTitle,
+        price: purchase.itemPrice,
+        status: 'sold',
+        buyerId: purchase.buyerId,
+        sellerId: purchase.sellerId,
+        sellerEmail: purchase.sellerEmail,
+        updatedAt: purchase.createdAt,
+        collectionStatus: purchase.collectionStatus || 'pending',
+        purchaseId: purchase.id,
+      }));
+
+      setItems(purchaseItems);
+      setTotalPages(1); // Simple pagination for now
       setLoading(false);
     };
 
-    fetchItems();
+    fetchPurchases();
   }, [auth, page]);
 
   if (loading) {

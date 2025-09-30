@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { getAuth } from "firebase/auth";
 import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 
 type User = {
   id: string;

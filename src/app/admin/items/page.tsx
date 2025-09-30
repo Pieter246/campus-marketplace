@@ -68,6 +68,8 @@ export default function AdminItemsPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const itemsPerPage = 20;
 
   // Initialize form for status dropdown
