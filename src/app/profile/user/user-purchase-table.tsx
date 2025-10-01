@@ -19,6 +19,7 @@ import { useAuth } from "@/context/auth";
 import { GetItemsResponse } from "@/types/GetItemsResponse";
 import { Item } from "@/types/item";
 import { toast } from "sonner";
+import EmailSellerButtonProfile from "@/components/email-seller-button-profile";
 
 type Props = {
   page?: number;
@@ -117,6 +118,14 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
                           <EyeIcon />
                         </Link>
                       </Button>
+                      {item.status === "sold" && (
+                        <EmailSellerButtonProfile
+                          sellerEmail={item.sellerEmail}
+                          itemTitle={item.title}
+                          itemId={item.id}
+                          price={item.price}
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 );

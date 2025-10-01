@@ -65,9 +65,10 @@ export default function AdminItemsPage() {
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>("title");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [page, setPage] = useState(1);
+
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const itemsPerPage = 20;
 
   // Initialize form for status dropdown
   const form = useForm<z.infer<typeof formSchema>>({
@@ -80,9 +81,10 @@ export default function AdminItemsPage() {
   // Handle form submission for status
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
-    newSearchParams.set("status", data.status);
-    setItems([]);
-    setPage(1);
+
+    newSearchParams.set("status", data.status); // Always set status, including "all"
+    setCurrentPage(1); // Reset to first page when changing filters
+
     router.push(`/admin/items?${newSearchParams.toString()}`);
   };
 
@@ -96,13 +98,12 @@ export default function AdminItemsPage() {
         status: validatedStatus === "all"
           ? ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"]
           : [validatedStatus],
-        page,
-        pageSize: 10,
+        page: currentPage,
+        pageSize: itemsPerPage,
       };
       console.log("Sending request body:", requestBody);
 
-      setIsLoadingMore(page > 1);
-      setLoading(page === 1);
+      setLoading(true);
 
       const response = await fetch("/api/items/list", {
         method: "POST",
@@ -110,7 +111,12 @@ export default function AdminItemsPage() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          status: validatedStatus === "all" ? undefined : [validatedStatus],
+          page: currentPage,
+          pageSize: itemsPerPage,
+        }),
+
       });
 
       const result: GetItemsResponse = await response.json();
@@ -120,31 +126,29 @@ export default function AdminItemsPage() {
           description: result.message || result.error || "Failed to fetch items.",
         });
         setLoading(false);
-        setIsLoadingMore(false);
         return;
       }
 
-      console.log("Fetched item statuses:", result.items.map(item => item.status));
-      setItems(prev => page === 1 ? result.items : [...prev, ...result.items]);
+      setItems(result.items);
       setTotalPages(result.totalPages || 1);
       setLoading(false);
-      setIsLoadingMore(false);
     };
 
     fetchItems();
-  }, [auth, validatedStatus, page]);
+
+  }, [auth, validatedStatus, currentPage]);
+
 
   // Sync form status with URL
   useEffect(() => {
     form.setValue("status", validatedStatus);
   }, [form, validatedStatus]);
 
-  // Filter and sort items
+  // Filter and sort items locally (after fetching paginated results)
   useEffect(() => {
     const filtered = items
       .filter((item) =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (validatedStatus === "all" || item.status === validatedStatus)
+        item.title.toLowerCase().includes(searchTerm.toLowerCase())
       )
       .sort((a, b) => {
         const multiplier = sortDirection === "asc" ? 1 : -1;
@@ -160,10 +164,28 @@ export default function AdminItemsPage() {
         }
       });
     setFilteredItems(filtered);
-  }, [items, searchTerm, validatedStatus, sortColumn, sortDirection]);
+  }, [items, searchTerm, sortColumn, sortDirection]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   const handleSort = (column: SortColumn) => {
@@ -176,8 +198,8 @@ export default function AdminItemsPage() {
   };
 
   const handleLoadMore = () => {
-    if (page < totalPages) {
-      setPage(page + 1);
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -303,14 +325,14 @@ export default function AdminItemsPage() {
               })}
             </TableBody>
           </Table>
-          {page < totalPages && (
+          {currentPage < totalPages && (
             <div className="mt-4 flex justify-center">
               <Button
                 onClick={handleLoadMore}
-                disabled={isLoadingMore || page >= totalPages}
+                disabled={loading || currentPage >= totalPages}
                 className="px-4 py-2"
               >
-                {isLoadingMore ? (
+                {loading ? (
                   <span className="flex items-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                     Loading...
@@ -322,6 +344,55 @@ export default function AdminItemsPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <div className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages} - Showing {filteredItems.length} items
+          </div>
+          <div className="flex gap-2 items-center">
+            <Button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1 || loading}
+              variant="outline"
+              className="px-3 py-1"
+            >
+              Previous
+            </Button>
+            
+            {/* Page numbers */}
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                if (pageNum <= totalPages) {
+                  return (
+                    <Button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      variant={currentPage === pageNum ? "primary" : "outline"}
+                      className="px-3 py-1 min-w-[40px]"
+                      disabled={loading}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                }
+                return null;
+              })}
+            </div>
+            
+            <Button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || loading}
+              variant="outline"
+              className="px-3 py-1"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

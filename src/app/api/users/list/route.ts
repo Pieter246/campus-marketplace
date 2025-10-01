@@ -36,18 +36,36 @@ export async function GET(req: NextRequest) {
 
     const snapshot = await query.get();
 
-    const users = snapshot.docs.map((doc) => {
-    const data = doc.data();
+    // Get admin emails from environment variable
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
-    return {
-      id: doc.id,          // <- use 'id' not 'userId'
-      email: data.email,
-      isActive: data.isActive ?? false,
-      ...data,
-      createdAt: data.createdAt?.toDate().toISOString() ?? null,
-      updatedAt: data.updatedAt?.toDate().toISOString() ?? null,
-    };
-  });
+    const users = snapshot.docs.map((doc) => {
+
+      const data = doc.data();
+      
+      // Check if user email is in admin emails list
+      const isAdminFromEnv = adminEmails.includes(data.email || '');
+      const isAdminFromDB = data.isAdmin ?? false;
+      
+      // If user is admin in env but not in DB, update the database
+      if (isAdminFromEnv && !isAdminFromDB) {
+        // Update the user document to set isAdmin: true
+        firestore.collection("users").doc(doc.id).update({ isAdmin: true }).catch(err => {
+          console.error("Failed to update admin status for", data.email, err);
+        });
+      }
+      
+      return {
+        id: doc.id,          // <- use 'id' not 'userId'
+        email: data.email,
+        isActive: data.isActive ?? false,
+        isAdmin: isAdminFromEnv || isAdminFromDB, // Combined admin status
+        ...data,
+        createdAt: data.createdAt?.toDate().toISOString() ?? null,
+        updatedAt: data.updatedAt?.toDate().toISOString() ?? null,
+      };
+    });
+
 
     return NextResponse.json(users, { status: 200 });
   } catch (error: unknown) {

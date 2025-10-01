@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { getAuth } from "firebase/auth";
+import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 
 type User = {
@@ -26,7 +27,9 @@ const DropdownMenu: React.FC<{
   onReinstate: (id: string) => void;
   onRemove: (id: string) => void;
   onViewMore: (user: User) => void;
-}> = ({ user, onSuspend, onReinstate, onRemove, onViewMore }) => {
+  onPromoteAdmin: (id: string) => void;
+  onDemoteAdmin: (id: string) => void;
+}> = ({ user, onSuspend, onReinstate, onRemove, onViewMore, onPromoteAdmin, onDemoteAdmin }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
@@ -47,10 +50,22 @@ const DropdownMenu: React.FC<{
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + window.scrollY + 4, // 4px margin below button
-        left: rect.right + window.scrollX - 192, // Align right edge of menu (w-48 = 192px)
-      });
+      const viewportWidth = window.innerWidth;
+      const menuWidth = 192; // w-48 = 192px
+      
+      // Calculate left position, ensuring menu stays in viewport
+      let left = rect.right - menuWidth;
+      if (left < 8) left = 8; // 8px margin from left edge
+      if (left + menuWidth > viewportWidth - 8) left = viewportWidth - menuWidth - 8;
+      
+      // Calculate top position, ensuring menu stays in viewport
+      let top = rect.bottom + 4; // 4px margin below button
+      const menuHeight = 120; // Approximate height
+      if (top + menuHeight > window.innerHeight - 8) {
+        top = rect.top - menuHeight - 4; // Show above button
+      }
+      
+      setMenuPosition({ top, left });
     }
   }, [isOpen]);
 
@@ -102,6 +117,27 @@ const DropdownMenu: React.FC<{
             >
               Remove
             </button>
+            {!user.isAdmin ? (
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 cursor-pointer"
+                onClick={() => {
+                  onPromoteAdmin(user.id);
+                  setIsOpen(false);
+                }}
+              >
+                Make Admin
+              </button>
+            ) : (
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 cursor-pointer"
+                onClick={() => {
+                  onDemoteAdmin(user.id);
+                  setIsOpen(false);
+                }}
+              >
+                Remove Admin
+              </button>
+            )}
             <button
               className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
               onClick={() => {
@@ -126,8 +162,12 @@ export default function ManageUsersPage() {
   const [viewUser, setViewUser] = useState<User | null>(null);
   const [sortColumn, setSortColumn] = useState<SortColumn>('email');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [lastUserId, setLastUserId] = useState<string | null>(null);
+  const usersPerPage = 50;
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page: number = 1, startAfter: string | null = null) => {
     try {
       setLoading(true);
       const auth = getAuth();
@@ -135,7 +175,12 @@ export default function ManageUsersPage() {
       if (!currentUser) throw new Error("Not logged in");
 
       const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/users/list`, {
+      const params = new URLSearchParams({
+        limit: (usersPerPage + 1).toString(), // +1 to check if there's a next page
+        ...(startAfter && { startAfter }),
+      });
+      
+      const res = await fetch(`/api/users/list?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -145,11 +190,22 @@ export default function ManageUsersPage() {
       }
 
       const data: User[] = await res.json();
+      
+      // Check if there's a next page
+      const hasNext = data.length > usersPerPage;
+      if (hasNext) {
+        data.pop(); // Remove the extra item
+      }
+      
       setUsers(data);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to fetch users";
-      console.error("Error loading users:", message);
-      setError(message);
+
+      setHasNextPage(hasNext);
+      setLastUserId(data.length > 0 ? data[data.length - 1].id : null);
+      setCurrentPage(page);
+    } catch (err: any) {
+      console.error("Error loading users:", err);
+      setError(err.message);
+
     } finally {
       setLoading(false);
     }
@@ -158,6 +214,22 @@ export default function ManageUsersPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleNextPage = () => {
+    if (hasNextPage && lastUserId) {
+      fetchUsers(currentPage + 1, lastUserId);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      // For previous page, we need to fetch from the beginning and paginate
+      // This is a limitation of Firestore pagination
+      setCurrentPage(1);
+      setLastUserId(null);
+      fetchUsers(1, null);
+    }
+  };
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -259,6 +331,58 @@ export default function ManageUsersPage() {
     }
   };
 
+  const handlePromoteAdmin = async (id: string) => {
+    if (!confirm("Are you sure you want to make this user an admin?")) return;
+
+    try {
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) throw new Error("Not logged in");
+
+      const res = await fetch(`/api/admin/users`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: id, action: "promote-admin" }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to promote user");
+      }
+
+      setUsers((prev) => prev.map(u => u.id === id ? { ...u, isAdmin: true } : u));
+    } catch (err: any) {
+      console.error("Promote admin error:", err);
+      alert(err.message);
+    }
+  };
+
+  const handleDemoteAdmin = async (id: string) => {
+    if (!confirm("Are you sure you want to remove admin privileges from this user?")) return;
+
+    try {
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) throw new Error("Not logged in");
+
+      const res = await fetch(`/api/admin/users`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: id, action: "demote-admin" }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to demote user");
+      }
+
+      setUsers((prev) => prev.map(u => u.id === id ? { ...u, isAdmin: false } : u));
+    } catch (err: any) {
+      console.error("Demote admin error:", err);
+      alert(err.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Manage Users</h1>
@@ -300,31 +424,50 @@ export default function ManageUsersPage() {
           </thead>
           <tbody>
             {filteredUsers.length ? (
-              filteredUsers.map((user) => (
-                <tr key={user.id} className="border-b last:border-none">
-                  <td className="py-2">{user.firstName || '-'}</td>
-                  <td className="py-2">{user.lastName || '-'}</td>
-                  <td className="py-2">{user.email}</td>
-                  <td className="py-2">{user.phoneNumber || '-'}</td>
-                  <td className="py-2">
-                    {user.isActive ? (
-                      <span className="px-2 py-1 rounded bg-green-100 text-green-700">Active</span>
-                    ) : (
-                      <span className="px-2 py-1 rounded bg-red-100 text-red-700">Suspended</span>
-                    )}
-                  </td>
-                  <td className="py-2">{user.isAdmin ? "Yes" : "No"}</td>
-                  <td className="py-2">
-                    <DropdownMenu
-                      user={user}
-                      onSuspend={handleSuspend}
-                      onReinstate={handleReinstate}
-                      onRemove={handleRemove}
-                      onViewMore={setViewUser}
-                    />
-                  </td>
-                </tr>
-              ))
+              filteredUsers.map((user) => {
+                // Check if user is admin
+                const userAny = user as any;
+                const isAdmin = user.isAdmin || 
+                              userAny.admin || 
+                              userAny.customClaims?.admin ||
+                              userAny.role === 'admin' ||
+                              userAny.roles?.includes('admin');
+                
+                return (
+                  <tr 
+                    key={user.id} 
+                    className={`border-b last:border-none ${isAdmin ? 'text-blue-600 font-semibold' : 'text-black'}`}
+                  >
+                    <td className="py-2">{user.firstName || '-'}</td>
+                    <td className="py-2">{user.lastName || '-'}</td>
+                    <td className="py-2">{user.email}</td>
+                    <td className="py-2">{user.phoneNumber || '-'}</td>
+                    <td className="py-2">
+                      {user.isActive ? (
+                        <span className="px-2 py-1 rounded bg-green-100 text-green-700">Active</span>
+                      ) : (
+                        <span className="px-2 py-1 rounded bg-red-100 text-red-700">Suspended</span>
+                      )}
+                    </td>
+                    <td className="py-2">
+                      <span className={isAdmin ? "text-blue-600 font-semibold" : "text-black"}>
+                        {isAdmin ? "Yes" : "No"}
+                      </span>
+                    </td>
+                    <td className="py-2">
+                      <DropdownMenu
+                        user={user}
+                        onSuspend={handleSuspend}
+                        onReinstate={handleReinstate}
+                        onRemove={handleRemove}
+                        onViewMore={setViewUser}
+                        onPromoteAdmin={handlePromoteAdmin}
+                        onDemoteAdmin={handleDemoteAdmin}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan={7} className="py-4 text-center text-gray-500">
@@ -334,6 +477,29 @@ export default function ManageUsersPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-sm text-gray-600">
+          Page {currentPage} - Showing {users.length} users
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1 || loading}
+            variant="outline"
+          >
+            Previous
+          </Button>
+          <Button
+            onClick={handleNextPage}
+            disabled={!hasNextPage || loading}
+            variant="outline"
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* View User Modal */}
@@ -347,7 +513,12 @@ export default function ManageUsersPage() {
             <p><strong>Last Name:</strong> {viewUser.lastName || "-"}</p>
             <p><strong>Phone Number:</strong> {viewUser.phoneNumber || "-"}</p>
             <p><strong>Active:</strong> {viewUser.isActive ? "Yes" : "No"}</p>
-            <p><strong>Admin:</strong> {viewUser.isAdmin ? "Yes" : "No"}</p>
+            <p>
+              <strong>Admin:</strong>{" "}
+              <span className={viewUser.isAdmin ? "text-blue-600 font-semibold" : "text-black"}>
+                {viewUser.isAdmin ? "Yes" : "No"}
+              </span>
+            </p>
             <p><strong>Email Verified:</strong> {viewUser.emailVerified ? "Yes" : "No"}</p>
             <p>
               <strong>Created At:</strong>{" "}

@@ -13,6 +13,9 @@ export interface Item {
   condition: ItemCondition;
   category: ItemCategory;
   sellerId: string;
+  sellerEmail?: string;
+  buyerId?: string;
+  buyerEmail?: string;
   status: ItemStatus;
   updatedAt?: string;
   postedAt?: string;
