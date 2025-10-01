@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import qs from "qs";
+import md5 from "crypto-js/md5";
 
 const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID!;
 const MERCHANT_KEY = process.env.PAYFAST_MERCHANT_KEY!;
@@ -39,17 +40,33 @@ export async function POST(req: NextRequest) {
       email_address: user.email,
       amount: totalAmount.toFixed(2),
       item_name: itemNames.join(", "),
-      passphrase: PASSPHRASE,
     };
 
-    const sorted = Object.keys(paymentData)
-      .sort()
-      .reduce((obj, key) => { obj[key] = paymentData[key]; return obj; }, {} as Record<string, string>);
+      // Create query string for signature generation
+    const queryStringForSignature = Object.entries(paymentData)
+      .filter(([, value]) => value !== null && value !== undefined && value !== "")
+      .map(([key, value]) => `${key}=${encodeURIComponent(String(value)).replace(/%20/g, "+")}`)
+      .join("&");
 
-    const queryString = qs.stringify(sorted, { encode: true });
+    // Add passphrase
+    const stringToHash = `${queryStringForSignature}&passphrase=${PASSPHRASE}`;
+
+    // Generate signature
+    const signature = md5(stringToHash).toString();
+    paymentData.signature = signature;
+
+    // Log all data being sent to PayFast
+    console.log("--- PayFast Checkout Data ---");
+    console.log("Generated Signature:", signature);
+    console.log("Full data object being sent:", paymentData);
+    console.log("-----------------------------");
+
+    // Create final query string for redirect URL
+    const finalQueryString = qs.stringify(paymentData, { encode: true });
+
     const payfastUrl = SANDBOX
-      ? `https://sandbox.payfast.co.za/eng/process?${queryString}`
-      : `https://www.payfast.co.za/eng/process?${queryString}`;
+      ? `https://sandbox.payfast.co.za/eng/process?${finalQueryString}`
+      : `https://www.payfast.co.za/eng/process?${finalQueryString}`;
 
     return NextResponse.json({ url: payfastUrl });
   } catch (err) {
