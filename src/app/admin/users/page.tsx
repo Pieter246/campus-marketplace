@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { getAuth } from "firebase/auth";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
-import Button from "@/components/ui/Button";
 import { refreshUserSession } from "@/lib/sessionUtils";
 
 type User = {
