@@ -15,14 +15,28 @@ export async function POST(req: NextRequest) {
   const amount_gross = formData.get("amount_gross");
   const payment_status = formData.get("payment_status");
   const custom_str1 = formData.get("custom_str1"); // This should contain the user ID
+  const signature = formData.get("signature"); // PayFast signature
 
-  console.log("PayFast notification received:", {
+  console.log("=== PAYFAST NOTIFY - SIGNATURE DEBUG ===");
+  console.log("All form data received:");
+  for (const [key, value] of formData.entries()) {
+    console.log(`  ${key}: ${value}`);
+  }
+  
+  console.log("\nKey PayFast fields:", {
     merchant_id,
     pf_payment_id,
     amount_gross,
     payment_status,
     custom_str1,
+    signature,
   });
+  
+  console.log("\nSignature verification data:");
+  console.log(`MERCHANT_KEY: ${process.env.PAYFAST_MERCHANT_KEY ? '[SET]' : '[NOT SET]'}`);
+  console.log(`PASSPHRASE: ${process.env.PAYFAST_PASSPHRASE ? '[SET]' : '[NOT SET]'}`);
+  console.log(`Received signature: ${signature}`);
+  console.log("=== END SIGNATURE DEBUG ===");
 
   // If payment is successful, handle all the necessary updates
   if (payment_status === "COMPLETE" && custom_str1) {
@@ -98,6 +112,8 @@ export async function POST(req: NextRequest) {
   }
 
   // TODO: verify signature using MERCHANT_KEY & PASSPHRASE
+  console.log("=== PAYFAST WEBHOOK PROCESSING COMPLETE ===");
+  console.log(`Final status: Payment ${payment_status}, processed: ${payment_status === 'COMPLETE' ? 'YES' : 'NO'}`);
   
   return new NextResponse("OK"); // Must return 200
 }

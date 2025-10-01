@@ -47,10 +47,19 @@ export async function POST(req: NextRequest) {
       .sort()
       .reduce((obj, key) => { obj[key] = paymentData[key]; return obj; }, {} as Record<string, string>);
 
+    console.log("=== PAYFAST CHECKOUT - SIGNATURE DEBUG ===");
+    console.log("Original payment data:", paymentData);
+    console.log("Sorted payment data:", sorted);
+    
     const queryString = qs.stringify(sorted, { encode: true });
+    console.log("Generated query string:", queryString);
+    
     const payfastUrl = SANDBOX
       ? `https://sandbox.payfast.co.za/eng/process?${queryString}`
       : `https://www.payfast.co.za/eng/process?${queryString}`;
+      
+    console.log("Final PayFast URL:", payfastUrl);
+    console.log("=== END PAYFAST CHECKOUT DEBUG ===");
 
     return NextResponse.json({ url: payfastUrl });
   } catch (err) {
