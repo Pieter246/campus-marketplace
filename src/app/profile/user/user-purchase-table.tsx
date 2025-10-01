@@ -133,7 +133,7 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
+                <TableCell colSpan={4} className="text-center bg-white">
                   {Array.from({ length: totalPages }).map((_, i) => (
                     <Button
                       disabled={page === i + 1}
