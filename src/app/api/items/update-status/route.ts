@@ -6,12 +6,9 @@ const VALID_STATUSES = ["pending", "for-sale", "draft", "sold", "withdrawn", "co
 
 export async function POST(req: NextRequest) {
   try {
-    const adminUser = await authenticateRequest(req);
-    if (!adminUser) {
+    const user = await authenticateRequest(req);
+    if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    if (!adminUser.admin) {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const { itemId, status } = await req.json();
@@ -28,11 +25,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Item not found" }, { status: 404 });
     }
 
-    // Get the current status to check if we're changing from 'for-sale'
-    const currentData = itemDoc.data();
-    const currentStatus = currentData?.status;
+    const itemData = itemDoc.data();
+    
+    // Check permissions based on the status being set
+    if (status === "collected") {
+      // Only the buyer can mark an item as collected
+      if (itemData?.buyerId !== user.uid) {
+        return NextResponse.json({ 
+          message: "You can only mark items as collected if you purchased them" 
+        }, { status: 403 });
+      }
+      // Can only mark sold items as collected
+      if (itemData?.status !== "sold") {
+        return NextResponse.json({ 
+          message: "Item must be sold before it can be marked as collected" 
+        }, { status: 400 });
+      }
+    } else {
+      // For all other status changes, require admin access
+      if (!user.admin) {
+        return NextResponse.json({ message: "Admin access required for this status change" }, { status: 403 });
+      }
+    }
 
-    await itemRef.update({ status });
+    // Get the current status to check if we're changing from 'for-sale'
+    const currentStatus = itemData?.status;
+
+    await itemRef.update({ 
+      status,
+      ...(status === "collected" && { 
+        collectedAt: new Date(),
+        collectedBy: user.uid 
+      })
+    });
 
     // If status is changing away from 'for-sale', remove item from all carts
     if (currentStatus === 'for-sale' && status !== 'for-sale') {

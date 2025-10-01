@@ -120,7 +120,7 @@ export default function UserItemsTable({ page = 1 }: Props) {
                           <EyeIcon />
                         </Link>
                       </Button>
-                      {!["sold", "pending", "for-sale"].includes(
+                      {!["sold", "pending", "for-sale", "collected"].includes(
                         item.status
                       ) && (
                         <Button asChild variant="outline" size="sm">
