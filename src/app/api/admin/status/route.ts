@@ -9,21 +9,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!authResult.admin) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
-
-    // Mock admin dashboard data
-    const stats = {
-      totalUsers: 150,
-      activeItems: 89,
-      totalTransactions: 245,
-      revenue: 15420
-    }
-
-    return NextResponse.json({ success: true, stats })
+    // Return current admin status (this already checks environment + database)
+    return NextResponse.json({ 
+      isAdmin: authResult.admin || false,
+      uid: authResult.uid,
+      email: authResult.email 
+    })
   } catch (error) {
-    console.error('Admin API error:', error)
+    console.error('Admin status check error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

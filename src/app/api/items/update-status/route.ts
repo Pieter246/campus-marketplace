@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { firestore, authenticateRequest } from "@/firebase/server";
+import { removeItemFromAllCarts } from "@/lib/cartCleanup";
 
 const VALID_STATUSES = ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"];
 
@@ -27,7 +28,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Item not found" }, { status: 404 });
     }
 
+    // Get the current status to check if we're changing from 'for-sale'
+    const currentData = itemDoc.data();
+    const currentStatus = currentData?.status;
+
     await itemRef.update({ status });
+
+    // If status is changing away from 'for-sale', remove item from all carts
+    if (currentStatus === 'for-sale' && status !== 'for-sale') {
+      try {
+        await removeItemFromAllCarts(itemId);
+        console.log(`Removed item ${itemId} from all carts due to status change from ${currentStatus} to ${status}`);
+      } catch (cartError) {
+        console.error(`Error removing item ${itemId} from carts:`, cartError);
+        // Don't fail the status update if cart cleanup fails
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -4,11 +4,11 @@ import { useState } from "react";
 import { useAuth } from "@/context/auth";
 
 export default function DebugPage() {
-  const [debugResult, setDebugResult] = useState<any>(null);
+  const [debugResult, setDebugResult] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const auth = useAuth();
 
-  const runDebug = async (endpoint: string, method = "GET", body?: any) => {
+  const runDebug = async (endpoint: string, method = "GET", body?: Record<string, unknown>) => {
     setLoading(true);
     try {
       const user = auth?.currentUser;

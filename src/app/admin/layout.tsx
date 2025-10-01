@@ -8,15 +8,15 @@ import { useRouter } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { currentUser, customClaims, isLoading } = useAuth();
+  const { currentUser, isAdmin, isLoading } = useAuth();
   const router = useRouter();
 
   // Redirect if not admin
   useEffect(() => {
-    if (!isLoading && (!currentUser || !customClaims?.admin)) {
+    if (!isLoading && (!currentUser || !isAdmin)) {
       router.push('/login?reason=admin-required');
     }
-  }, [currentUser, customClaims, isLoading, router]);
+  }, [currentUser, isAdmin, isLoading, router]);
 
   // Show loading while checking auth
   if (isLoading) {
@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Don't render if not admin
-  if (!currentUser || !customClaims?.admin) {
+  if (!currentUser || !isAdmin) {
     return null;
   }
 

@@ -24,10 +24,11 @@ export async function POST(req: NextRequest) {
       message: `Removed ${result.removed} cart items`,
       removed: result.removed 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Cart cleanup API error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { success: false, message: "Failed to cleanup cart", error: error.message },
+      { success: false, message: "Failed to cleanup cart", error: errorMessage },
       { status: 500 }
     );
   }

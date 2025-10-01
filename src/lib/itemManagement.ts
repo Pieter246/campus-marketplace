@@ -1,4 +1,5 @@
 import { firestore } from "@/firebase/server";
+import { removeItemFromAllCarts as cleanupItemFromAllCarts } from "./cartCleanup";
 
 export async function removeItemFromAllCarts(itemId: string) {
   try {
@@ -52,7 +53,10 @@ export async function markItemAsSold(itemId: string, buyerId: string, buyerEmail
       updatedAt: new Date(),
     });
 
-    console.log(`Successfully marked item ${itemId} as sold`);
+    // Automatically remove item from all users' carts since it's no longer for sale
+    await cleanupItemFromAllCarts(itemId);
+
+    console.log(`Successfully marked item ${itemId} as sold and removed from all carts`);
     return { success: true };
   } catch (error) {
     console.error("Error marking item as sold:", error);

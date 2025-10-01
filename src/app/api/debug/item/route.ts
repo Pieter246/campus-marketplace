@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { firestore } from "@/firebase/server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // Get a sample item to see its structure
     const itemsSnap = await firestore
@@ -28,10 +28,11 @@ export async function GET(req: NextRequest) {
       priceType: typeof itemData.price
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error debugging item:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { success: false, message: "Failed to debug item", error: error.message },
+      { success: false, message: "Failed to debug item", error: errorMessage },
       { status: 500 }
     );
   }

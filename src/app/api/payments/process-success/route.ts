@@ -98,10 +98,11 @@ export async function POST(req: NextRequest) {
       purchaseCount: purchaseRecords.length
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error processing payment success:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { success: false, message: "Payment processing failed", error: error.message },
+      { success: false, message: "Payment processing failed", error: errorMessage },
       { status: 500 }
     );
   }

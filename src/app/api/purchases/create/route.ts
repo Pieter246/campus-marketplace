@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
 
     const batch = firestore.batch();
     const purchaseData = [];
+    const itemsToMarkSold = [];
 
     // Create purchase record for each item
     for (const itemId of itemIds) {
@@ -52,7 +53,14 @@ export async function POST(req: NextRequest) {
       batch.set(purchaseRef, purchaseRecord);
       purchaseData.push(purchaseRecord);
 
-      // Update item status to sold and add buyer info
+      // Track items that need to be marked as sold (for cart cleanup)
+      itemsToMarkSold.push({
+        itemId,
+        buyerId: user.uid,
+        buyerEmail: user.email || ''
+      });
+
+      // Update item status to sold and add buyer info in batch
       batch.update(itemRef, {
         status: 'sold',
         buyerId: user.uid,
@@ -64,16 +72,30 @@ export async function POST(req: NextRequest) {
 
     await batch.commit();
 
+    // After batch commit, clean up carts for all sold items
+    for (const itemInfo of itemsToMarkSold) {
+      try {
+        // This will only do the cart cleanup since the item is already marked as sold
+        const { removeItemFromAllCarts } = await import("@/lib/cartCleanup");
+        await removeItemFromAllCarts(itemInfo.itemId);
+        console.log(`Removed sold item ${itemInfo.itemId} from all carts`);
+      } catch (cartError) {
+        console.error(`Error removing item ${itemInfo.itemId} from carts:`, cartError);
+        // Don't fail the purchase if cart cleanup fails
+      }
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: "Purchase records created successfully",
       purchases: purchaseData 
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating purchase records:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { success: false, message: "Failed to create purchase records", error: error.message },
+      { success: false, message: "Failed to create purchase records", error: errorMessage },
       { status: 500 }
     );
   }

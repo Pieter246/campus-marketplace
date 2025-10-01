@@ -31,9 +31,10 @@ export async function PUT(
 
     await cartItemRef.update({ quantity });
     return NextResponse.json({ success: true, message: "Quantity updated" });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Update cart item error:", err);
-    return NextResponse.json({ success: false, message: err.message });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ success: false, message });
   }
 }
 

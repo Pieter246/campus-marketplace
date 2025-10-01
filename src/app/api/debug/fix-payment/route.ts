@@ -99,10 +99,11 @@ export async function POST(req: NextRequest) {
       message: "Invalid action" 
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in manual fix:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { success: false, message: "Manual fix failed", error: error.message },
+      { success: false, message: "Manual fix failed", error: errorMessage },
       { status: 500 }
     );
   }
