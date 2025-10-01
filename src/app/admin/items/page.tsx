@@ -63,13 +63,12 @@ export default function AdminItemsPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const [isFetching, setIsFetching] = useState(false);
   const [sortColumn, setSortColumn] = useState<SortColumn>("title");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const itemsPerPage = 20;
 
   // Initialize form for status dropdown
@@ -83,29 +82,20 @@ export default function AdminItemsPage() {
   // Handle form submission for status
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
-
-    newSearchParams.set("status", data.status); // Always set status, including "all"
-    setCurrentPage(1); // Reset to first page when changing filters
-
+    newSearchParams.set("status", data.status);
     router.push(`/admin/items?${newSearchParams.toString()}`);
   };
 
-  useEffect(() => {
-    const fetchItems = async () => {
+  // Fetch items
+  const fetchItems = async (pageNum: number, reset: boolean = false) => {
+    if (isFetching) return; // Prevent concurrent fetches
+    setIsFetching(true);
+    try {
       const user = auth?.currentUser;
       if (!user) return;
 
       const token = await user.getIdToken();
-      const requestBody = {
-        status: validatedStatus === "all"
-          ? ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"]
-          : [validatedStatus],
-        page: currentPage,
-        pageSize: itemsPerPage,
-      };
-      console.log("Sending request body:", requestBody);
-
-      setLoading(true);
+      setIsLoadingMore(pageNum > 1);
 
       const response = await fetch("/api/items/list", {
         method: "POST",
@@ -115,10 +105,9 @@ export default function AdminItemsPage() {
         },
         body: JSON.stringify({
           status: validatedStatus === "all" ? undefined : [validatedStatus],
-          page: currentPage,
-          pageSize: itemsPerPage,
+          page: pageNum,
+          pageSize: itemsPerPage + 1, // Fetch one extra to check for more items
         }),
-
       });
 
       const result: GetItemsResponse = await response.json();
@@ -127,26 +116,41 @@ export default function AdminItemsPage() {
         toast.error("Failed to fetch items", {
           description: result.message || result.error || "Failed to fetch items.",
         });
-        setLoading(false);
         return;
       }
 
-      setItems(result.items);
-      setTotalPages(result.totalPages || 1);
-      setLoading(false);
-    };
+      // Deduplicate items by id
+      const newItems = result.items.slice(0, itemsPerPage).filter(
+        (newItem) => !items.some((existingItem) => existingItem.id === newItem.id)
+      );
+      setHasMore(result.items.length > itemsPerPage);
+      setItems((prevItems) => (reset ? newItems : [...prevItems, ...newItems]));
+    } catch (error) {
+      toast.error("Failed to fetch items", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsLoadingMore(false);
+      setIsFetching(false);
+      if (pageNum === 1) setLoading(false);
+    }
+  };
 
-    fetchItems();
-
-  }, [auth, validatedStatus, currentPage, page]);
-
+  // Fetch items on mount or when status changes
+  useEffect(() => {
+    setItems([]); // Reset items
+    setHasMore(true); // Reset hasMore
+    setPage(1); // Reset page
+    setLoading(true);
+    fetchItems(1, true);
+  }, [auth, validatedStatus]);
 
   // Sync form status with URL
   useEffect(() => {
     form.setValue("status", validatedStatus);
   }, [form, validatedStatus]);
 
-  // Filter and sort items locally (after fetching paginated results)
+  // Filter and sort items locally
   useEffect(() => {
     const filtered = items
       .filter((item) =>
@@ -172,24 +176,6 @@ export default function AdminItemsPage() {
     setSearchTerm(e.target.value);
   };
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -200,12 +186,14 @@ export default function AdminItemsPage() {
   };
 
   const handleLoadMore = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    if (hasMore && !isLoadingMore && !isFetching) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchItems(nextPage);
     }
   };
 
-  if (loading) {
+  if (loading && !items.length) {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-6 text-primary">Approve Items</h1>
@@ -300,41 +288,35 @@ export default function AdminItemsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredItems.map((item) => {
-                const detail = [item.title]
-                  .filter((addressLine) => !!addressLine)
-                  .join(", ");
-
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell>{detail}</TableCell>
-                    <TableCell>R{numeral(item.price).format("0,0")}</TableCell>
-                    <TableCell>
-                      <ItemStatusBadge status={item.status} />
-                    </TableCell>
-                    <TableCell className="flex justify-end gap-1">
-                      <Button
-                        asChild
-                        className="inline-flex items-center justify-center rounded-lg font-medium transition-colors border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background focus:ring-2 focus:ring-offset-2 focus:ring-foreground px-3 py-1.5 text-sm h-auto min-h-0"
-                      >
-                        <Link href={`/item/${item.id}`}>
-                          <EyeIcon />
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {filteredItems.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{item.title}</TableCell>
+                  <TableCell>R{numeral(item.price).format("0,0")}</TableCell>
+                  <TableCell>
+                    <ItemStatusBadge status={item.status} />
+                  </TableCell>
+                  <TableCell className="flex justify-end gap-1">
+                    <Button
+                      asChild
+                      className="inline-flex items-center justify-center rounded-lg font-medium transition-colors border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background focus:ring-2 focus:ring-offset-2 focus:ring-foreground px-3 py-1.5 text-sm h-auto min-h-0"
+                    >
+                      <Link href={`/item/${item.id}`}>
+                        <EyeIcon />
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
-          {currentPage < totalPages && (
+          {hasMore && (
             <div className="mt-4 flex justify-center">
               <Button
                 onClick={handleLoadMore}
-                disabled={loading || currentPage >= totalPages}
+                disabled={isLoadingMore || isFetching}
                 className="px-4 py-2"
               >
-                {loading ? (
+                {isLoadingMore ? (
                   <span className="flex items-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                     Loading...
@@ -346,55 +328,6 @@ export default function AdminItemsPage() {
             </div>
           )}
         </>
-      )}
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages} - Showing {filteredItems.length} items
-          </div>
-          <div className="flex gap-2 items-center">
-            <Button
-              onClick={handlePrevPage}
-              disabled={currentPage === 1 || loading}
-              variant="outline"
-              className="px-3 py-1"
-            >
-              Previous
-            </Button>
-            
-            {/* Page numbers */}
-            <div className="flex gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                if (pageNum <= totalPages) {
-                  return (
-                    <Button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      variant={currentPage === pageNum ? "primary" : "outline"}
-                      className="px-3 py-1 min-w-[40px]"
-                      disabled={loading}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                }
-                return null;
-              })}
-            </div>
-            
-            <Button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages || loading}
-              variant="outline"
-              className="px-3 py-1"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
       )}
     </div>
   );

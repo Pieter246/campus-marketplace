@@ -21,7 +21,7 @@ import {
 interface Item {
   id: string;
   price: number;
-  status: "pending" | "for-sale" | "draft" | "sold" | "withdrawn";
+  status: "pending" | "for-sale" | "draft" | "sold" | "withdrawn" | "collected";
   sellerId?: string;
 }
 
@@ -37,6 +37,7 @@ const STATUS_COLORS: Record<string, string> = {
   draft: "#9ca3af",
   sold: "#10b981",
   withdrawn: "#ef4444",
+  collected: "#4afa15ff"
 };
 
 export default function AdminDashboard() {
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
 
         // Status counts
         const counts: Record<string, number> = {};
-        ["pending", "for-sale", "draft", "sold", "withdrawn"].forEach((status) => {
+        ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"].forEach((status) => {
           counts[status] = itemsData.items.filter((item: Item) => item.status === status).length;
         });
         setStatusCounts(counts);
