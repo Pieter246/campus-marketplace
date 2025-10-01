@@ -39,9 +39,9 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Assuming the user tries to access any other page without being logged in return to home page
+    // Assuming the user tries to access any other page without being logged in return to login page
     if(!token) {
-        return NextResponse.redirect(new URL("/", request.url));
+        return NextResponse.redirect(new URL("/login", request.url));
     }
 
     /* Decode the JWT token to get its expiration time and user role (admin or user)
