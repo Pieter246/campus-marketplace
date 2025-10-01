@@ -47,7 +47,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // ✅ await params here
+    // await params here
     const { cartItemId } = await context.params;
     if (!cartItemId) {
       return NextResponse.json({ message: "Missing cartItemId" }, { status: 400 });
