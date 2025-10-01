@@ -71,6 +71,15 @@ export default function AdminDashboard() {
       const token = await user.getIdToken();
 
       try {
+        // Test admin access first with our status endpoint
+        const statusRes = await fetch("/api/admin/status", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!statusRes.ok) {
+          throw new Error("Admin access denied");
+        }
+
         // Fetch items
         const itemsRes = await fetch("/api/items/list", {
           method: "POST",

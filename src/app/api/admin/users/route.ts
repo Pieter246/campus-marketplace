@@ -37,9 +37,13 @@ export async function PUT(req: NextRequest) {
       // Make user admin
       await firestore.collection("users").doc(userId).update({
         isAdmin: true,
+        adminPromotedAt: new Date(),
+        adminPromotedBy: user.uid,
         updatedAt: new Date()
       });
 
+      console.log(`User ${userId} promoted to admin by ${user.uid}`);
+      
       return NextResponse.json({ 
         success: true, 
         message: "User promoted to admin successfully" 
@@ -53,9 +57,18 @@ export async function PUT(req: NextRequest) {
         }, { status: 400 });
       }
 
+      // Prevent self-demotion
+      if (userId === user.uid) {
+        return NextResponse.json({ 
+          message: "Cannot demote yourself" 
+        }, { status: 400 });
+      }
+
       // Remove admin privileges
       await firestore.collection("users").doc(userId).update({
         isAdmin: false,
+        adminDemotedAt: new Date(),
+        adminDemotedBy: user.uid,
         updatedAt: new Date()
       });
 
@@ -68,12 +81,13 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ message: "Invalid action" }, { status: 400 });
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Admin management error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { 
         message: "Failed to update admin status", 
-        error: error?.message ?? "Unknown error" 
+        error: errorMessage 
       },
       { status: 500 }
     );

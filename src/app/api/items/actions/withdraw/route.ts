@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest, firestore } from "@/firebase/server";
+import { removeItemFromAllCarts } from "@/lib/cartCleanup";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +18,15 @@ export async function POST(req: NextRequest) {
       status: "withdrawn",
       updatedAt: new Date(),
     });
+
+    // Remove item from all carts since it's no longer for sale
+    try {
+      await removeItemFromAllCarts(itemId);
+      console.log(`Removed withdrawn item ${itemId} from all carts`);
+    } catch (cartError) {
+      console.error(`Error removing item ${itemId} from carts:`, cartError);
+      // Don't fail the withdrawal if cart cleanup fails
+    }
 
     return NextResponse.json({ success: true, message: "Item withdrawn" });
   } catch (error: unknown) {

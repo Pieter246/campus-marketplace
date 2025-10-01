@@ -38,7 +38,7 @@ export default function UserPurchaseTable({ page = 1 }: Props) {
 
       const token = await user.getIdToken();
 
-      // API call get items bought by the user
+      // API call get items bought by the user (like development branch)
       const response = await fetch("/api/items/list", {
         method: "POST",
         headers: {

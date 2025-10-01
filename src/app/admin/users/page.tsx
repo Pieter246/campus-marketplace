@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { getAuth } from "firebase/auth";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
+import { refreshUserSession } from "@/lib/sessionUtils";
 
 type User = {
   id: string;
@@ -202,9 +204,9 @@ export default function ManageUsersPage() {
       setHasNextPage(hasNext);
       setLastUserId(data.length > 0 ? data[data.length - 1].id : null);
       setCurrentPage(page);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error loading users:", err);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
 
     } finally {
       setLoading(false);
@@ -345,15 +347,25 @@ export default function ManageUsersPage() {
         body: JSON.stringify({ userId: id, action: "promote-admin" }),
       });
 
+      const data = await res.json();
+      
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to promote user");
+        throw new Error(data.message || "Failed to promote user");
       }
 
+      // Update local state
       setUsers((prev) => prev.map(u => u.id === id ? { ...u, isAdmin: true } : u));
-    } catch (err: any) {
-      console.error("Promote admin error:", err);
-      alert(err.message);
+      
+      // Show success message
+      alert('User promoted to admin successfully!');
+      
+      // Refresh session to ensure changes are reflected immediately
+      await refreshUserSession();
+      
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to promote user';
+      console.error("Promote admin error:", errorMessage);
+      alert(`Failed to promote user: ${errorMessage}`);
     }
   };
 
@@ -371,15 +383,25 @@ export default function ManageUsersPage() {
         body: JSON.stringify({ userId: id, action: "demote-admin" }),
       });
 
+      const data = await res.json();
+      
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to demote user");
+        throw new Error(data.message || "Failed to demote user");
       }
 
+      // Update local state
       setUsers((prev) => prev.map(u => u.id === id ? { ...u, isAdmin: false } : u));
-    } catch (err: any) {
-      console.error("Demote admin error:", err);
-      alert(err.message);
+      
+      // Show success message
+      alert('Admin privileges removed successfully!');
+      
+      // Refresh session to ensure changes are reflected immediately
+      await refreshUserSession();
+      
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to demote user';
+      console.error("Demote admin error:", errorMessage);
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -426,12 +448,17 @@ export default function ManageUsersPage() {
             {filteredUsers.length ? (
               filteredUsers.map((user) => {
                 // Check if user is admin
-                const userAny = user as any;
+                const userRecord = user as User & { 
+                  admin?: boolean; 
+                  customClaims?: { admin?: boolean }; 
+                  role?: string; 
+                  roles?: string[] 
+                };
                 const isAdmin = user.isAdmin || 
-                              userAny.admin || 
-                              userAny.customClaims?.admin ||
-                              userAny.role === 'admin' ||
-                              userAny.roles?.includes('admin');
+                              userRecord.admin || 
+                              userRecord.customClaims?.admin ||
+                              userRecord.role === 'admin' ||
+                              userRecord.roles?.includes('admin');
                 
                 return (
                   <tr 

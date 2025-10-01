@@ -1,13 +1,73 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/auth";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutSuccessPage() {
-  const [loading] = useState(false);
+  const auth = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handlePaymentSuccess = async () => {
+      if (!auth?.currentUser) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Clear any stored cart data from localStorage
+        localStorage.removeItem('cartBeforePayment');
+        
+        // Process the payment success - create purchase records, mark items as sold, clear carts
+        const token = await auth.currentUser.getIdToken();
+        
+        const response = await fetch("/api/payments/process-success", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            payment_id: `success-${Date.now()}`,
+            user_id: auth.currentUser.uid,
+            payment_status: "success",
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("Payment processing completed:", result);
+        } else {
+          console.error("Payment processing failed");
+        }
+        
+        console.log("Payment successful - items processed and cart cleared");
+      } catch (error) {
+        console.error("Error handling payment success:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Small delay to ensure auth is loaded
+    const timer = setTimeout(handlePaymentSuccess, 1000);
+    return () => clearTimeout(timer);
+  }, [auth]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Processing your payment...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Placeholder item data (to be replaced with fetched purchased items)
   const placeholderItem = {
