@@ -95,7 +95,7 @@ export default function CheckoutSuccessPage() {
           </p>
           <ol className="list-decimal list-inside space-y-2 mb-3">
             <li>
-              <strong>Contact the seller:</strong> Use the contact details below to message the seller and arrange a time to meet for collection.
+              <strong>Contact the seller:</strong> Email the seller and arrange a time to meet for collection.
             </li>
             <li>
               <strong>Collect the item:</strong> Meet the seller at the agreed place. Take a quick photo together with the item as proof of collection.
@@ -109,7 +109,7 @@ export default function CheckoutSuccessPage() {
           </p>
         </div>
 
-        {/* Placeholder Item Display */}
+        {/* Placeholder Item Display
         <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-white">
           <h3 className="text-lg font-semibold mb-2 text-center">Your Purchased Item(s)</h3>
           <div className="flex items-center gap-4">
@@ -144,11 +144,22 @@ export default function CheckoutSuccessPage() {
             </div>
           </div>
         </div>
+        */}
+
+        <Button
+          type="button"
+          variant="primary"
+          className="w-full mt-8"
+          loading={loading}
+          onClick={() => router.push("/profile/user?tab=purchases")}
+        >
+          Contact the seller
+        </Button>
 
         <Button
           type="button"
           variant="outline"
-          className="w-full mt-8"
+          className="w-full mt-2"
           loading={loading}
           onClick={() => router.push("/")}
         >
