@@ -15,7 +15,7 @@ import {
 import { EyeIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
 import numeral from "numeral";
-import { useAuth } from "@/context/auth"; // ✅ assumes you have a client-side auth context
+import { useAuth } from "@/context/auth"; // assumes you have a client-side auth context
 import { GetItemsResponse } from "@/types/GetItemsResponse";
 import { Item } from "@/types/item";
 import { toast } from "sonner";

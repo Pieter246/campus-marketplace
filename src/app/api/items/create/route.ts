@@ -3,7 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-// 📦 Zod schema for validation
+// Zod schema for validation
 const CreateItemSchema = z.object({
   title: z.string().min(1),
   collectionAddress: z.string().min(1),

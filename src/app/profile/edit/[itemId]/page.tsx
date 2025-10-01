@@ -14,11 +14,11 @@ export default function EditProperty({
 }: {
   params: Promise<{ itemId: string }>;
 }) {
-  const { itemId } = use(params); // ✅ unwrap the promise
+  const { itemId } = use(params); // unwrap the promise
   const [item, setItem] = useState<Item | null>(null);
   const [user, setUser] = useState<User | null>(null); // Fixed: Use User | null
 
-  // ✅ Check auth
+  // Check auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -32,7 +32,7 @@ export default function EditProperty({
     return () => unsubscribe();
   }, []);
 
-  // ✅ Refactored fetch function
+  // Refactored fetch function
   const fetchItem = useCallback(async () => {
     if (!user || !itemId) return;
 
@@ -67,7 +67,7 @@ export default function EditProperty({
     }
   }, [user, itemId]);
 
-  // ✅ Trigger fetch on user change
+  // Trigger fetch on user change
   useEffect(() => {
     fetchItem();
   }, [fetchItem]);
