@@ -8,8 +8,11 @@ import {
   signInWithPopup,
   User
 } from "firebase/auth"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { removeToken, setToken } from "./actions"
+
+// NEW: Import server action for Google Firestore registration
+import { registerGoogleUser } from "@/app/register/actions"
 
 // Explicit custom claims type
 export type CustomClaims = ParsedToken & {
@@ -19,10 +22,12 @@ export type CustomClaims = ParsedToken & {
 export type AuthContextType = {
   currentUser: User | null
   logout: () => Promise<void>
-  loginWithGoogle: () => Promise<void>
+  loginWithGoogle: () => Promise<User>
   customClaims: CustomClaims | null
   loginWithEmail: (email: string, password: string) => Promise<void>
   isLoading: boolean
+  isAdmin: boolean // Add real-time admin status
+  refreshAdminStatus: () => Promise<void> // Function to refresh admin status
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -31,6 +36,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [customClaims, setCustomClaims] = useState<CustomClaims | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false) // Add admin status state
+
+  // Function to check admin status via API
+  const refreshAdminStatus = useCallback(async () => {
+    try {
+      if (!currentUser) {
+        setIsAdmin(false)
+        return
+      }
+
+      const token = await currentUser.getIdToken()
+      const response = await fetch('/api/admin/status', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setIsAdmin(data.isAdmin || false)
+      } else {
+        setIsAdmin(false)
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+      setIsAdmin(false)
+    }
+  }, [currentUser])
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -49,6 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } else {
         await removeToken()
+        setIsAdmin(false) // Clear admin status when logged out
       }
 
       setLoading(false)
@@ -57,17 +91,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe()
   }, [])
 
+  // Separate useEffect for checking admin status when user changes
+  useEffect(() => {
+    if (currentUser) {
+      refreshAdminStatus()
+      
+      // Set up periodic admin status check (every 60 seconds)
+      const adminStatusInterval = setInterval(() => {
+        refreshAdminStatus()
+      }, 60000) // Check every minute
+      
+      return () => clearInterval(adminStatusInterval)
+    }
+  }, [currentUser, refreshAdminStatus])
+
   const logout = async () => {
     await auth.signOut()
   }
 
-  const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+  // -------------------------------
+  // UPDATED: loginWithGoogle
+  // -------------------------------
+  const loginWithGoogle = async (): Promise<User> => {
+  const provider = new GoogleAuthProvider()
+  const result = await signInWithPopup(auth, provider)
+  const user = result.user
+
+  if (!user) throw new Error("No user returned from Google login")
+
+  // Call server action to create Firestore document if missing
+  await registerGoogleUser({
+    uid: user.uid,
+    email: user.email!,
+    emailVerified: user.emailVerified,
+    displayName: user.displayName || "",
+  })
+
+  // Refresh admin status after registration
+  setTimeout(() => refreshAdminStatus(), 1000) // Small delay to ensure document is created
+
+    return user  // <-- critical!
   }
 
   const loginWithEmail = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email, password)
+    // Admin status will be refreshed automatically by the useEffect
   }
 
   const value: AuthContextType = {
@@ -77,6 +145,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     customClaims,
     loginWithEmail,
     isLoading: loading,
+    isAdmin,
+    refreshAdminStatus,
   }
 
   return (

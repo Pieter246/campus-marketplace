@@ -5,11 +5,11 @@ export async function GET(request: NextRequest) {
   try {
     const authResult = await authenticateRequest(request)
     
-    if (!authResult || !authResult.success || !authResult.decodedToken) {
+    if (!authResult) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!authResult.decodedToken.admin) {
+    if (!authResult.admin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 

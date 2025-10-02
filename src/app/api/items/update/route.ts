@@ -3,7 +3,7 @@ import { firestore, authenticateRequest } from "@/firebase/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 
-// 📦 Zod schema for validation
+// Zod schema for validation
 const UpdateItemSchema = z.object({
   title: z.string().min(1),
   collectionAddress: z.string().min(1),

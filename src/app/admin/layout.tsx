@@ -2,21 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { currentUser, customClaims, isLoading } = useAuth();
+  const { currentUser, isAdmin, isLoading } = useAuth();
   const router = useRouter();
 
   // Redirect if not admin
   useEffect(() => {
-    if (!isLoading && (!currentUser || !customClaims?.admin)) {
+    if (!isLoading && (!currentUser || !isAdmin)) {
       router.push('/login?reason=admin-required');
     }
-  }, [currentUser, customClaims, isLoading, router]);
+  }, [currentUser, isAdmin, isLoading, router]);
 
   // Show loading while checking auth
   if (isLoading) {
@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Don't render if not admin
-  if (!currentUser || !customClaims?.admin) {
+  if (!currentUser || !isAdmin) {
     return null;
   }
 
@@ -39,11 +39,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Dashboard", href: "/admin" },
     { name: "Users", href: "/admin/users" },
     { name: "Items", href: "/admin/items" },
-    { name: "Reports", href: "/admin/reports" },
+    /* { name: "Reports", href: "/admin/reports" }, */
   ];
 
   return (
-    <div className="flex justify-center items-start min-h-screen pr-6 pl-6">
+    <div className="flex justify-center items-start min-h-screen pr-6 pl-6 mb-10">
       {/* Floating card wrapper like login page */}
       <div className="flex w-full max-w-7xl bg-transparent gap-6">
         {/* Sidebar */}

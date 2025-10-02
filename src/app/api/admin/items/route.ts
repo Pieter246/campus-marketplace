@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, firestore } from '@/firebase/server'
+import { removeItemFromAllCarts } from '@/lib/cartCleanup'
 
 export async function GET(request: NextRequest) {
   try {
     const authResult = await authenticateRequest(request)
     
-    if (!authResult || !authResult.success || !authResult.decodedToken) {
+    if (!authResult) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!authResult.decodedToken.admin) {
+    if (!authResult.admin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
+    if (!authResult.admin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
@@ -47,11 +52,11 @@ export async function PUT(request: NextRequest) {
   try {
     const authResult = await authenticateRequest(request)
     
-    if (!authResult || !authResult.success || !authResult.decodedToken) {
+    if (!authResult) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!authResult.decodedToken.admin) {
+    if (!authResult.admin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
@@ -68,7 +73,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 })
     }
 
-    let updateData: any = {
+    // Get current status for cart cleanup logic
+    const currentData = itemDoc.data()
+    const currentStatus = currentData?.status
+
+    const updateData: { status?: string; updatedAt: Date } = {
       updatedAt: new Date()
     }
 
@@ -83,6 +92,12 @@ export async function PUT(request: NextRequest) {
         updateData.status = 'suspended'
         break
       case 'delete':
+        // Remove from all carts before deleting
+        try {
+          await removeItemFromAllCarts(itemId)
+        } catch (cartError) {
+          console.error(`Error removing item ${itemId} from carts before deletion:`, cartError)
+        }
         await itemRef.delete()
         return NextResponse.json({ success: true, message: 'Item deleted' })
       default:
@@ -94,6 +109,17 @@ export async function PUT(request: NextRequest) {
     }
 
     await itemRef.update(updateData)
+
+    // If status is changing away from 'for-sale', remove item from all carts
+    if (currentStatus === 'for-sale' && updateData.status !== 'for-sale') {
+      try {
+        await removeItemFromAllCarts(itemId)
+        console.log(`Removed item ${itemId} from all carts due to admin action: ${action}`)
+      } catch (cartError) {
+        console.error(`Error removing item ${itemId} from carts:`, cartError)
+        // Don't fail the update if cart cleanup fails
+      }
+    }
 
     return NextResponse.json({ 
       success: true, 

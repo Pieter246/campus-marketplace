@@ -3,7 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-// 📦 Zod schema for validation
+// Zod schema for validation
 const CreateItemSchema = z.object({
   title: z.string().min(1),
   collectionAddress: z.string().min(1),
@@ -55,12 +55,13 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Item creation error:", error);
+    const errorMessage: string = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       {
         message: "Internal server error",
-        error: error?.message ?? "Unknown error",
+        error: errorMessage,
       },
       { status: 500 }
     );

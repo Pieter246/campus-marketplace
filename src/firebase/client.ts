@@ -50,4 +50,4 @@ const getFreshToken = async (): Promise<string | null> => {
   }
 };
 
-export { auth, storage  };
+export { auth, storage, getFreshToken };

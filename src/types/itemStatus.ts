@@ -3,4 +3,5 @@ export type ItemStatus =
   | "pending"
   | "for-sale"
   | "sold"
-  | "withdrawn";
+  | "withdrawn"
+  | "collected";

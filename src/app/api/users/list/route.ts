@@ -36,24 +36,43 @@ export async function GET(req: NextRequest) {
 
     const snapshot = await query.get();
 
+    // Get admin emails from environment variable
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+
     const users = snapshot.docs.map((doc) => {
-    const data = doc.data();
-    console.log("Route.ts: " + doc.id); // WHY IS THIS ALWAYS UNDEFINED???
-    return {
-      id: doc.id,          // <- use 'id' not 'userId'
-      email: data.email,
-      isActive: data.isActive ?? false,
-      ...data,
-      createdAt: data.createdAt?.toDate().toISOString() ?? null,
-      updatedAt: data.updatedAt?.toDate().toISOString() ?? null,
-    };
-  });
+
+      const data = doc.data();
+      
+      // Check if user email is in admin emails list
+      const isAdminFromEnv = adminEmails.includes(data.email || '');
+      const isAdminFromDB = data.isAdmin ?? false;
+      
+      // If user is admin in env but not in DB, update the database
+      if (isAdminFromEnv && !isAdminFromDB) {
+        // Update the user document to set isAdmin: true
+        firestore.collection("users").doc(doc.id).update({ isAdmin: true }).catch(err => {
+          console.error("Failed to update admin status for", data.email, err);
+        });
+      }
+      
+      return {
+        id: doc.id,          // <- use 'id' not 'userId'
+        email: data.email,
+        isActive: data.isActive ?? false,
+        isAdmin: isAdminFromEnv || isAdminFromDB, // Combined admin status
+        ...data,
+        createdAt: data.createdAt?.toDate().toISOString() ?? null,
+        updatedAt: data.updatedAt?.toDate().toISOString() ?? null,
+      };
+    });
+
 
     return NextResponse.json(users, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Get users error:", error);
+    const errorMessage: string = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "Failed to get users", error: error?.message ?? "Unknown error" },
+      { message: "Failed to get users", error: errorMessage },
       { status: 500 }
     );
   }

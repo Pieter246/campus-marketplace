@@ -2,6 +2,7 @@ import { Firestore, getFirestore } from "firebase-admin/firestore";
 import { getApps, ServiceAccount } from "firebase-admin/app";
 import admin from "firebase-admin";
 import { Auth, getAuth, DecodedIdToken } from "firebase-admin/auth";
+import { ensureUserDocument, checkCurrentAdminStatus } from "@/lib/userUtils";
 
 const serviceAccount = {
   type: "service_account",
@@ -46,8 +47,8 @@ export const verifyTokenSafe = async (
 
   try {
     return await auth.verifyIdToken(token);
-  } catch (err: any) {
-    if (err.code === "auth/id-token-expired") {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("auth/id-token-expired")) {
       console.warn("Firebase ID token expired");
       return null; // token expired, treat user as unauthenticated
     }
@@ -68,7 +69,24 @@ export async function authenticateRequest(req: Request) {
     const idToken = authHeader.split("Bearer ")[1];
     const decodedToken = await auth.verifyIdToken(idToken);
 
-    return decodedToken;
+    // Ensure user document exists and get current admin status
+    await ensureUserDocument(decodedToken.uid, decodedToken.email || '', {
+      emailVerified: decodedToken.email_verified || false
+    });
+
+    // Check current admin status (environment + database)
+    const isCurrentlyAdmin = await checkCurrentAdminStatus(decodedToken.uid, decodedToken.email || '');
+
+    // Get updated user data
+    const userDoc = await firestore.collection("users").doc(decodedToken.uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+
+    return {
+      ...decodedToken,
+      admin: isCurrentlyAdmin,
+      isAdmin: isCurrentlyAdmin,
+      userData
+    };
   } catch (error) {
     console.error("Authentication error:", error);
     return null;

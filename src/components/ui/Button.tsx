@@ -1,5 +1,5 @@
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
+import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 import React from "react";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -26,7 +26,7 @@ export default function Button({
     primary: "bg-primary text-background hover:opacity-90 focus:ring-primary",
     secondary: "bg-secondary text-background hover:opacity-90 focus:ring-secondary",
     outline:
-      "border border-foreground bg-transparent text-foreground hover:bg-background focus:ring-foreground",
+      "border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background focus:ring-foreground",
     destructive:
       "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
   };
@@ -41,10 +41,10 @@ export default function Button({
   const combinedClassName = cn(baseStyles, variants[variant], sizes[size], className);
 
   if (asChild && React.isValidElement(children)) {
-    const child = children as React.ReactElement<any>;
+    const child = children as React.ReactElement<{ className?: string }>;
     return React.cloneElement(child, {
-      className: cn(child.props.className, combinedClassName),
       ...props,
+      className: cn(child.props.className, combinedClassName),
     });
   }
 
@@ -111,6 +111,6 @@ const buttonVariants = cva(
       size: "default",
     },
   }
-)
+);
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

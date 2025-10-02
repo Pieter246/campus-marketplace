@@ -21,8 +21,8 @@ import {
 interface Item {
   id: string;
   price: number;
-  status: "pending" | "for-sale" | "draft" | "sold" | "withdrawn";
-  sellerId?: string; // important for sold items chart
+  status: "pending" | "for-sale" | "draft" | "sold" | "withdrawn" | "collected";
+  sellerId?: string;
 }
 
 interface User {
@@ -37,14 +37,15 @@ const STATUS_COLORS: Record<string, string> = {
   draft: "#9ca3af",
   sold: "#10b981",
   withdrawn: "#ef4444",
+  collected: "#4afa15ff"
 };
 
 export default function AdminDashboard() {
   const auth = useAuth();
   const [loading, setLoading] = useState(true);
 
-  const [items, setItems] = useState<Item[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [, setItems] = useState<Item[]>([]);
+  const [, setUsers] = useState<User[]>([]);
 
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [priceBuckets, setPriceBuckets] = useState<{ range: string; count: number }[]>([]);
@@ -55,7 +56,7 @@ export default function AdminDashboard() {
   const [totalItems, setTotalItems] = useState(0);
   const [itemsForSale, setItemsForSale] = useState(0);
   const [itemsSold, setItemsSold] = useState(0);
-  const [itemDrafts, setItemDrafts] = useState(0);
+  const [, setItemDrafts] = useState(0);
 
   const [totalTurnover, setTotalTurnover] = useState(0);
   const [avgSoldPrice, setAvgSoldPrice] = useState(0);
@@ -71,6 +72,15 @@ export default function AdminDashboard() {
       const token = await user.getIdToken();
 
       try {
+        // Test admin access first with our status endpoint
+        const statusRes = await fetch("/api/admin/status", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!statusRes.ok) {
+          throw new Error("Admin access denied");
+        }
+
         // Fetch items
         const itemsRes = await fetch("/api/items/list", {
           method: "POST",
@@ -105,7 +115,7 @@ export default function AdminDashboard() {
 
         // Status counts
         const counts: Record<string, number> = {};
-        ["pending", "for-sale", "draft", "sold", "withdrawn"].forEach((status) => {
+        ["pending", "for-sale", "draft", "sold", "withdrawn", "collected"].forEach((status) => {
           counts[status] = itemsData.items.filter((item: Item) => item.status === status).length;
         });
         setStatusCounts(counts);
@@ -156,7 +166,7 @@ export default function AdminDashboard() {
 
           if (!usersRes.ok) {
             const errData = await usersRes.json().catch(() => ({}));
-            throw new Error((errData as any).message || "Failed to fetch users");
+            throw new Error(errData.message || "Failed to fetch users");
           }
 
           const usersData: User[] = await usersRes.json();
@@ -172,8 +182,9 @@ export default function AdminDashboard() {
         setActiveUsers(allUsers.filter((u) => u.isActive).length);
         setInactiveUsers(allUsers.filter((u) => !u.isActive).length);
 
-      } catch (err: any) {
-        toast.error(err.message || "Failed to fetch admin metrics");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to fetch admin metrics";
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -281,8 +292,8 @@ export default function AdminDashboard() {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={soldItemsByUsersChartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="itemsSold" label={{ value: 'Items Sold', position: 'insideBottom', offset: -5 }} />
-              <YAxis label={{ value: 'Number of Users', angle: -90, position: 'insideLeft' }} />
+              <XAxis dataKey="itemsSold" label={{ value: "Items Sold", position: "insideBottom", offset: -5 }} />
+              <YAxis label={{ value: "Number of Users", angle: -90, position: "insideLeft" }} />
               <Tooltip />
               <Bar dataKey="users" fill="#3b82f6" />
             </BarChart>

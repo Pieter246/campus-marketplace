@@ -22,10 +22,11 @@ export async function POST(req: NextRequest) {
       success: true,
       message: "Item marked as pending",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Sell error:", error);
+    const errorMessage: string = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "Internal error", error: error.message },
+      { message: "Internal error", error: errorMessage },
       { status: 500 }
     );
   }
