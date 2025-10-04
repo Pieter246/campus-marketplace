@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/firebase/server";
-import { firestore } from "@/firebase/server";
+import { ensureUserDocument } from "@/lib/userUtils";
 
 // ---------------------------
 // Email/Password Registration
@@ -20,21 +20,14 @@ export const registerUser = async (
       displayName: `${firstName} ${lastName}`,
     });
 
-    // Firestore document
-    const userDoc = {
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      email: userRecord.email,
-      emailVerified: userRecord.emailVerified ?? false,
+    // Create user document in Firestore with proper admin status
+    await ensureUserDocument(userRecord.uid, userRecord.email || email, {
       firstName,
       lastName,
-      isActive: true,
-      isAdmin: false,
       phoneNumber: "",
       userId: userRecord.uid,
-    };
-
-    await firestore.collection("users").doc(userRecord.uid).set(userDoc);
+      emailVerified: userRecord.emailVerified ?? false,
+    });
 
     return { error: false, uid: userRecord.uid };
   } catch (e: unknown) {
@@ -55,26 +48,17 @@ interface GoogleUserInput {
 
 export const registerGoogleUser = async (user: GoogleUserInput) => {
   try {
-    const userDocRef = firestore.collection("users").doc(user.uid);
-    const doc = await userDocRef.get();
+    const [firstName, ...lastNameParts] = (user.displayName || "").split(" ");
+    const lastName = lastNameParts.join(" ");
 
-    if (!doc.exists) {
-      const [firstName, ...lastNameParts] = (user.displayName || "").split(" ");
-      const lastName = lastNameParts.join(" ");
-
-      await userDocRef.set({
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        email: user.email,
-        emailVerified: user.emailVerified,
-        firstName: firstName || "",
-        lastName: lastName || "",
-        isActive: true,
-        isAdmin: false,
-        phoneNumber: "",
-        userId: user.uid,
-      });
-    }
+    // Use ensureUserDocument to handle admin status properly
+    await ensureUserDocument(user.uid, user.email, {
+      firstName: firstName || "",
+      lastName: lastName || "",
+      phoneNumber: "",
+      userId: user.uid,
+      emailVerified: user.emailVerified,
+    });
 
     return { error: false };
   } catch (e: unknown) {

@@ -1,13 +1,73 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/auth";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutSuccessPage() {
-  const [loading] = useState(false);
+  const auth = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handlePaymentSuccess = async () => {
+      if (!auth?.currentUser) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Clear any stored cart data from localStorage
+        localStorage.removeItem('cartBeforePayment');
+        
+        // Process the payment success - create purchase records, mark items as sold, clear carts
+        const token = await auth.currentUser.getIdToken();
+        
+        const response = await fetch("/api/payments/process-success", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            payment_id: `success-${Date.now()}`,
+            user_id: auth.currentUser.uid,
+            payment_status: "success",
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("Payment processing completed:", result);
+        } else {
+          console.error("Payment processing failed");
+        }
+        
+        console.log("Payment successful - items processed and cart cleared");
+      } catch (error) {
+        console.error("Error handling payment success:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Small delay to ensure auth is loaded
+    const timer = setTimeout(handlePaymentSuccess, 1000);
+    return () => clearTimeout(timer);
+  }, [auth]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Processing your payment...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Placeholder item data (to be replaced with fetched purchased items)
   const placeholderItem = {
@@ -20,7 +80,7 @@ export default function CheckoutSuccessPage() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-start px-4 mb-8">
+    <div className="min-h-[50vh] flex justify-center items-start px-4 mb-8">
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-8">
         <h1 className="text-3xl font-bold mb-4 text-center">Payment Successful!</h1>
         <p className="text-gray-700 mb-6">
@@ -35,7 +95,7 @@ export default function CheckoutSuccessPage() {
           </p>
           <ol className="list-decimal list-inside space-y-2 mb-3">
             <li>
-              <strong>Contact the seller:</strong> Use the contact details below to message the seller and arrange a time to meet for collection.
+              <strong>Contact the seller:</strong> Email the seller and arrange a time to meet for collection.
             </li>
             <li>
               <strong>Collect the item:</strong> Meet the seller at the agreed place. Take a quick photo together with the item as proof of collection.
@@ -49,7 +109,7 @@ export default function CheckoutSuccessPage() {
           </p>
         </div>
 
-        {/* Placeholder Item Display */}
+        {/* Placeholder Item Display
         <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-white">
           <h3 className="text-lg font-semibold mb-2 text-center">Your Purchased Item(s)</h3>
           <div className="flex items-center gap-4">
@@ -84,11 +144,22 @@ export default function CheckoutSuccessPage() {
             </div>
           </div>
         </div>
+        */}
+
+        <Button
+          type="button"
+          variant="primary"
+          className="w-full mt-8"
+          loading={loading}
+          onClick={() => router.push("/profile/user?tab=purchases")}
+        >
+          Contact the seller
+        </Button>
 
         <Button
           type="button"
           variant="outline"
-          className="w-full mt-8"
+          className="w-full mt-2"
           loading={loading}
           onClick={() => router.push("/")}
         >

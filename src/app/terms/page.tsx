@@ -7,7 +7,6 @@ export default function TermsPage() {
   const router = useRouter();
 
   const handleBack = () => {
-    // Go back if possible, otherwise fallback to home page
     if (window.history.length > 1) {
       router.back();
     } else {
@@ -35,42 +34,69 @@ export default function TermsPage() {
 
         <h2 className="text-xl font-semibold mt-6 mb-2">2. Eligibility</h2>
         <p className="mb-4 text-gray-700">
-          You must be a registered student to use this service. By creating an
-          account, you confirm that the information you provide is accurate and
-          truthful.
+          You must be a registered student with a valid university email address to use this service. 
+          By creating an account, you confirm that the information you provide is accurate and truthful.
         </p>
 
         <h2 className="text-xl font-semibold mt-6 mb-2">3. User Responsibilities</h2>
         <ul className="list-disc list-inside mb-4 text-gray-700 space-y-2">
-          <li>You are responsible for your own listings and transactions.</li>
-          <li>Only legal and campus-approved items may be sold.</li>
-          <li>
-            You must treat other users respectfully and avoid fraudulent or
-            misleading behavior.
+          <li>You are responsible for your own listings, transactions, and communications with other users.</li>
+          <li>Only legal and campus-approved items may be sold. Prohibited items include, but are not limited to:
+            <ul className="list-circle list-inside ml-4 mt-2 space-y-1">
+              <li>Alcohol, tobacco, or controlled substances</li>
+              <li>Weapons, firearms, or dangerous materials</li>
+              <li>Prescription drugs or medications</li>
+              <li>Counterfeit or stolen goods</li>
+              <li>Any items that violate university policies</li>
+              <li>Hazardous materials</li>
+            </ul>
           </li>
+          <li>You must treat other users respectfully and avoid fraudulent, misleading, or harassing behavior.</li>
+          <li>You are responsible for ensuring your listings are accurate and not misleading.</li>
         </ul>
 
         <h2 className="text-xl font-semibold mt-6 mb-2">4. Transactions</h2>
         <p className="mb-4 text-gray-700">
           All transactions are conducted directly between students. The Campus
           Marketplace platform is not responsible for verifying payments,
-          delivery, or quality of goods.
+          delivery, or quality of goods. We do not handle payments directly and
+          are not party to any transactions between users.
         </p>
 
-        <h2 className="text-xl font-semibold mt-6 mb-2">5. Liability</h2>
+        <h2 className="text-xl font-semibold mt-6 mb-2">5. Dispute Resolution</h2>
         <p className="mb-4 text-gray-700">
-          The Campus Marketplace is provided “as is.” We are not liable for any
-          disputes, losses, or damages resulting from use of the platform.
+          Users are encouraged to resolve disputes amicably between themselves. 
+          If you encounter fraudulent activity or violations of these terms, you 
+          may report the user to us at <a href="mailto:contact@campusmarketplace.com" className="text-blue-600 hover:underline">contact@campusmarketplace.com</a>. 
+          We may, at our sole discretion, suspend accounts involved in repeated 
+          or serious violations.
         </p>
 
-        <h2 className="text-xl font-semibold mt-6 mb-2">6. Changes to Terms</h2>
+        <h2 className="text-xl font-semibold mt-6 mb-2">6. Account Management</h2>
+        <p className="mb-4 text-gray-700">
+          You may delete your account and associated data at any time by contacting 
+          us at <a href="mailto:contact@campusmarketplace.com" className="text-blue-600 hover:underline">contact@campusmarketplace.com</a>. 
+          Upon account deletion, your active listings will be removed and your 
+          personal data will be processed in accordance with our Privacy Policy.
+        </p>
+
+        <h2 className="text-xl font-semibold mt-6 mb-2">7. Liability</h2>
+        <p className="mb-4 text-gray-700">
+          The Campus Marketplace is provided "as is." We are not liable for any 
+          disputes, losses, or damages resulting from use of the platform. As a 
+          neutral platform, we do not endorse any items listed and are not responsible 
+          for the accuracy of listings or the conduct of users.
+        </p>
+
+        <h2 className="text-xl font-semibold mt-6 mb-2">8. Changes to Terms</h2>
         <p className="mb-4 text-gray-700">
           These terms may be updated periodically. Continued use of the platform
-          indicates acceptance of the updated terms.
+          indicates acceptance of the updated terms. We will notify users of 
+          material changes via email or platform notification.
         </p>
 
         <p className="mt-8 text-gray-700">
-          By registering, you confirm that you have read and agreed to these
+          By registering, you confirm that you have read, understood, and agreed to these
           Terms & Conditions.
         </p>
 

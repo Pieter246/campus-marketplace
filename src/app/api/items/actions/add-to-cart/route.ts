@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       cartItemId: newDoc.id,
       cartId,
       itemId,
+      quantity: 1,
       addedAt: new Date(),
     });
 

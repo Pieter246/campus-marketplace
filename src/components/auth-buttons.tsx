@@ -74,7 +74,7 @@ export default function AuthButtons() {
 
               <DropdownMenuSeparator />
 
-              {auth.customClaims?.admin && (
+              {auth.isAdmin && (
                 <DropdownMenuItem
                   onClick={() => router.push("/admin")}
                   className="px-3 py-2 hover:bg-gray-100 cursor-pointer rounded-sm"

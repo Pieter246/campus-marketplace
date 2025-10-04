@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Footer from "@/components/ui/Footer";
-import Header from "@/components/ui/Header"; // New Client Component
+import Header from "@/components/ui/Header";
 import SessionManager from "@/components/SessionManager";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/auth";
+import CookieNotice from "@/components/CookieNotice"; // New import
 
 const rubikSans = localFont({
   src: "./fonts/Rubik-Var.ttf",
@@ -38,6 +39,7 @@ export default function RootLayout({
             <main className="flex-grow pt-10">{children}</main>
             <Footer />
             <Toaster richColors closeButton />
+            <CookieNotice /> {/* Added here */}
           </SessionManager>
         </AuthProvider>
       </body>

@@ -23,14 +23,14 @@ export default async function UserDashboard({
           asChild
           className="text-xl rounded-sm data-[state=active]:primary data-[state=active]:text-white"
         >
-          <Link href="/profile/user?tab=dashboard">Active Items</Link>
+          <Link href="/profile/user?tab=dashboard">My Items</Link>
         </TabsTrigger>
         <TabsTrigger
           value="purchases"
           asChild
           className="text-xl rounded-sm data-[state=active]:primary data-[state=active]:text-white"
         >
-          <Link href="/profile/user?tab=purchases">Purchases</Link>
+          <Link href="/profile/user?tab=purchases">My Purchases</Link>
         </TabsTrigger>
         <TabsTrigger
           value="account"

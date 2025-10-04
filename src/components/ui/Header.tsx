@@ -134,7 +134,7 @@ export default function Header() {
                         <div className="text-xs text-gray-700">{auth.currentUser.email}</div>
                       </div>
                       <div className="border-t border-gray-200" />
-                      {auth.customClaims?.admin && (
+                      {auth.isAdmin && (
                         <Link
                           href="/admin"
                           className="block px-3 py-2 hover:bg-gray-100 rounded-sm"
@@ -154,7 +154,7 @@ export default function Header() {
                         onClick={async () => {
                           await auth.logout();
                           setIsAccountOpen(false);
-                          router.refresh();
+                          router.push("/");
                         }}
                         className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-sm cursor-pointer"
                       >
@@ -253,7 +253,7 @@ export default function Header() {
               <div className="border-t border-gray-200 my-2" />
               {auth.currentUser ? (
                 <>
-                  {auth.customClaims?.admin && (
+                  {auth.isAdmin && (
                     <Link
                       href="/admin"
                       className="text-gray-700 hover:text-accent hover:underline underline-offset-4 transition"
@@ -273,7 +273,7 @@ export default function Header() {
                     onClick={async () => {
                       await auth.logout();
                       toggleMenu();
-                      router.refresh();
+                      router.push("/");
                     }}
                     className="text-left text-gray-700 hover:text-accent hover:underline underline-offset-4 transition"
                   >

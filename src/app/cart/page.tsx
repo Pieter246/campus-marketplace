@@ -12,6 +12,7 @@ interface CartItem {
   cartItemId: string;
   cartId: string;
   itemId: string;
+  quantity: number;
 }
 
 interface ItemData {
@@ -19,6 +20,8 @@ interface ItemData {
   title: string;
   price: number;
   images: string[];
+  condition: string;
+  sellerId: string;
 }
 
 export default function CartPage() {
@@ -58,8 +61,13 @@ export default function CartPage() {
     fetchCart();
   }, [auth]);
 
-  const subtotal = itemsData.reduce((sum, item) => sum + item.price, 0);
-  const vat = (subtotal * 15) / 115;
+  const subtotal = itemsData.reduce((sum, item) => {
+    const cartItem = cartItems.find(c => c.itemId === item.id);
+    const quantity = cartItem?.quantity || 1;
+    return sum + (item.price * quantity);
+  }, 0);
+  const vat = subtotal * 0.15; // 15% VAT added to subtotal
+  const total = subtotal + vat;
 
   const handleDelete = async (cartItemId: string) => {
     if (!auth?.currentUser) return;
@@ -87,8 +95,19 @@ export default function CartPage() {
       // Merge cartItems with their item data
       const cartForCheckout = cartItems.map(cartItem => {
         const item = itemsData.find(i => i.id === cartItem.itemId);
-        return item ? { id: item.id, name: item.title, price: item.price } : null;
-      }).filter((item): item is { id: string; name: string; price: number } => item !== null);
+        return item ? { 
+          id: item.id, 
+          name: item.title, 
+          price: item.price,
+          quantity: cartItem.quantity || 1
+        } : null;
+      }).filter(Boolean);
+
+      // Calculate totalAmount with quantities
+      const totalAmount = cartForCheckout.reduce((sum, item) => 
+        sum + (item ? item.price * item.quantity : 0), 0
+      );
+      const totalWithVat = totalAmount * 1.15; // Add 15% VAT
 
       const token = await auth.currentUser.getIdToken();
 
@@ -98,24 +117,24 @@ export default function CartPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ cart: cartForCheckout }),
+        body: JSON.stringify({ cart: cartForCheckout, totalAmount: totalWithVat }),
       });
 
       const data = await res.json();
 
       if (data.url) {
+        localStorage.setItem('cartBeforePayment', JSON.stringify({ cartItems, itemsData }));
         window.location.href = data.url; // redirect to PayFast sandbox
       } else {
-        alert("Error initiating payment: " + (data.message || ""));
+        toast.error("Error initiating payment: " + (data.message || ""));
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to initiate payment");
+      toast.error("Failed to initiate payment");
     } finally {
       setLoading(false);
     }
   }
-
   return (
     <div className="min-h-screen flex justify-center items-start px-4 mb-8">
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-8">
@@ -131,6 +150,7 @@ export default function CartPage() {
               {cartItems.map(cartItem => {
                 const item = itemsData.find(i => i.id === cartItem.itemId);
                 if (!item) return null;
+                const quantity = cartItem.quantity || 1;
                 return (
                   <li key={cartItem.cartItemId} className="flex justify-between items-center py-4">
                     {/* Left: thumbnail + details */}
@@ -151,7 +171,7 @@ export default function CartPage() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-800">{item.title}</p>
-                        <p className="text-sm text-gray-500">R{item.price}</p>
+                        <p className="text-sm text-gray-500">R{item.price} {quantity > 1 && `x${quantity}`}</p>
                       </div>
                     </div>
 
@@ -174,12 +194,12 @@ export default function CartPage() {
                 <span>R{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-500">
-                <span>VAT (15% incl.)</span>
+                <span>VAT (15%)</span>
                 <span>R{vat.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-lg font-semibold text-gray-800 pt-2 border-t">
                 <span>Total</span>
-                <span>R{subtotal.toFixed(2)}</span>
+                <span>R{total.toFixed(2)}</span>
               </div>
             </div>
 

@@ -12,9 +12,7 @@ interface EmailSellerButtonProfileProps {
 
 export default function EmailSellerButtonProfile({ 
   sellerEmail, 
-  itemTitle, 
-  itemId, 
-  price 
+  itemTitle
 }: EmailSellerButtonProfileProps) {
   if (!sellerEmail) {
     return null;

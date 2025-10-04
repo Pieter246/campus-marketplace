@@ -326,7 +326,7 @@ export default function Item() {
 
               {/* ACTIONS */}
               <div className="mt-4">
-                {item.status !== "sold" ? (
+                {item.status !== "sold" && item.status !== "collected" ? (
                   <>
                     <div className="flex flex-wrap gap-2">
                       {claims?.user_id !== item.sellerId && (

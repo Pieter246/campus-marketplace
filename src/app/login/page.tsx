@@ -36,7 +36,7 @@ export default function LoginForm() {
 
     try {
       await auth?.loginWithEmail(form.email, form.password);
-      router.refresh();
+      router.push("/");
     } catch (e: unknown) {
       const errorMessage: string =
         typeof e === "object" && e !== null && "code" in e && e.code === "auth/invalid-credential"
@@ -61,7 +61,7 @@ export default function LoginForm() {
       toast.success("Success!", { description: "Logged in successfully" });
 
       // Refresh page to reflect logged-in state
-      router.refresh();
+      router.push("/");
       } catch (error: unknown) {
       // Handle user closing the popup
       const errorMessage: string =

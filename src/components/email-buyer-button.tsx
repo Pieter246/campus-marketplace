@@ -12,9 +12,7 @@ interface EmailBuyerButtonProps {
 
 export default function EmailBuyerButton({ 
   buyerEmail, 
-  itemTitle, 
-  itemId, 
-  price 
+  itemTitle
 }: EmailBuyerButtonProps) {
   if (!buyerEmail) {
     return null;
