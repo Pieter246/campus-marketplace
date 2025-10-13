@@ -147,11 +147,11 @@ export default function SearchClient({ searchParams }: SearchClientProps) {
             return (
               <Card key={item.id} className="overflow-hidden pt-0 pb-0">
                 <CardContent className="px-0 flex flex-col h-full">
-                  <div className="h-40 relative bg-sky-50 text-zinc-400 flex flex-col justify-center items-center">
+                  <div className="h-50 relative bg-sky-50 text-zinc-400 flex flex-col justify-center items-center">
                     {!!item.images?.[0] ? (
                       <Image
                         fill
-                        className="object-cover"
+                        className="object-contain"
                         src={imageUrlFormatter(item.images[0])}
                         alt=""
                       />
