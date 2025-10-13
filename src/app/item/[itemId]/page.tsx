@@ -334,14 +334,12 @@ export default function Item() {
                           <div className="w-full flex-1">
                             <BuyButton id={item.id} />
                           </div>
-                          <div className="w-full flex-1">
-                            <EmailSellerButton 
-                              sellerEmail={item.sellerEmail}
-                              itemTitle={item.title}
-                              itemId={item.id}
-                              price={item.price}
-                            />
-                          </div>
+                          <EmailSellerButton 
+                            sellerEmail={item.sellerEmail}
+                            itemTitle={item.title}
+                            itemId={item.id}
+                            price={item.price}
+                          />
                         </>
                       )}
 
