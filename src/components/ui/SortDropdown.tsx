@@ -68,7 +68,7 @@ export default function SortDropdown() {
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="books">Books</SelectItem>
-            <SelectItem value="tech">Technology</SelectItem>
+            <SelectItem value="electronics">Electronics</SelectItem>
             <SelectItem value="stationery">Stationery</SelectItem>
             <SelectItem value="furniture">Furniture</SelectItem>
             {/* Add more categories as needed */}
