@@ -42,7 +42,7 @@ export default function ItemForm({ handleSubmit, submitButtonLabel = "Save Draft
 
   useEffect(() => {
     if (combinedDefaultValues.status === "sold") {
-      router.push("/dashboard/user");
+      router.push("/profile/user");
     }
   }, [combinedDefaultValues.status, router]);
 
@@ -139,6 +139,7 @@ export default function ItemForm({ handleSubmit, submitButtonLabel = "Save Draft
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="excellent">Excellent</SelectItem>
                         <SelectItem value="used">Used</SelectItem>
                         <SelectItem value="fair">Fair</SelectItem>
                         <SelectItem value="poor">Poor</SelectItem>
