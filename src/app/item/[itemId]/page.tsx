@@ -17,6 +17,7 @@ import numeral from "numeral";
 import BackButton from "./back-button";
 import imageUrlFormatter from "@/lib/imageUrlFormatter";
 import ItemConditionBadge from "@/components/item-condition-badge";
+import ItemCategoryBadge from "@/components/item-category-badge";
 import ReactMarkdown from "react-markdown";
 import BuyButton from "./buy-button";
 import SellButton from "./sell-button";
@@ -297,6 +298,10 @@ export default function Item() {
                     condition={item.condition}
                     className="capitalize text-base"
                   />
+                  <ItemCategoryBadge
+                    category={item.category}
+                    className="capitalize text-base"
+                  />
                 </div>
 
                 {item.category && (
@@ -305,7 +310,7 @@ export default function Item() {
                     <h3 className="text-md font-normal">{capitalizeCategory(item.category)}</h3>
                   </div>
                 )}
-
+                <hr className="my-2"></hr>
                 <div className="space-y-1">
                   <h3 className="text-lg font-bold">Location:</h3>
                   <p className="text-md">
@@ -324,6 +329,7 @@ export default function Item() {
                 </div>
               </div>
 
+              <hr className="py-2 mt-auto"></hr>
               {/* ACTIONS */}
               <div className="mt-4">
                 {item.status !== "sold" && item.status !== "collected" ? (
@@ -334,14 +340,12 @@ export default function Item() {
                           <div className="w-full flex-1">
                             <BuyButton id={item.id} />
                           </div>
-                          <div className="w-full flex-1">
-                            <EmailSellerButton 
-                              sellerEmail={item.sellerEmail}
-                              itemTitle={item.title}
-                              itemId={item.id}
-                              price={item.price}
-                            />
-                          </div>
+                          <EmailSellerButton 
+                            sellerEmail={item.sellerEmail}
+                            itemTitle={item.title}
+                            itemId={item.id}
+                            price={item.price}
+                          />
                         </>
                       )}
 

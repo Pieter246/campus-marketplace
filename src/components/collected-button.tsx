@@ -68,10 +68,10 @@ export default function CollectedButton({
       disabled={isLoading}
       variant="outline"
       size="sm"
-      className="flex items-center gap-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+      className="flex items-center gap-1 border-green-500 border-2 text-green-800 bg-green-200 text-green-700 hover:bg-green-700"
     >
       <Package size={16} />
-      {isLoading ? "Marking..." : "Collected"}
+      {isLoading ? "Marking..." : "Mark Collected"}
     </Button>
   );
 }

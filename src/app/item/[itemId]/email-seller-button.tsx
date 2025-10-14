@@ -59,12 +59,14 @@ export default function EmailSellerButton({
   };
 
   return (
-    <Button
-      onClick={handleEmailSeller}
-      className="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white"
-      title="Email Seller"
-    >
-      <Mail size={20} />
-    </Button>
+    <div className="flex-1">
+      <Button
+        onClick={handleEmailSeller}
+        className="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white"
+        title="Email Seller"
+      >
+        <Mail size={24} />
+      </Button>
+    </div>
   );
 }

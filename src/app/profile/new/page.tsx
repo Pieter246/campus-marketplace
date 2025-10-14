@@ -95,14 +95,6 @@ export default function NewItem() {
   
   return (
     <div className="flex flex-col justify-center items-center pb-4">
-      {/* Removed breadcrumb for now to preserve visual consistency
-      <Breadcrumbs
-        className="text-2xl pb-2"
-        items={[
-          { href: "/profile/user", label: "User" },
-          { label: "New item" }, // current page, no href
-        ]}
-      />*/}
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl">
         <h1 className="text-2xl text-center font-bold pb-4">New Item</h1>
         <ItemForm
