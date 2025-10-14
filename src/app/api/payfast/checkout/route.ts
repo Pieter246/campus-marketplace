@@ -55,12 +55,6 @@ export async function POST(req: NextRequest) {
     const signature = md5(stringToHash).toString();
     paymentData.signature = signature;
 
-    // Log all data being sent to PayFast
-    console.log("--- PayFast Checkout Data ---");
-    console.log("Generated Signature:", signature);
-    console.log("Full data object being sent:", paymentData);
-    console.log("-----------------------------");
-
     // Create final query string for redirect URL
     const finalQueryString = qs.stringify(paymentData, { encode: true });
 
