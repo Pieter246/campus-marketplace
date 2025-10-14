@@ -10,7 +10,7 @@ const CreateItemSchema = z.object({
   description: z.string().min(1),
   price: z.number().nonnegative(),
   status: z.enum(["draft", "pending", "for-sale", "sold", "withdrawn"]),
-  condition: z.enum(["new", "used", "fair", "poor"]),
+  condition: z.enum(["new", "excellent", "used", "fair", "poor"]),
   category: z.enum(["books", "electronics", "clothing", "notes", "stationery", "other"]),
 });
 

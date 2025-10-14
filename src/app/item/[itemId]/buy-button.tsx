@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/context/auth";
+import { ShoppingCart } from "lucide-react"; 
 
 export default function AddToCartButton({ id }: { id: string }) {
   const router = useRouter();
@@ -46,9 +47,27 @@ export default function AddToCartButton({ id }: { id: string }) {
     }
   };
 
-  return (
-    <Button className="flex-1 w-full" onClick={handleAddToCart} disabled={isAdding}>
-      {isAdding ? "Adding..." : "Add to cart"}
+   return (
+    <Button 
+      className="flex-1 w-full justify-center h-10" // Added justify-center for a better look on mobile
+      onClick={handleAddToCart} 
+      disabled={isAdding}
+    >
+      {isAdding ? (
+        "Adding..."
+      ) : (
+        <>
+          {/* MOBILE: Icon is shown by default (no size prefix). Hidden on 'sm' screens and up. */}
+          <span className="sm:hidden">
+            <ShoppingCart className="size-5" />
+          </span>
+          
+          {/* DESKTOP: Text is hidden by default. Shown on 'sm' screens and up. */}
+          <span className="hidden sm:inline">
+            Add to cart
+          </span>
+        </>
+      )}
     </Button>
   );
 }

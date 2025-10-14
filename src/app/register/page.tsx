@@ -212,7 +212,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               className="mr-2"
             />
-            <label>I agree to the Terms & Privacy</label>
+            <label>I agree to the <a className="text-blue-600 hover:text-blue-800 transition-colors duration-300" href="/terms">Terms & Conditions</a> and <a className="text-blue-600 hover:text-blue-800 transition-colors duration-300" href="/privacy">Privacy Policy</a></label>
           </div>
           {errors.terms && <p className="text-red-500">{errors.terms}</p>}
 
