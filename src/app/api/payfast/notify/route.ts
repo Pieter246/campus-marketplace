@@ -1,119 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
-import { removeUserCartItems } from "@/lib/cartCleanup";
-import { removeItemFromAllCarts, markItemAsSold } from "@/lib/itemManagement";
-import { firestore } from "@/firebase/server";
-import { Timestamp } from "firebase-admin/firestore";
+import md5 from "crypto-js/md5";
+
+const PASSPHRASE = process.env.PAYFAST_PASSPHRASE!;
+
+/**
+ * PayFast ITN signature rules (per official docs & working legacy examples):
+ * 1. Use ALL fields exactly as POSTed (including empty values), EXCEPT 'signature'.
+ * 2. Preserve the ORIGINAL ORDER received (do NOT sort) – order matters if merchant added custom fields.
+ * 3. Values must be URL encoded AS ORIGINALLY SENT (so we must NOT decode + re-encode differently).
+ * 4. Concatenate as name=value pairs joined by '&'.
+ * 5. If a passphrase is set, append: &passphrase=YourPassphrase (passphrase value URL encoded ONLY if it contains special chars – we leave it raw unless needed).
+ * 6. MD5 hash the final string – must match the received 'signature'.
+ */
 
 export async function POST(req: NextRequest) {
-  console.log("=== PAYFAST WEBHOOK CALLED ===");
-  
-  const formData = await req.formData();
+  // Read raw body so we can preserve parameter order & original encoding
+  const rawBody = await req.text();
+  console.log("Raw PayFast body:", rawBody);
 
-  // PayFast fields
-  const merchant_id = formData.get("merchant_id");
-  const pf_payment_id = formData.get("pf_payment_id");
-  const amount_gross = formData.get("amount_gross");
-  const payment_status = formData.get("payment_status");
-  const custom_str1 = formData.get("custom_str1"); // This should contain the user ID
-  const signature = formData.get("signature"); // PayFast signature
-
-  console.log("=== PAYFAST NOTIFY - SIGNATURE DEBUG ===");
-  console.log("All form data received:");
-  for (const [key, value] of formData.entries()) {
-    console.log(`  ${key}: ${value}`);
-  }
-  
-  console.log("\nKey PayFast fields:", {
-    merchant_id,
-    pf_payment_id,
-    amount_gross,
-    payment_status,
-    custom_str1,
-    signature,
-  });
-  
-  console.log("\nSignature verification data:");
-  console.log(`MERCHANT_KEY: ${process.env.PAYFAST_MERCHANT_KEY ? '[SET]' : '[NOT SET]'}`);
-  console.log(`PASSPHRASE: ${process.env.PAYFAST_PASSPHRASE ? '[SET]' : '[NOT SET]'}`);
-  console.log(`Received signature: ${signature}`);
-  console.log("=== END SIGNATURE DEBUG ===");
-
-  // If payment is successful, handle all the necessary updates
-  if (payment_status === "COMPLETE" && custom_str1) {
-    try {
-      const buyerId = custom_str1 as string;
-      
-      // Get the user's cart to see what items were purchased
-      const cartItemsSnap = await firestore
-        .collection("cartItems")
-        .where("cartId", "==", buyerId)
-        .get();
-
-      const purchasedItemIds: string[] = [];
-      const purchaseRecords = [];
-
-      // Process each cart item
-      for (const cartDoc of cartItemsSnap.docs) {
-        const cartData = cartDoc.data();
-        const itemId = cartData.itemId;
-        
-        if (itemId) {
-          purchasedItemIds.push(itemId);
-
-          // Get item details for purchase record
-          const itemRef = firestore.collection("items").doc(itemId);
-          const itemSnap = await itemRef.get();
-          
-          if (itemSnap.exists) {
-            const itemData = itemSnap.data();
-            const quantity = cartData.quantity || 1;
-
-            // Create purchase record
-            const purchaseRef = firestore.collection("purchases").doc();
-            const purchaseRecord = {
-              id: purchaseRef.id,
-              itemId: itemId,
-              itemTitle: itemData?.title || '',
-              itemPrice: itemData?.price || 0,
-              quantity: quantity,
-              sellerId: itemData?.sellerId || '',
-              sellerEmail: itemData?.sellerEmail || '',
-              buyerId: buyerId,
-              paymentId: pf_payment_id as string || '',
-              totalAmount: parseFloat(amount_gross as string || '0'),
-              status: 'paid',
-              collectionStatus: 'pending',
-              createdAt: Timestamp.now(),
-              updatedAt: Timestamp.now(),
-            };
-
-            await purchaseRef.set(purchaseRecord);
-            purchaseRecords.push(purchaseRecord);
-
-            // Mark item as sold
-            await markItemAsSold(itemId, buyerId, '');
-
-            // Remove item from ALL users' carts (not just the buyer's)
-            await removeItemFromAllCarts(itemId);
-          }
-        }
-      }
-
-      // Clear the buyer's cart completely
-      await removeUserCartItems(buyerId);
-
-      console.log(`Payment successful: processed ${purchasedItemIds.length} items for user ${buyerId}`);
-      console.log(`Created ${purchaseRecords.length} purchase records`);
-      
-    } catch (error) {
-      console.error("Failed to process successful payment:", error);
-      // Don't fail the webhook because of processing failure
-    }
+  // Extract signature (can appear anywhere). We'll remove only that pair.
+  // Match signature parameter (start, middle, or end)
+  const signatureMatch = rawBody.match(/(?:^|&)signature=([^&]*)/);
+  const receivedSignature = signatureMatch ? decodeURIComponent(signatureMatch[1]) : undefined;
+  if (!receivedSignature) {
+    console.error("No signature field found in ITN payload");
+    return new NextResponse("Missing signature", { status: 400 });
   }
 
-  // TODO: verify signature using MERCHANT_KEY & PASSPHRASE
-  console.log("=== PAYFAST WEBHOOK PROCESSING COMPLETE ===");
-  console.log(`Final status: Payment ${payment_status}, processed: ${payment_status === 'COMPLETE' ? 'YES' : 'NO'}`);
-  
-  return new NextResponse("OK"); // Must return 200
+  // Remove the signature pair from the raw string while keeping other pairs & their order/encoding intact
+  let baseParamString = rawBody
+    // remove signature=... (with preceding & if not first)
+    .replace(/(^|&)signature=[^&]*/,'')
+    // clean possible leading & left after removal
+    .replace(/^&/, '')
+    // trim whitespace just in case
+    .trim();
+
+  // IMPORTANT: Do NOT drop empty values – PayFast includes them in signature calc
+  // At this point baseParamString is the exact concatenation of all remaining pairs.
+
+  // Append passphrase if configured (non-empty)
+  let stringToHash = baseParamString;
+  if (PASSPHRASE && PASSPHRASE.length > 0) {
+    // Append with & (only if there are existing params)
+    stringToHash += `&passphrase=${PASSPHRASE}`; // leave as-is; encode if you add special chars
+  }
+
+  const generatedSignature = md5(stringToHash).toString();
+
+  // Additionally parse into object for business logic
+  const params = new URLSearchParams(rawBody);
+  const pfData: Record<string,string> = {};
+  params.forEach((value, key) => { pfData[key] = value; });
+
+  console.log("--- PayFast Notify Signature Verification ---");
+  console.log("Base param string (without signature):", baseParamString);
+  console.log("String to hash (final):", stringToHash);
+  console.log("Received Signature:", receivedSignature);
+  console.log("Generated Signature:", generatedSignature);
+  console.log("All received fields (raw order preserved):", pfData);
+  console.log("-----------------------------------------");
+
+  if (generatedSignature !== receivedSignature) {
+    // For PayFast ITN you normally MUST still return 200 to stop retries; keeping 400 for debug only.
+    console.error("Signature mismatch – investigate. Returning 400 (debug mode).\nSuggestion: once fixed, always return 200 even on mismatch to avoid repeated retries flooding logs.");
+    return new NextResponse("Signature verification failed", { status: 400 });
+  }
+
+  console.log("Signature valid. Proceeding with payment handling.");
+
+  // Example: extract useful fields
+  const { pf_payment_id, payment_status, amount_gross, m_payment_id } = pfData;
+  console.log("Payment info:", { pf_payment_id, payment_status, amount_gross, m_payment_id });
+
+  // TODO: (idempotent) persist / update order state in Firestore here
+  // Ensure you guard against replay attacks: store pf_payment_id processed list.
+
+  return new NextResponse("OK");
 }
