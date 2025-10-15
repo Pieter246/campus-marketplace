@@ -162,7 +162,6 @@ export default function CartPage() {
                             alt={item.title}
                             fill
                             className="object-cover"
-                            unoptimized
                           />
                         ) : (
                           <div className="flex items-center justify-center w-full h-full text-gray-400 text-xs">

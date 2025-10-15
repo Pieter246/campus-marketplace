@@ -12,7 +12,6 @@ export default function Logo({ className }: LogoProps) {
       className={className}
       width={150} // Adjust based on your logo's dimensions
       height={50} // Adjust based on your logo's dimensions
-      unoptimized
     />
   );
 }

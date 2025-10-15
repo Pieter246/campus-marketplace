@@ -227,7 +227,6 @@ export default function Item() {
                       alt="Item image"
                       sizes="(max-width: 768px) 100vw, 800px"
                       priority
-                      unoptimized
                     />
                   ) : (
                     images.map((img, idx) => (
@@ -247,7 +246,6 @@ export default function Item() {
                           alt={`Item image ${idx + 1}`}
                           sizes="(max-width: 768px) 100vw, 800px"
                           priority={idx === 0}
-                          unoptimized
                         />
                       </div>
                     ))
@@ -278,7 +276,6 @@ export default function Item() {
                                 src={imageUrlFormatter(img)}
                                 //alt={`Thumbnail ${index + 1}`}
                                 alt=""
-                                unoptimized
                               />
                             </Card>
                           </button>
@@ -308,12 +305,6 @@ export default function Item() {
                   />
                 </div>
 
-                {item.category && (
-                  <div className="flex flex-row">
-                    <h3 className="text-md font-semibold pr-1">Category: </h3>
-                    <h3 className="text-md font-normal">{capitalizeCategory(item.category)}</h3>
-                  </div>
-                )}
                 <hr className="my-2"></hr>
                 <div className="space-y-1">
                   <h3 className="text-lg font-bold">Location:</h3>
@@ -423,7 +414,6 @@ export default function Item() {
                           src={imageUrlFormatter(relatedItem.images?.[0] || "/placeholder-image.jpg")}
                           alt={relatedItem.title}
                           sizes="(max-width: 768px) 50vw, 200px"
-                          unoptimized
                         />
                       </div>
                       <h4 className="text-sm font-semibold truncate">{relatedItem.title}</h4>
