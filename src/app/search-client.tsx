@@ -154,6 +154,7 @@ export default function SearchClient({ searchParams }: SearchClientProps) {
                         className="object-contain"
                         src={imageUrlFormatter(item.images[0])}
                         alt=""
+                        unoptimized // Ensures images work in Firebase deployment
                       />
                     ) : (
                       <>

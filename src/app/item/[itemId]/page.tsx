@@ -227,6 +227,7 @@ export default function Item() {
                       alt="Item image"
                       sizes="(max-width: 768px) 100vw, 800px"
                       priority
+                      unoptimized
                     />
                   ) : (
                     images.map((img, idx) => (
@@ -246,6 +247,7 @@ export default function Item() {
                           alt={`Item image ${idx + 1}`}
                           sizes="(max-width: 768px) 100vw, 800px"
                           priority={idx === 0}
+                          unoptimized
                         />
                       </div>
                     ))
@@ -274,7 +276,9 @@ export default function Item() {
                                 fill
                                 className="object-contain"
                                 src={imageUrlFormatter(img)}
-                                alt={`Thumbnail ${index + 1}`}
+                                //alt={`Thumbnail ${index + 1}`}
+                                alt=""
+                                unoptimized
                               />
                             </Card>
                           </button>
@@ -419,6 +423,7 @@ export default function Item() {
                           src={imageUrlFormatter(relatedItem.images?.[0] || "/placeholder-image.jpg")}
                           alt={relatedItem.title}
                           sizes="(max-width: 768px) 50vw, 200px"
+                          unoptimized
                         />
                       </div>
                       <h4 className="text-sm font-semibold truncate">{relatedItem.title}</h4>
