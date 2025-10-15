@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth";
-import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
@@ -69,16 +68,6 @@ export default function CheckoutSuccessPage() {
     );
   }
 
-  // Placeholder item data (to be replaced with fetched purchased items)
-  const placeholderItem = {
-    id: "placeholder-item-id",
-    title: "Placeholder Item Title",
-    price: 1000,
-    images: ["/placeholder-image.jpg"],
-    collectionAddress: "123 Example Street, Campus Town, 12345",
-    sellerEmail: "seller@example.com",
-  };
-
   return (
     <div className="min-h-[50vh] flex justify-center items-start px-4 mb-8">
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-8">
@@ -120,6 +109,7 @@ export default function CheckoutSuccessPage() {
                   alt={placeholderItem.title}
                   fill
                   className="object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="flex items-center justify-center w-full h-full text-gray-400 text-xs">

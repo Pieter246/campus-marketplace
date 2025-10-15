@@ -54,9 +54,9 @@ export default function PrivacyPolicyPage() {
           We do not sell your personal information. Your information may be shared with:
         </p>
         <ul className="list-disc list-inside mb-4 text-gray-700 space-y-2">
-          <li><strong>Other Users:</strong> As necessary to facilitate transactions (your name and contact information are shared with users you transact with)</li>
+          <li><strong>Other Users:</strong> As necessary to facilitate transactions (your name and contact information are shared with users you transact with).</li>
           <li><strong>Service Providers:</strong> Trusted third parties who help us operate our platform (hosting providers, email services) under strict confidentiality agreements</li>
-          <li><strong>Legal Requirements:</strong> When required by South African law or to protect our rights and users' safety</li>
+          <li><strong>Legal Requirements:</strong> When required by South African law or to protect our rights and users&apos; safety</li>
         </ul>
 
         <h2 className="text-xl font-semibold mt-6 mb-2">5. Data Security</h2>
