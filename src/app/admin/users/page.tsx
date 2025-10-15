@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import { getAuth } from "firebase/auth";
-import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { refreshUserSession } from "@/lib/sessionUtils";
 
@@ -163,7 +162,6 @@ export default function ManageUsersPage() {
   const [viewUser, setViewUser] = useState<User | null>(null);
   const [sortColumn, setSortColumn] = useState<SortColumn>('email');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const usersPerPage = 50;
 
   const fetchUsers = async () => {
     try {

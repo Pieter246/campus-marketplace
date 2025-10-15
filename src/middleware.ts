@@ -16,6 +16,7 @@ export async function middleware(request: NextRequest) {
 
     const cookieStore = await cookies();
     const token = cookieStore.get("firebaseAuthToken")?.value;
+    const hasSession = cookieStore.get("authSession")?.value;
 
     const { pathname  } = request.nextUrl;
 
@@ -39,8 +40,16 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Assuming the user tries to access any other page without being logged in return to login page
-    if(!token) {
+    // If the session has been checked (hasSession is true) and there's still no token,
+    // then we can safely redirect to login.
+    // This prevents the race condition on initial load.
+    if (hasSession && !token) {
+        return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    // If there is no token, redirect to login. This is the main protection for all other routes.
+    // This check is placed after all the allowed paths for unauthenticated users.
+    if (!token) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
 

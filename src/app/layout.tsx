@@ -34,13 +34,12 @@ export default function RootLayout({
         className={`${rubikSans.variable} ${rubikItalic.variable} antialiased flex flex-col min-h-screen`}
       >
         <AuthProvider>
-          <SessionManager>
+            <SessionManager />
             <Header />
             <main className="flex-grow pt-10">{children}</main>
             <Footer />
             <Toaster richColors closeButton />
             <CookieNotice /> {/* Added here */}
-          </SessionManager>
         </AuthProvider>
       </body>
     </html>
