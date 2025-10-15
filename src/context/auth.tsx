@@ -134,8 +134,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const loginWithEmail = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password)
-    // Admin status will be refreshed automatically by the useEffect
+    const result = await signInWithEmailAndPassword(auth, email, password)
+    const user = result.user
+    if (!user.emailVerified) {
+      await auth.signOut()
+      throw new Error("Email not verified. Please check your inbox and verify your email before logging in.")
+    }
   }
 
   const value: AuthContextType = {
