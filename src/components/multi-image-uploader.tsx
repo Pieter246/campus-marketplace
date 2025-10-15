@@ -123,7 +123,6 @@ export default function MultiImageUploader({
                                                         alt=""
                                                         fill
                                                         className="object-cover"
-                                                        unoptimized
                                                     />
                                                 </div>
                                                 <div className="flex-grow">

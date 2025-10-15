@@ -211,7 +211,6 @@ export default function PhotoUpload({
                   width={200}
                   height={128}
                   className="w-full h-32 object-cover rounded-lg border"
-                  unoptimized
                 />
                 
                 {/* Remove Button */}
@@ -274,7 +273,6 @@ export default function PhotoUpload({
                 width={200}
                 height={128}
                 className="w-full h-32 object-cover rounded-lg border"
-                unoptimized
               />
             ))}
           </div>
