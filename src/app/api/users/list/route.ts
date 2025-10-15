@@ -55,14 +55,20 @@ export async function GET(req: NextRequest) {
         });
       }
       
+  function normalizeDate(val: any): string | null {
+        if (!val) return null;
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object' && typeof val.toDate === 'function') return val.toDate().toISOString();
+        return null;
+      }
       return {
         id: doc.id,          // <- use 'id' not 'userId'
         email: data.email,
         isActive: data.isActive ?? false,
         isAdmin: isAdminFromEnv || isAdminFromDB, // Combined admin status
         ...data,
-        createdAt: data.createdAt?.toDate().toISOString() ?? null,
-        updatedAt: data.updatedAt?.toDate().toISOString() ?? null,
+        createdAt: normalizeDate(data.createdAt),
+        updatedAt: normalizeDate(data.updatedAt),
       };
     });
 
