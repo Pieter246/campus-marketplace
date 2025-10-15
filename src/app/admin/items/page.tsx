@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ItemStatusBadge from "@/components/item-status-badge";
 import Button from "@/components/ui/Button";
@@ -87,7 +87,7 @@ export default function AdminItemsPage() {
   };
 
   // Fetch items
-  const fetchItems = useCallback(async (pageNum: number, reset: boolean = false) => {
+  const fetchItems = async (pageNum: number, reset: boolean = false) => {
     if (isFetching) return;
     setIsFetching(true);
     try {
@@ -134,7 +134,7 @@ export default function AdminItemsPage() {
       setIsFetching(false);
       if (pageNum === 1) setLoading(false);
     }
-  }, [auth, isFetching, items, itemsPerPage, validatedStatus]);
+  };
 
   // Fetch items on mount or when status changes
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function AdminItemsPage() {
     setPage(1); // Reset page
     setLoading(true);
     fetchItems(1, true);
-  }, [auth, validatedStatus, fetchItems]);
+  }, [auth, validatedStatus]);
 
   // Sync form status with URL
   useEffect(() => {
