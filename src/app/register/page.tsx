@@ -61,10 +61,25 @@ export default function RegisterPage() {
         return;
       }
 
-      toast.success("Success", {
-        description: "Your account was created successfully",
-      });
-      router.push("/login");
+      // Now sign in with client SDK and send verification email
+      try {
+        const { signInWithEmailAndPassword, sendEmailVerification } = await import("firebase/auth");
+        const { auth: clientAuth } = await import("@/firebase/client");
+        const userCredential = await signInWithEmailAndPassword(clientAuth, form.email, form.password);
+        const user = userCredential.user;
+        await sendEmailVerification(user);
+        await clientAuth.signOut();
+        toast.success("Success", {
+          description: "Account created. Please check your email for verification before logging in.",
+        });
+        router.push(`/auth/verify-email?email=${encodeURIComponent(form.email)}`);
+      } catch (err) {
+        // If sign-in or email fails, still allow login
+        toast.success("Success", {
+          description: "Your account was created successfully, but we could not send a verification email automatically. Please log in and use the resend button if needed.",
+        });
+        router.push("/login");
+      }
     } catch (err: unknown) {
       console.error(err);
       const error = err as { message?: string };

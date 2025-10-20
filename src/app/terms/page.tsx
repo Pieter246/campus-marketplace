@@ -82,9 +82,9 @@ export default function TermsPage() {
 
         <h2 className="text-xl font-semibold mt-6 mb-2">7. Liability</h2>
         <p className="mb-4 text-gray-700">
-          The Campus Marketplace is provided "as is." We are not liable for any 
+          The Campus Marketplace is provided &quot;as is.&quot; We are not liable for any 
           disputes, losses, or damages resulting from use of the platform. As a 
-          neutral platform, we do not endorse any items listed and are not responsible 
+          neutral platform, we do not endorse any items listed and are not responsible
           for the accuracy of listings or the conduct of users.
         </p>
 

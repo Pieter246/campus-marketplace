@@ -274,7 +274,8 @@ export default function Item() {
                                 fill
                                 className="object-contain"
                                 src={imageUrlFormatter(img)}
-                                alt={`Thumbnail ${index + 1}`}
+                                //alt={`Thumbnail ${index + 1}`}
+                                alt=""
                               />
                             </Card>
                           </button>
@@ -304,12 +305,6 @@ export default function Item() {
                   />
                 </div>
 
-                {item.category && (
-                  <div className="flex flex-row">
-                    <h3 className="text-md font-semibold pr-1">Category: </h3>
-                    <h3 className="text-md font-normal">{capitalizeCategory(item.category)}</h3>
-                  </div>
-                )}
                 <hr className="my-2"></hr>
                 <div className="space-y-1">
                   <h3 className="text-lg font-bold">Location:</h3>

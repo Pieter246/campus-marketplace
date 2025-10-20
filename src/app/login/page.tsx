@@ -35,13 +35,25 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      await auth?.loginWithEmail(form.email, form.password);
+      const { signInWithEmailAndPassword } = await import("firebase/auth");
+      const { auth: clientAuth } = await import("@/firebase/client");
+      const userCredential = await signInWithEmailAndPassword(clientAuth, form.email, form.password);
+      const user = userCredential.user;
+      await user.reload();
+      if (!user.emailVerified) {
+        await clientAuth.signOut();
+        toast.error("Error!", {
+          description: "Your email is not verified. Please check your inbox and click the verification link. If you did not receive it, you can resend below."
+        });
+        router.push(`/auth/verify-email?email=${encodeURIComponent(form.email)}`);
+        return;
+      }
       router.push("/");
     } catch (e: unknown) {
-      const errorMessage: string =
-        typeof e === "object" && e !== null && "code" in e && e.code === "auth/invalid-credential"
-          ? "Incorrect credentials"
-          : "An error occurred";
+      let errorMessage = "An error occurred";
+      if (typeof e === "object" && e !== null && "message" in e && typeof e.message === "string") {
+        errorMessage = e.message;
+      }
       toast.error("Error!", {
         description: errorMessage,
       });

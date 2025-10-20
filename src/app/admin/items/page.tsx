@@ -88,7 +88,7 @@ export default function AdminItemsPage() {
 
   // Fetch items
   const fetchItems = async (pageNum: number, reset: boolean = false) => {
-    if (isFetching) return; // Prevent concurrent fetches
+    if (isFetching) return;
     setIsFetching(true);
     try {
       const user = auth?.currentUser;
