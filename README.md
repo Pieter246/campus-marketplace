@@ -61,9 +61,9 @@ To check your installed versions:
    ```
 3. Copy the environment file:
     ```
-    cp .env.example .env
+    cp .env.example .env.local
     ```
-4. Add your Firebase and PayFast credentials to the `.env` file (see details below).
+4. Add your Firebase and PayFast credentials to the `.env.local` file (see details below).
 
 5. Build the frontend:
    
@@ -88,7 +88,7 @@ This will start the optimized production server.
 
 ## Environment Setup
 
-In your `.env` file, include the following keys:
+In your `.env.local` file, include the following keys:
 ```
 # Backend
 FIREBASE_PROJECT_ID=enter_yours_here
@@ -127,7 +127,7 @@ To configure Firebase:
 1. Go to [Firebase Console](https://console.firebase.google.com/).
 2. Create a new Firebase project.
 3. Enable Authentication, Firestore, and Storage.
-4. Copy your project credentials into the `.env` file.
+4. Copy your project credentials into the `.env.local` file.
 
 ---
 
@@ -137,7 +137,7 @@ Campus Marketplace integrates with **PayFast** to securely handle payments betwe
 
 1. Create a [PayFast Sandbox Account](https://sandbox.payfast.co.za/).
 2. Retrieve your **Merchant ID** and **Merchant Key**.
-3. Add these values to your `.env` file.
+3. Add these values to your `.env.local` file.
 4. Test your integration using the sandbox environment.
 
 ---
