@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sending, setSending] = useState(false);
@@ -97,5 +97,17 @@ export default function VerifyEmailPage() {
       </button>*/}
       {message && <p className="mt-4 text-red-800">{message}</p>}
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-md mx-auto mt-16 p-6 bg-white rounded shadow">
+        <div className="text-center">Loading...</div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
