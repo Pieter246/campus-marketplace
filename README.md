@@ -220,7 +220,7 @@ Student number: 41669436
 University Email Address: 41669436@mynwu.ac.za  
 
 
-**Group Member 2 (Group Leader)***  
+**Group Member 2 (Group Leader)**  
 Name and surname: Pieter Meyer 
 Student number: 42937582  
 University Email Address: 42937582@mynwu.ac.za 
