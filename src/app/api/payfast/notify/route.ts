@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Remove the signature pair from the raw string while keeping other pairs & their order/encoding intact
-  let baseParamString = rawBody
+  const baseParamString = rawBody
     // remove signature=... (with preceding & if not first)
     .replace(/(^|&)signature=[^&]*/,'')
     // clean possible leading & left after removal
