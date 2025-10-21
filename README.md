@@ -1,6 +1,7 @@
 # Campus Marketplace - NWU Student Marketplace
 
 ![Campus Marketplace Logo](https://github.com/Pieter246/campus-marketplace/blob/development/public/logo.svg?raw=true)
+# Live Demo: [Click Here](https://campus-marketplace-2yna.vercel.app/)
 
 ## Table of Contents
 1. [Introduction](#introduction)
