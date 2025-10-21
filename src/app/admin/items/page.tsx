@@ -143,7 +143,7 @@ export default function AdminItemsPage() {
     setPage(1); // Reset page
     setLoading(true);
     fetchItems(1, true);
-  }, [auth, validatedStatus]);
+  }, [auth, validatedStatus, fetchItems]);
 
   // Sync form status with URL
   useEffect(() => {
