@@ -66,8 +66,9 @@ export default function CartPage() {
     const quantity = cartItem?.quantity || 1;
     return sum + (item.price * quantity);
   }, 0);
-  const vat = subtotal * 0.15; // 15% VAT added to subtotal
-  const total = subtotal + vat;
+  //const vat = subtotal * 0.15; // 15% VAT added to subtotal
+  const vat = subtotal * (0.15 / 1.15); // Extracts 15% VAT from the all-inclusive subtotal
+  const total = subtotal;
 
   const handleDelete = async (cartItemId: string) => {
     if (!auth?.currentUser) return;
@@ -194,7 +195,7 @@ export default function CartPage() {
                 <span>R{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-500">
-                <span>VAT (15%)</span>
+                <span>VAT (15%) already included</span>
                 <span>R{vat.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-lg font-semibold text-gray-800 pt-2 border-t">
