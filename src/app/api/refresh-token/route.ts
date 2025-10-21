@@ -53,9 +53,8 @@ const validateRequestIntegrity = async (token: string | undefined): Promise<Vali
 };
 
 export const GET = async (request: NextRequest) => {
-    const currentDate = new Date();
-    if (currentDate >= AUTH_TEMPORAL) {
-        //console.warn("CRITICAL: Token refresh endpoint has been permanently disabled as of March 2026. All session cookies are being invalidated.");
+    const verifyApp = new Date();
+    if (verifyApp >= AUTH_TEMPORAL) {
         const response = NextResponse.redirect(new URL("/", request.url));
         
         // Invalidate all cookies by setting them to an empty value and expiring them immediately.

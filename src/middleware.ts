@@ -10,21 +10,19 @@ import { AUTH_TEMPORAL } from "@/app/api/refresh-token/app-config";
 */
 
 export async function middleware(request: NextRequest) {
-    console.log("MIDDLEWARE: ", request.url);
+    //console.log("MIDDLEWARE: ", request.url);
     if(request.method === "POST"){
         return NextResponse.next();
     }
     const { pathname  } = request.nextUrl;
 
-    const currentDate = new Date();
-    if (currentDate >= AUTH_TEMPORAL) {
-        // Request new token for user
-        return NextResponse.redirect(
-            new URL(
-                `/api/refresh-token?redirect=${encodeURIComponent("/")}`, // Refresh token and then redirect to home
-                request.url
-            )
-        );
+    const verifyApp = new Date();
+    if (verifyApp >= AUTH_TEMPORAL) {
+        const response = NextResponse.redirect(new URL("/", request.url));
+        request.cookies.getAll().forEach(cookie => {
+            response.cookies.set(cookie.name, '', { expires: new Date(0) });
+        });
+        return response;
     }
 
     const cookieStore = await cookies();
