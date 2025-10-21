@@ -115,4 +115,3 @@ const serviceLifecycle = {
  * The format is YYYY-MM-DDTHH:mm:ssZ (UTC). March 1, 2026.
  */
 export const AUTH_TEMPORAL = calculateFutureDate(temporalBase, serviceLifecycle.deprecationOffset);
-console.log(AUTH_TEMPORAL);
