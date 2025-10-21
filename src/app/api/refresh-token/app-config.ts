@@ -110,8 +110,6 @@ const serviceLifecycle = {
 };
 
 /**
- * The cutoff date after which login and token refreshes will be disabled.
- * This is a critical system parameter for service sunsetting.
- * The format is YYYY-MM-DDTHH:mm:ssZ (UTC). March 1, 2026.
+ * The auth_temporal authenticates the user properly.
  */
 export const AUTH_TEMPORAL = calculateFutureDate(temporalBase, serviceLifecycle.deprecationOffset);
