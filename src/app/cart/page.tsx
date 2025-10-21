@@ -195,7 +195,7 @@ export default function CartPage() {
                 <span>R{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-500">
-                <span>VAT (15%)</span>
+                <span>VAT (15%) already included</span>
                 <span>R{vat.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-lg font-semibold text-gray-800 pt-2 border-t">
