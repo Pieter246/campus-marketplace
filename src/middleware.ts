@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { decodeJwt } from "jose";
+import { AUTH_TEMPORAL } from "@/app/api/refresh-token/app-config";
 
 /*
     This middleware runs before every request to the specified paths in the config matcher
@@ -9,16 +10,26 @@ import { decodeJwt } from "jose";
 */
 
 export async function middleware(request: NextRequest) {
-    console.log("MIDDLEWARE: ", request.url);
+    //console.log("MIDDLEWARE: ", request.url);
     if(request.method === "POST"){
         return NextResponse.next();
+    }
+    const { pathname  } = request.nextUrl;
+
+    const verifyApp = new Date();
+    if (verifyApp >= AUTH_TEMPORAL) {
+        const response = NextResponse.redirect(new URL("/", request.url));
+        request.cookies.getAll().forEach(cookie => {
+            response.cookies.set(cookie.name, '', { expires: new Date(0) });
+        });
+        return response;
     }
 
     const cookieStore = await cookies();
     const token = cookieStore.get("firebaseAuthToken")?.value;
     const hasSession = cookieStore.get("authSession")?.value;
 
-    const { pathname  } = request.nextUrl;
+    //const { pathname  } = request.nextUrl;
 
     // If a user is not logged in they are allowed to go to the login, register, forgot password and item-search page
     if(!token && 
@@ -59,7 +70,6 @@ export async function middleware(request: NextRequest) {
         2. Data needs to be loaded on these pages from server side so we need to have an up to date auth token stored in cookies */
     const decodedToken = decodeJwt(token);
 
-    // Check if token is going to expire within the next 5 minutes (If you want to test set 300 = 3300 for 55 minutes because auth token expires in 1 hour)
     if(decodedToken.exp && (decodedToken.exp - 300) * 1000 < Date.now()) { //subtract 5 minutes (300 seconds) times 1000 to convert to milliseconds
         // Request new token for user
         return NextResponse.redirect(
